@@ -41,6 +41,8 @@ tdt_cantidad:
 ; =====================================
 ; void tdt_agregarBloque(tdt* tabla, bloque* b)
 tdt_agregarBloque:
+    lea RSI, [RDI+3]
+    jmp tdt_agregar
 
 ; =====================================
 ; void tdt_agregarBloques(tdt* tabla, bloque** b)
@@ -49,6 +51,7 @@ tdt_agregarBloques:
 ; =====================================
 ; void tdt_borrarBloque(tdt* tabla, bloque* b)
 tdt_borrarBloque:
+    jmp tdt_borrar
         
 ; =====================================
 ; void tdt_borrarBloques(tdt* tabla, bloque** b)
