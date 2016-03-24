@@ -1,7 +1,9 @@
 ; FUNCIONES de C
+  extern calloc
   extern malloc
   extern free
   extern strcpy
+  extern strlen
   extern tdt_agregar
   extern tdt_borrar
   
@@ -29,6 +31,33 @@ section .text
 ; =====================================
 ; tdt* tdt_crear(char* identificacion)
 tdt_crear:
+    ; RDI: id
+    ; No stack frame needed (no local vars nor args in stack)
+
+    ; rdi <- strlen(id) + 1 | Calc newId size
+    push rdi        ; Aligned stack | [sp+4] = id
+    call strlen
+    lea rdi, [rax + 1]  ; rdi <- len(id) + 1 = sizeof(*id)
+
+    ; rax <- malloc(rdi) | Allocate newId
+    call malloc
+
+    ; rax <- newId | Copy id(rsi) contents to newId(rax)
+    pop rsi
+    push rax        ; Aligned stack | [sp+4] = newId
+    mov rdi, rax
+    call strcpy
+
+    ; rax <- calloc(1,TDT_SIZE) | Allocate and zero new TDT
+    mov rdi, 1
+    mov rsi, TDT_SIZE
+    call calloc
+
+    ; rax[IDENTIFICACION] = newId(r15)
+    pop rdi
+    mov [rax], rdi
+
+    ret
 
 ; =====================================
 ; void tdt_recrear(tdt** tabla, char* identificacion)
