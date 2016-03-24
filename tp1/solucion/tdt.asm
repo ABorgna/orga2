@@ -35,7 +35,7 @@ tdt_crear:
     ; No stack frame needed (no local vars nor args in stack)
 
     ; rdi <- strlen(id) + 1 | Calc newId size
-    push rdi        ; Aligned stack | [sp+4] = id
+    push rdi        ; Aligned stack | [sp+8] = id
     call strlen
     lea rdi, [rax + 1]  ; rdi <- len(id) + 1 = sizeof(*id)
 
@@ -44,7 +44,7 @@ tdt_crear:
 
     ; rax <- newId | Copy id(rsi) contents to newId(rax)
     pop rsi
-    push rax        ; Aligned stack | [sp+4] = newId
+    push rax        ; Aligned stack | [sp+8] = newId
     mov rdi, rax
     call strcpy
 
@@ -62,6 +62,35 @@ tdt_crear:
 ; =====================================
 ; void tdt_recrear(tdt** tabla, char* identificacion)
 tdt_recrear:
+    ; RDI: &tabla
+    ; RSI: newId
+    ; No stack frame needed (no local vars nor args in stack)
+    push r15
+    push r14
+    sub rsp, 8        ; Aligned stack
+    mov r15, rdi    ; r15 <- &tabla
+
+    ; rdi <- newId ? newId : tabla->id
+    cmp rsi, 0
+    cmovz rsi, [r15] ; rsi <- tabla
+    cmovz rsi, [rsi] ; rsi <- tabla->id
+    mov rdi, rsi
+
+    ; r14 <- newTabla
+    call tdt_crear
+    mov r14, rax
+
+    ; destruir tabla
+    mov rdi, r15
+    call tdt_destruir
+
+    ; [r15] <- newTabla
+    mov [r15], r14
+
+    add rsp, 8
+    pop r14
+    pop r15
+    ret
 
 ; =====================================
 ; uint32_t tdt_cantidad(tdt* tabla)
