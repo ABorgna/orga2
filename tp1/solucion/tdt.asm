@@ -182,12 +182,13 @@ tdt_traducir:
     shr esi, 4
     and si, 0x0ff0
     movzx r10, sil
-    cmp byte [rdi+r10+7], 0
-    jnz .done
+    cmp byte [rdi+r10+15], 0
+    jz .done
 
     ; copy the value
-    mov rsi, [rdi+r10+7]
+    lea rsi, [rdi+r10]
     mov rdi, rdx
+    cld
     movsd
     movsw
     movsb
@@ -241,28 +242,29 @@ tdt_destruir:
         ; For j in 256..1
         mov rcx, 256
         .t1Loop:
-            push rcx
-            sub rsp, 8  ; Aligned stack
-
-            mov r13, [r14 + rcx - 1]
+            mov r13, [r14 + rcx * 8 - 8]
             cmp r13, 0
             jz .doneT2
+                push rcx
 
                 ; For i in 256..1
                 mov rcx, 256
                 .t2Loop:
                     ; Free the ith entry of t2
-                    mov rdi, [r13 + rcx -1]
+                    push rcx  ; Aligned stack
+                    mov rdi, [r13 + rcx * 8 - 8]
                     call free
+                    pop rcx
                 loop .t2Loop
 
                 ; Free t2
+                sub rsp, 8  ; Aligned stack
                 mov rdi, r13
                 call free
-            .doneT2:
 
-            add rsp, 8
-            pop rcx
+                add rsp, 8
+                pop rcx
+            .doneT2:
         loop .t1Loop
 
         ; Free t1
