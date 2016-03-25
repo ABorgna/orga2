@@ -25,6 +25,7 @@
   %define TDT_OFFSET_PRIMERA          8
   %define TDT_OFFSET_CANTIDAD        16
   %define TDT_SIZE                   20
+  %define BLOQUE_OFFSET_VALOR         3
 
 section .text
 
@@ -95,40 +96,192 @@ tdt_recrear:
 ; =====================================
 ; uint32_t tdt_cantidad(tdt* tabla)
 tdt_cantidad:
+    mov eax, [rdi + TDT_OFFSET_CANTIDAD]
+    ret
 
 ; =====================================
 ; void tdt_agregarBloque(tdt* tabla, bloque* b)
 tdt_agregarBloque:
-    lea RSI, [RDI+3]
+    lea rdx, [rsi+BLOQUE_OFFSET_VALOR]    ; rdx <- &(bloque->valor)
     jmp tdt_agregar
 
 ; =====================================
 ; void tdt_agregarBloques(tdt* tabla, bloque** b)
 tdt_agregarBloques:
-        
+
+    cmp qword [rsi], 0
+    jz .done
+
+    push rdi
+    push rsi
+    sub rsp, 8  ; Aligned stack
+    mov rsi, [rsi]
+    call tdt_agregarBloque
+    add rsp, 8
+    pop rsi
+    pop rdi
+
+    add rsi, 8      ; Next block
+    jmp tdt_agregarBloques
+
+    .done:
+    ret
+
 ; =====================================
 ; void tdt_borrarBloque(tdt* tabla, bloque* b)
 tdt_borrarBloque:
     jmp tdt_borrar
-        
+
 ; =====================================
 ; void tdt_borrarBloques(tdt* tabla, bloque** b)
 tdt_borrarBloques:
-        
+    cmp qword [rsi], 0
+    jz .done
+
+    push rdi
+    push rsi
+    sub rsp, 8  ; Aligned stack
+    mov rsi, [rsi]
+    call tdt_borrarBloque
+    add rsp, 8
+    pop rsi
+    pop rdi
+
+    add rsi, 8      ; Next block
+    jmp tdt_borrarBloques
+
+    .done: ret
+
 ; =====================================
 ; void tdt_traducir(tdt* tabla, uint8_t* clave, uint8_t* valor)
 tdt_traducir:
-        
+    ; RDI: tabla
+    ; ESI: *clave
+    ; RDX: valor
+    mov esi, [rsi]
+
+    ; rdi <- tN1 or ret
+    cmp qword [rdi+TDT_OFFSET_PRIMERA], 0
+    jz .done
+    mov rdi, [rdi+TDT_OFFSET_PRIMERA]
+
+    ; rdi <- tN2 or ret
+    movzx r10, sil
+    cmp qword [rdi+r10*8], 0
+    jz .done
+    mov rdi, [rdi+r10*8]
+
+    ; rdi <- tN3 or ret
+    shr esi, 8
+    movzx r10, sil
+    cmp qword [rdi+r10*8], 0
+    jz .done
+    mov rdi, [rdi+r10*8]
+
+    ; ret if !valor.valido
+    shr esi, 4
+    and si, 0x0ff0
+    movzx r10, sil
+    cmp byte [rdi+r10+7], 0
+    jnz .done
+
+    ; copy the value
+    mov rsi, [rdi+r10+7]
+    mov rdi, rdx
+    movsd
+    movsw
+    movsb
+
+    .done: ret
+
 ; =====================================
 ; void tdt_traducirBloque(tdt* tabla, bloque* b)
 tdt_traducirBloque:
+    lea rdx, [rsi+BLOQUE_OFFSET_VALOR]    ; rdx <- &(bloque->valor)
+    jmp tdt_traducir
+    ret
 
 ; =====================================
 ; void tdt_traducirBloques(tdt* tabla, bloque** b)
 tdt_traducirBloques:
-        
+    cmp qword [rsi], 0
+    jz .done
+
+    push rdi
+    push rsi
+    sub rsp, 8  ; Aligned stack
+    mov rsi, [rsi]
+    call tdt_traducirBloque
+    add rsp, 8
+    pop rsi
+    pop rdi
+
+    add rsi, 8      ; Next block
+    jmp tdt_traducirBloques
+
+    .done: ret
+
 ; =====================================
 ; void tdt_destruir(tdt** tabla)
 tdt_destruir:
+    ; RDI -> r15: &tabla
+    ; R8:  tabla
+    ; R14:  t1
+    ; R13: t2
+    push r15
+    push r14
+    push r13    ; Aligned stack
+    mov r15, rdi
+    mov r8, [rdi]
 
+    mov r14, [r8+TDT_OFFSET_PRIMERA]
+    cmp r14, 0
+    jz .doneT1
+
+        ; For j in 256..1
+        mov rcx, 256
+        .t1Loop:
+            push rcx
+            sub rsp, 8  ; Aligned stack
+
+            mov r13, [r14 + rcx - 1]
+            cmp r13, 0
+            jz .doneT2
+
+                ; For i in 256..1
+                mov rcx, 256
+                .t2Loop:
+                    ; Free the ith entry of t2
+                    mov rdi, [r13 + rcx -1]
+                    call free
+                loop .t2Loop
+
+                ; Free t2
+                mov rdi, r13
+                call free
+            .doneT2:
+
+            add rsp, 8
+            pop rcx
+        loop .t1Loop
+
+        ; Free t1
+        mov rdi,r14
+        call free
+    .doneT1:
+
+    ; Free the id string
+    mov r8, [r15]
+    mov rdi, [r8+TDT_OFFSET_IDENTIFICACION]
+    call free
+
+    ; Free the table
+    mov rdi, [r15]
+    call free
+    mov qword [r15], 0
+
+    pop r13
+    pop r14
+    pop r15
+    ret
 

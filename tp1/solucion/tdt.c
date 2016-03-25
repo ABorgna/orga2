@@ -10,17 +10,17 @@ void tdt_agregar(tdt* tabla, uint8_t* clave, uint8_t* valor) {
     tdtN3 *t3;
 
     if(!tabla->primera) {
-        tabla->primera = (tdtN1*) malloc(sizeof(tdtN1));
+        tabla->primera = (tdtN1*) calloc(1,sizeof(tdtN1));
     }
     t1 = tabla->primera;
 
     if(!t1->entradas[clave[0]]) {
-        t1->entradas[clave[0]] = (tdtN2*) malloc(sizeof(tdtN2));
+        t1->entradas[clave[0]] = (tdtN2*) calloc(1,sizeof(tdtN2));
     }
     t2 = t1->entradas[clave[0]];
 
     if(!t2->entradas[clave[1]]) {
-        t2->entradas[clave[1]] = (tdtN3*) malloc(sizeof(tdtN3));
+        t2->entradas[clave[1]] = (tdtN3*) calloc(1,sizeof(tdtN3));
     }
     t3 = t2->entradas[clave[1]];
 
@@ -93,7 +93,7 @@ void tdt_imprimirTraducciones(tdt* tabla, FILE *pFile) {
 }
 
 maxmin* tdt_obtenerMaxMin(tdt* tabla) {
-    maxmin *mm = (maxmin*) calloc(1,sizeof(maxmin*));
+    maxmin *mm = (maxmin*) calloc(1,sizeof(maxmin));
     tdtN1 *t1;
     tdtN2 *t2;
     tdtN3 *t3;
