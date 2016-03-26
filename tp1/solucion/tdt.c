@@ -1,7 +1,7 @@
 #include "tdt.h"
 
 // Convertir de puntero generico a las parte alta o baja de un numero de 128b
-#define HIGH_64(x) *((uint64_t*)(x)+8)
+#define HIGH_64(x) *((uint64_t*)(x)+1)
 #define LOW_64(x) *((uint64_t*)(x))
 
 void tdt_agregar(tdt* tabla, uint8_t* clave, uint8_t* valor) {
@@ -99,7 +99,8 @@ maxmin* tdt_obtenerMaxMin(tdt* tabla) {
     tdtN3 *t3;
     valorValido val;
     uint16_t i,j,k;
-    uint8_t first = 1;
+    uint8_t first = 1, isGt,isL;
+    int8_t c;
 
     if(!(t1 = tabla->primera)) return mm;
 
@@ -112,32 +113,39 @@ maxmin* tdt_obtenerMaxMin(tdt* tabla) {
             for(i=0; i<256; i++) {
                 val = t3->entradas[i];
                 if(!val.valido) continue;
-                val.valido = 0;
 
-                if(first || HIGH_64(&val) > HIGH_64(mm->max_valor) ||
-                    (HIGH_64(&val) == HIGH_64(mm->max_valor) &&
-                     LOW_64(&val) > LOW_64(mm->max_valor))) {
-                    mm->max_clave[2] = k;
-                    mm->max_clave[1] = j;
-                    mm->max_clave[0] = i;
-                    memcpy(mm->max_valor,&val,15);
+                if(first) {
+                    isL = 1;
+                    isGt = 1;
+                    first = 0;
+                } else {
+                    isL = 0;
+                    isGt = 0;
+                    for(c=14; c >= 0; c--) {
+                        if(val.valor.val[c] < mm->min_valor[c]) {
+                            isL = 1;
+                            break;
+                        } else if(val.valor.val[c] > mm->min_valor[c]) {
+                            isGt = 1;
+                        }
+                    }
                 }
 
-                if(first || HIGH_64(&val) < HIGH_64(mm->min_valor) ||
-                    (HIGH_64(&val) == HIGH_64(mm->min_valor) &&
-                     LOW_64(&val) < LOW_64(mm->min_valor))) {
+                if(isL) {
                     mm->min_clave[2] = k;
                     mm->min_clave[1] = j;
                     mm->min_clave[0] = i;
                     memcpy(mm->min_valor,&val,15);
                 }
-
-                val.valido = 1;
-                first = 0;
+                if(isGt) {
+                    mm->max_clave[2] = k;
+                    mm->max_clave[1] = j;
+                    mm->max_clave[0] = i;
+                    memcpy(mm->max_valor,&val,15);
+                }
             }
         }
     }
-
     return mm;
 }
 
