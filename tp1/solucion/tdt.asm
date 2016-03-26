@@ -156,9 +156,8 @@ tdt_borrarBloques:
 ; void tdt_traducir(tdt* tabla, uint8_t* clave, uint8_t* valor)
 tdt_traducir:
     ; RDI: tabla
-    ; ESI: *clave
+    ; RSI: clave
     ; RDX: valor
-    mov esi, [rsi]
 
     ; rdi <- tN1 or ret
     cmp qword [rdi+TDT_OFFSET_PRIMERA], 0
@@ -166,29 +165,29 @@ tdt_traducir:
     mov rdi, [rdi+TDT_OFFSET_PRIMERA]
 
     ; rdi <- tN2 or ret
-    movzx r10, sil
+    movzx r10, byte [rsi]
     cmp qword [rdi+r10*8], 0
     jz .done
     mov rdi, [rdi+r10*8]
 
     ; rdi <- tN3 or ret
-    shr esi, 8
-    movzx r10, sil
+    movzx r10, byte [rsi+1]
     cmp qword [rdi+r10*8], 0
     jz .done
     mov rdi, [rdi+r10*8]
 
     ; ret if !valor.valido
-    shr esi, 4
-    and si, 0x0ff0
-    movzx r10, sil
-    cmp byte [rdi+r10+15], 0
+    movzx r10, byte [rsi+2]
+    shl r10, 1 ; t3 has 16B entries
+    cmp byte [rdi+r10*8+15], 0
     jz .done
 
     ; copy the value
-    lea rsi, [rdi+r10]
+    lea rsi, [rdi+r10*8]
     mov rdi, rdx
     cld
+    movsd
+    movsd
     movsd
     movsw
     movsb
@@ -200,7 +199,6 @@ tdt_traducir:
 tdt_traducirBloque:
     lea rdx, [rsi+BLOQUE_OFFSET_VALOR]    ; rdx <- &(bloque->valor)
     jmp tdt_traducir
-    ret
 
 ; =====================================
 ; void tdt_traducirBloques(tdt* tabla, bloque** b)

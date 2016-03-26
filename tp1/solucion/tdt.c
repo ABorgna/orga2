@@ -24,9 +24,12 @@ void tdt_agregar(tdt* tabla, uint8_t* clave, uint8_t* valor) {
     }
     t3 = t2->entradas[clave[1]];
 
+    if(!t3->entradas[clave[2]].valido) {
+        tabla->cantidad++;
+        t3->entradas[clave[2]].valido = 1;
+    }
+
     memcpy(&(t3->entradas[clave[2]]),valor,15);
-    t3->entradas[clave[2]].valido = 1;
-    tabla->cantidad++;
 }
 
 void tdt_borrar(tdt* tabla, uint8_t* clave) {
@@ -38,8 +41,11 @@ void tdt_borrar(tdt* tabla, uint8_t* clave) {
     if(!(t1 = tabla->primera)) return;
     if(!(t2 = t1->entradas[clave[0]])) return;
     if(!(t3 = t2->entradas[clave[1]])) return;
-    t3->entradas[clave[2]].valido = 0;
-    tabla->cantidad--;
+
+    if(t3->entradas[clave[2]].valido) {
+        tabla->cantidad--;
+        t3->entradas[clave[2]].valido = 0;
+    }
 
     for(i=0, anyValid = 0; i < 256; i++) anyValid |= t3->entradas[i].valido;
     if(!anyValid) {
@@ -65,7 +71,7 @@ void tdt_imprimirTraducciones(tdt* tabla, FILE *pFile) {
     tdtN2 *t2;
     tdtN3 *t3;
     valorValido val;
-    uint16_t i,j,k;
+    uint16_t i,j,k,c;
 
     fprintf(pFile, "- %s -\n", tabla->identificacion);
     if(!(t1 = tabla->primera)) return;
@@ -79,14 +85,11 @@ void tdt_imprimirTraducciones(tdt* tabla, FILE *pFile) {
             for(i=0; i<256; i++) {
                 val = t3->entradas[i];
                 if(!val.valido) continue;
-                val.valido = 0;
 
-                fprintf(pFile, "%2X%2X%2X => ", k,j,i);
-                fprintf(pFile, "%14lX", HIGH_64(&val));
-                fprintf(pFile, "%16lX", LOW_64(&val));
-                fprintf(pFile, "\n");
-
-                val.valido = 1;
+                fprintf(pFile, "%d-%d-%d = ", k,j,i);
+                for(c=0; c < 15; c++) {
+                    fprintf(pFile, "%d%s", val.valor.val[c],c==14? "\n" : "-");
+                }
             }
         }
     }
@@ -98,9 +101,11 @@ maxmin* tdt_obtenerMaxMin(tdt* tabla) {
     tdtN2 *t2;
     tdtN3 *t3;
     valorValido val;
-    uint16_t i,j,k;
+    uint16_t i,j,k,c;
     uint8_t first = 1, isGt,isL;
-    int8_t c;
+
+    memset(&(mm->min_valor),0xff,15);
+    memset(&(mm->min_clave),0xff,3);
 
     if(!(t1 = tabla->primera)) return mm;
 
@@ -117,32 +122,40 @@ maxmin* tdt_obtenerMaxMin(tdt* tabla) {
                 if(first) {
                     isL = 1;
                     isGt = 1;
+                    mm->min_clave[0] = k;
+                    mm->min_clave[1] = j;
+                    mm->min_clave[2] = i;
                     first = 0;
                 } else {
                     isL = 0;
                     isGt = 0;
-                    for(c=14; c >= 0; c--) {
+                    for(c=0; c < 15; c++) {
                         if(val.valor.val[c] < mm->min_valor[c]) {
                             isL = 1;
                             break;
-                        } else if(val.valor.val[c] > mm->min_valor[c]) {
+                        } else if (val.valor.val[c] > mm->min_valor[c]) {
+                       break;
+                        }
+                    }
+                    for(c=0; c < 15; c++) {
+                        if(val.valor.val[c] > mm->max_valor[c]) {
                             isGt = 1;
+                            break;
+                        } else if(val.valor.val[c] < mm->max_valor[c]) {
+                            break;
                         }
                     }
                 }
 
                 if(isL) {
-                    mm->min_clave[2] = k;
-                    mm->min_clave[1] = j;
-                    mm->min_clave[0] = i;
                     memcpy(mm->min_valor,&val,15);
                 }
                 if(isGt) {
-                    mm->max_clave[2] = k;
-                    mm->max_clave[1] = j;
-                    mm->max_clave[0] = i;
                     memcpy(mm->max_valor,&val,15);
                 }
+                mm->max_clave[0] = k;
+                mm->max_clave[1] = j;
+                mm->max_clave[2] = i;
             }
         }
     }
