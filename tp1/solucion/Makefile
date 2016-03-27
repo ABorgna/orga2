@@ -3,7 +3,7 @@ CFLAGS=-Wall -Wextra -pedantic -O0 -ggdb -lm -Wno-unused-parameter
 NASM=nasm
 NASMFLAGS=-f elf64 -g -F DWARF
 
-targets = main tester test
+targets = main tester test ej3
 
 all: $(targets)
 
