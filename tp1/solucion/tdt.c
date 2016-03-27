@@ -1,9 +1,5 @@
 #include "tdt.h"
 
-// Convertir de puntero generico a las parte alta o baja de un numero de 128b
-#define HIGH_64(x) *((uint64_t*)(x)+1)
-#define LOW_64(x) *((uint64_t*)(x))
-
 void tdt_agregar(tdt* tabla, uint8_t* clave, uint8_t* valor) {
     tdtN1 *t1;
     tdtN2 *t2;
@@ -86,10 +82,11 @@ void tdt_imprimirTraducciones(tdt* tabla, FILE *pFile) {
                 val = t3->entradas[i];
                 if(!val.valido) continue;
 
-                fprintf(pFile, "%d-%d-%d = ", k,j,i);
+                fprintf(pFile, "%02X%02X%02X => ", k,j,i);
                 for(c=0; c < 15; c++) {
-                    fprintf(pFile, "%d%s", val.valor.val[c],c==14? "\n" : "-");
+                    fprintf(pFile, "%02X", val.valor.val[c]);
                 }
+                fprintf(pFile, "\n");
             }
         }
     }
