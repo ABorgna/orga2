@@ -3,12 +3,11 @@ CFLAGS=-Wall -Wextra -pedantic -O0 -ggdb -lm -Wno-unused-parameter
 NASM=nasm
 NASMFLAGS=-f elf64 -g -F DWARF
 
-all: main tester
+targets = main tester test
 
-main: main.c tdt_c.o tdt_asm.o
-	$(CC) $(CFLAGS) $^ -o $@
+all: $(targets)
 
-tester: tester.c tdt_c.o tdt_asm.o
+$(targets): % : %.c tdt_c.o tdt_asm.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 tdt_asm.o: tdt.asm
@@ -19,5 +18,5 @@ tdt_c.o: tdt.c
 
 clean:
 	rm -f *.o
-	rm -f main tester
+	rm -f $(targets)
 	rm -f salida.caso.*
