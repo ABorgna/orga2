@@ -73,9 +73,9 @@ tdt_recrear:
 
     ; rdi <- newId ? newId : tabla->id
     cmp rsi, 0
-    cmovz rsi, [r15] ; rsi <- tabla
-    cmovz rsi, [rsi] ; rsi <- tabla->id
-    mov rdi, rsi
+    cmovnz rdi, rsi
+    cmovz rdi, [r15] ; rdi <- tabla
+    cmovz rdi, [rdi] ; rdi <- tabla->id
 
     ; r14 <- newTabla
     call tdt_crear
@@ -106,51 +106,9 @@ tdt_agregarBloque:
     jmp tdt_agregar
 
 ; =====================================
-; void tdt_agregarBloques(tdt* tabla, bloque** b)
-tdt_agregarBloques:
-
-    cmp qword [rsi], 0
-    jz .done
-
-    push rdi
-    push rsi
-    sub rsp, 8  ; Stack aligned
-    mov rsi, [rsi]
-    call tdt_agregarBloque
-    add rsp, 8
-    pop rsi
-    pop rdi
-
-    add rsi, 8      ; Next block
-    jmp tdt_agregarBloques
-
-    .done:
-    ret
-
-; =====================================
 ; void tdt_borrarBloque(tdt* tabla, bloque* b)
 tdt_borrarBloque:
     jmp tdt_borrar
-
-; =====================================
-; void tdt_borrarBloques(tdt* tabla, bloque** b)
-tdt_borrarBloques:
-    cmp qword [rsi], 0
-    jz .done
-
-    push rdi
-    push rsi
-    sub rsp, 8  ; Stack aligned
-    mov rsi, [rsi]
-    call tdt_borrarBloque
-    add rsp, 8
-    pop rsi
-    pop rdi
-
-    add rsi, 8      ; Next block
-    jmp tdt_borrarBloques
-
-    .done: ret
 
 ; =====================================
 ; void tdt_traducir(tdt* tabla, uint8_t* clave, uint8_t* valor)
@@ -186,8 +144,7 @@ tdt_traducir:
     lea rsi, [rdi+r10*8]
     mov rdi, rdx
     cld
-    movsd
-    movsd
+    movsq
     movsd
     movsw
     movsb
@@ -199,26 +156,6 @@ tdt_traducir:
 tdt_traducirBloque:
     lea rdx, [rsi+BLOQUE_OFFSET_VALOR]    ; rdx <- &(bloque->valor)
     jmp tdt_traducir
-
-; =====================================
-; void tdt_traducirBloques(tdt* tabla, bloque** b)
-tdt_traducirBloques:
-    cmp qword [rsi], 0
-    jz .done
-
-    push rdi
-    push rsi
-    sub rsp, 8  ; Stack aligned
-    mov rsi, [rsi]
-    call tdt_traducirBloque
-    add rsp, 8
-    pop rsi
-    pop rdi
-
-    add rsi, 8      ; Next block
-    jmp tdt_traducirBloques
-
-    .done: ret
 
 ; =====================================
 ; void tdt_destruir(tdt** tabla)
@@ -283,5 +220,53 @@ tdt_destruir:
     pop r13
     pop r14
     pop r15
+    ret
 
+; =====================================
+; void tdt_agregarBloques(tdt* tabla, bloque** b)
+tdt_agregarBloques:
+    mov rdx, tdt_agregarBloque
+    jmp processBloques
+
+; =====================================
+; void tdt_borrarBloques(tdt* tabla, bloque** b)
+tdt_borrarBloques:
+    mov rdx, tdt_borrarBloque
+    jmp processBloques
+
+; =====================================
+; void tdt_traducirBloques(tdt* tabla, bloque** b)
+tdt_traducirBloques:
+    mov rdx, tdt_traducirBloque
+    jmp processBloques
+
+; =====================================
+; Procesar todos los bloques del arreglo con la funcion
+; a la que apunta rdx (tal vez quedaria mejor en un macro)
+processBloques:
+    ; RDI: tdt* tabla
+    ; RSI: bloque** b
+    ; RDX: targetFunctionAddr
+
+    ; Return if *bloque = NULL
+    cmp qword [rsi], 0
+    jz .done
+
+    push rdi
+    push rsi
+    push rdx  ; Stack aligned
+
+    mov rsi, [rsi]
+    call rdx
+
+    pop rdx
+    pop rsi
+    pop rdi
+
+    ; Next block
+    add rsi, 8
+    jmp processBloques
+
+    .done:
+    ret
 
