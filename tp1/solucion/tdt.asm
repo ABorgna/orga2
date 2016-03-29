@@ -6,7 +6,7 @@
   extern strlen
   extern tdt_agregar
   extern tdt_borrar
-  
+
 ; FUNCIONES
   global tdt_crear
   global tdt_recrear
@@ -36,7 +36,7 @@ tdt_crear:
     ; No stack frame needed (no local vars nor args in stack)
 
     ; rdi <- strlen(id) + 1 | Calc newId size
-    push rdi        ; Aligned stack | [sp+8] = id
+    push rdi        ; Stack aligned | [rsp] = id
     call strlen
     lea rdi, [rax + 1]  ; rdi <- len(id) + 1 = sizeof(*id)
 
@@ -45,7 +45,7 @@ tdt_crear:
 
     ; rax <- newId | Copy id(rsi) contents to newId(rax)
     pop rsi
-    push rax        ; Aligned stack | [sp+8] = newId
+    push rax        ; Stack aligned | [rsp] = newId
     mov rdi, rax
     call strcpy
 
@@ -68,7 +68,7 @@ tdt_recrear:
     ; No stack frame needed (no local vars nor args in stack)
     push r15
     push r14
-    sub rsp, 8        ; Aligned stack
+    sub rsp, 8        ; Stack aligned
     mov r15, rdi    ; r15 <- &tabla
 
     ; rdi <- newId ? newId : tabla->id
@@ -114,7 +114,7 @@ tdt_agregarBloques:
 
     push rdi
     push rsi
-    sub rsp, 8  ; Aligned stack
+    sub rsp, 8  ; Stack aligned
     mov rsi, [rsi]
     call tdt_agregarBloque
     add rsp, 8
@@ -140,7 +140,7 @@ tdt_borrarBloques:
 
     push rdi
     push rsi
-    sub rsp, 8  ; Aligned stack
+    sub rsp, 8  ; Stack aligned
     mov rsi, [rsi]
     call tdt_borrarBloque
     add rsp, 8
@@ -208,7 +208,7 @@ tdt_traducirBloques:
 
     push rdi
     push rsi
-    sub rsp, 8  ; Aligned stack
+    sub rsp, 8  ; Stack aligned
     mov rsi, [rsi]
     call tdt_traducirBloque
     add rsp, 8
@@ -229,7 +229,7 @@ tdt_destruir:
     ; R13: t2
     push r15
     push r14
-    push r13    ; Aligned stack
+    push r13    ; Stack aligned
     mov r15, rdi
     mov r8, [rdi]
 
@@ -249,14 +249,14 @@ tdt_destruir:
                 mov rcx, 256
                 .t2Loop:
                     ; Free the ith entry of t2
-                    push rcx  ; Aligned stack
+                    push rcx  ; Stack aligned
                     mov rdi, [r13 + rcx * 8 - 8]
                     call free
                     pop rcx
                 loop .t2Loop
 
                 ; Free t2
-                sub rsp, 8  ; Aligned stack
+                sub rsp, 8  ; Stack aligned
                 mov rdi, r13
                 call free
 
@@ -283,5 +283,5 @@ tdt_destruir:
     pop r13
     pop r14
     pop r15
-    ret
+
 
