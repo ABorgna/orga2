@@ -2,8 +2,6 @@
   extern calloc
   extern malloc
   extern free
-  extern strcpy
-  extern strlen
   extern tdt_agregar
   extern tdt_borrar
 
@@ -35,47 +33,54 @@ tdt_crear:
     ; RDI: id
     ; No stack frame needed (no local vars nor args in stack)
 
-    ; rdi <- strlen(id) + 1 | Calc newId size
-    push rdi        ; Stack aligned | [rsp] = id
-    call strlen
-    lea rdi, [rax + 1]  ; rdi <- len(id) + 1 = sizeof(*id)
+    ; rcx <- |str|, calc newId size (including terminator)
+    push rdi ; Stack aligned, [rsp] = id
+    mov rcx, -1
+    xor rax, rax
+    repnz scasb
+    not rcx
 
-    ; rax <- malloc(rdi) | Allocate newId
+    ; rax <- newId
+    push rcx
+    sub rsp, 8 ; Stack aligned
+    mov rdi, rcx
+    call malloc
+    add rsp, 8
+    pop rcx
+    pop rsi
+
+    ; Copy id(rsi) contents to newId(rax)
+    push rax
+    mov rdi, rax
+    rep movsb
+
+    ; rax <- newTDT
+    mov rdi, TDT_SIZE
     call malloc
 
-    ; rax <- newId | Copy id(rsi) contents to newId(rax)
-    pop rsi
-    push rax        ; Stack aligned | [rsp] = newId
-    mov rdi, rax
-    call strcpy
-
-    ; rax <- calloc(1,TDT_SIZE) | Allocate and zero new TDT
-    mov rdi, 1
-    mov rsi, TDT_SIZE
-    call calloc
-
-    ; rax[IDENTIFICACION] = newId(r15)
-    pop rdi
-    mov [rax], rdi
+    ; initialize the TDT
+    pop qword [rax + TDT_OFFSET_IDENTIFICACION]
+    mov qword [rax + TDT_OFFSET_PRIMERA], qword 0
+    mov [rax + TDT_OFFSET_CANTIDAD], dword 0
 
     ret
 
 ; =====================================
 ; void tdt_recrear(tdt** tabla, char* identificacion)
 tdt_recrear:
-    ; RDI: &tabla
+    ; RDI: *tabla
     ; RSI: newId
     ; No stack frame needed (no local vars nor args in stack)
     push r15
     push r14
-    sub rsp, 8        ; Stack aligned
-    mov r15, rdi    ; r15 <- &tabla
+    sub rsp, 8 ; Stack aligned
+    mov r15, rdi ; r15 <- *tabla
 
     ; rdi <- newId ? newId : tabla->id
     cmp rsi, 0
     cmovnz rdi, rsi
-    cmovz rdi, [r15] ; rdi <- tabla
-    cmovz rdi, [rdi] ; rdi <- tabla->id
+    cmovz rax, [r15] ; rax <- tabla
+    cmovz rdi, [rax+TDT_OFFSET_IDENTIFICACION] ; rdi <- tabla->id
 
     ; r14 <- newTabla
     call tdt_crear
@@ -143,7 +148,6 @@ tdt_traducir:
     ; copy the value
     lea rsi, [rdi+r10*8]
     mov rdi, rdx
-    cld
     movsq
     movsd
     movsw
