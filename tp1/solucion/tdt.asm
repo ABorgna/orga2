@@ -1,5 +1,4 @@
 ; FUNCIONES de C
-  extern calloc
   extern malloc
   extern free
   extern tdt_agregar
@@ -71,31 +70,27 @@ tdt_recrear:
     ; RDI: *tabla
     ; RSI: newId
     ; No stack frame needed (no local vars nor args in stack)
-    push r15
-    push r14
-    sub rsp, 8 ; Stack aligned
-    mov r15, rdi ; r15 <- *tabla
+    push rdi ; Stack aligned
 
     ; rdi <- newId ? newId : tabla->id
     cmp rsi, 0
     cmovnz rdi, rsi
-    cmovz rax, [r15] ; rax <- tabla
+    cmovz rax, [rdi] ; rax <- tabla
     cmovz rdi, [rax+TDT_OFFSET_IDENTIFICACION] ; rdi <- tabla->id
 
-    ; r14 <- newTabla
+    ; rax <- newTabla
     call tdt_crear
-    mov r14, rax
 
-    ; destruir tabla
-    mov rdi, r15
+    ; [rsp] = oldTabla, *tabla = &newTabla
+    pop rdi
+    push qword [rdi] ; Stack aligned
+    mov [rdi], rax
+
+    ; destruir oldTabla
+    mov rdi, rsp
     call tdt_destruir
-
-    ; [r15] <- newTabla
-    mov [r15], r14
-
     add rsp, 8
-    pop r14
-    pop r15
+
     ret
 
 ; =====================================
