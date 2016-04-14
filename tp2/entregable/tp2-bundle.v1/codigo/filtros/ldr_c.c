@@ -11,14 +11,14 @@ void ldr_c (
     unsigned char *dst,
     int cols,
     int filas,
-    int src_row_size,
-    int dst_row_size,
+    int src_row_size __attribute__((unused)),
+    int dst_row_size __attribute__((unused)),
     int alpha)
 {
     const int LDR_MAX = 5 * 5 * 255 * 3 * 255;
 
-    bgra_t (*src_matrix)[src_row_size] = (bgra_t(*)[src_row_size]) src;
-    bgra_t (*dst_matrix)[dst_row_size] = (bgra_t(*)[dst_row_size]) dst;
+    bgra_t (*src_matrix)[cols] = (bgra_t(*)[cols]) src;
+    bgra_t (*dst_matrix)[cols] = (bgra_t(*)[cols]) dst;
 
     for (int i = 0; i < filas; i++) {
         for (int j = 0; j < cols; j++) {
