@@ -15,7 +15,7 @@ void ldr_c (
     int dst_row_size,
     int alpha)
 {
-    const unsigned int LDR_MAX = 5 * 5 * 255 * 3 * 255;
+    const int LDR_MAX = 5 * 5 * 255 * 3 * 255;
 
     bgra_t (*src_matrix)[src_row_size] = (bgra_t(*)[src_row_size]) src;
     bgra_t (*dst_matrix)[dst_row_size] = (bgra_t(*)[dst_row_size]) dst;
@@ -24,8 +24,9 @@ void ldr_c (
         for (int j = 0; j < cols; j++) {
             bgra_t pixel = src_matrix[i][j * 4];
 
+            // Copiamos directamente los bordes
             if(i >= 2 && i < filas-2 && j >= 2 && j < cols-2) {
-                unsigned int acum = 0;
+                int acum = 0;
 
                 for(char di = -2; di <= 2; di++) {
                     for(char dj = -2; dj <= 2; dj++) {
