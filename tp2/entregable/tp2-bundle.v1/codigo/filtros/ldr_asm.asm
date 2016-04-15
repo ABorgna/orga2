@@ -71,8 +71,6 @@ ldr_asm:
     movq mm1, [PIXEL_MAX]
     pinsrd xmm6, r10d, 0
     pinsrd xmm6, r10d, 1
-    pinsrd xmm6, r10d, 2
-    pinsrd xmm6, r10d, 3
     cvtdq2ps xmm6, xmm6
     movdq2q mm2, xmm6
 
@@ -349,46 +347,37 @@ ldr_asm:
         dec rcx
     jnz .magicLoop
 
-;   ; Do a direct copy of the first two lines
-;   ; Loop (4B * 2 * cols / 128b) = cols/2 times
-;   shr rcx, 1
-;   .copyUp:
-;       movdqu xmm0, [rdi]
-;       movdqu [rsi], xmm0
+    ; Do a direct copy of the first and last two lines
+    lea rbx, [rax*2+2] ; rbx = cols * 2 + 2 = pixels to copy
+    mov rsi, r8 ; rsi = src start
+    mov rdi, r9 ; rdi = dst start
+    call copyN
 
-;       add rdi, 16
-;       add rsi, 16
-;   loop .copyUp
-;   ; Copy the last two pixels if cols is odd
-;   test rax, 1
-;   jz .endCopyUp
-;       movq xmm0, [rdi]
-;       movq [rsi], xmm0
+    ; rax: cols
+    ; rdx: filas
+    ; r8: srcBase
+    ; r9: dstBase
+    ; startDir = (filas - 2) * row_size - 2 + base
+    lea r11, [rdx-2]
+    imul r11, rax
+    sub r11, 2
+    shl r11, 2 ; #pixels -> #bytes
+    lea rsi, [r11+r8]
+    lea rdi, [r11+r9]
+    call copyN
 
-;       add rdi, 8
-;       add rsi, 8
-;   .endCopyUp:
+    ; copia directa de los bordes
+    lea rsi, [r8 + r15 - 8]
+    lea rdi, [r9 + r15 - 8]
+    ; rcx = #filas-3 = ((filas-4)*cols+4)/4
+    lea rcx, [rdx-3]
+    .copyBorders:
+        movdqu xmm0, [rsi]
+        movdqu [rdi], xmm0
 
-;   ; Do a direct copy of the last two lines
-;   ; Loop (4B * 2 * cols / 128b) = cols/2 times
-;   mov rcx, rax
-;   shr rcx, 1
-;   .copyDown:
-;       movdqu xmm0, [rdi]
-;       movdqu [rsi], xmm0
-
-;       add rdi, 16
-;       add rsi, 16
-;   loop .copyDown
-;   ; Copy the last two pixels if cols is odd
-;   test rax, 1
-;   jz .endCopyDown
-;       movq xmm0, [rdi]
-;       movq [rsi], xmm0
-
-;       add rdi, 8
-;       add rsi, 8
-;   .endCopyDown:
+        add rsi, r14
+        add rdi, r14
+    loop .copyBorders
 
     pop r12
     pop r13
@@ -398,95 +387,81 @@ ldr_asm:
     pop rbp
     ret
 
-ldr_asm_ooo: ; Optimize for out of order operations
-    push rbp
-    mov rbp, rsp ; Stack aligned
+copyN:
+    ; Copy rbx pixels from [rsi] to [rdi]
+    ; Modifies rsi, rdi, rcx, r11, and xmm0-15
+    mov rcx, rbx
+    shr rcx, 6
+    jnz .copy64
+    jmp .copy64End
+    .copy64:
+        ; 64 pixels (256B) per loop
+        movdqu xmm0, [rsi]
+        movdqu xmm1, [rsi+16]
+        movdqu xmm2, [rsi+32]
+        movdqu xmm3, [rsi+48]
+        movdqu xmm4, [rsi+64]
+        movdqu xmm5, [rsi+80]
+        movdqu xmm6, [rsi+96]
+        movdqu xmm7, [rsi+112]
+        movdqu xmm8, [rsi+128]
+        movdqu xmm9, [rsi+144]
+        movdqu xmm10, [rsi+160]
+        movdqu xmm11, [rsi+176]
+        movdqu xmm12, [rsi+192]
+        movdqu xmm13, [rsi+108]
+        movdqu xmm14, [rsi+124]
+        movdqu xmm15, [rsi+140]
 
-    ; r10 = src, r11 = dst
-    mov r10, rdi
-    mov r11, rsi
+        movdqu [rdi], xmm0
+        movdqu [rdi+16], xmm1
+        movdqu [rdi+32], xmm2
+        movdqu [rdi+48], xmm3
+        movdqu [rdi+64], xmm4
+        movdqu [rdi+80], xmm5
+        movdqu [rdi+96], xmm6
+        movdqu [rdi+112], xmm7
+        movdqu [rdi+128], xmm8
+        movdqu [rdi+144], xmm9
+        movdqu [rdi+160], xmm10
+        movdqu [rdi+176], xmm11
+        movdqu [rdi+192], xmm12
+        movdqu [rdi+108], xmm13
+        movdqu [rdi+124], xmm14
+        movdqu [rdi+140], xmm15
 
-    ; Do a direct copy of the first two lines
-    ; Loop (4B * 2 * filas / 128b / 8) = filas/16 times
-    shr rcx, 1
-    .copyUp:
-        ; https://stackoverflow.com/questions/1715224/very-fast-memcpy-for-image-processing
-        prefetchnta [rdi+128] ; Prefetch at least 32B
-        prefetchnta [rdi+160] ; TODO: Test with/without prefetchs
-        prefetchnta [rdi+192]
-        prefetchnta [rdi+224]
+        add rdi, 256
+        add rsi, 256
 
-        movdqu xmm0, [rdi]
-        movdqu xmm1, [rdi+16]
-        movdqu xmm2, [rdi+32]
-        movdqu xmm3, [rdi+48]
-        movdqu xmm4, [rdi+64]
-        movdqu xmm5, [rdi+80]
-        movdqu xmm6, [rdi+96]
-        movdqu xmm7, [rdi+112]
-
-        movntdq [rdi], xmm0
-        movntdq [rdi+16], xmm1
-        movntdq [rdi+32], xmm2
-        movntdq [rdi+48], xmm3
-        movntdq [rdi+64], xmm4
-        movntdq [rdi+80], xmm5
-        movntdq [rdi+96], xmm6
-        movntdq [rdi+112], xmm7
-
-        add rdi, 128
-        add rsi, 128
-    loop .copyUp
-
-
-    ; Loop over each line, except the first and last two
-    ; rbx = lineNum
-    lea rbx, [edx-4]
-    .lineLoop:
-        ; Do a direct copy of the first two columns
-        movq xmm0, [rdi]
-        movq [rsi], xmm0
-        add rdi, 8
-        add rsi, 8
-
-        ; Loop over each group of 4 pixel in the column, ignoring the first and last two
-        lea rcx, [rax-4]
-        shr rcx, 2
-        .colLoop:
-            ; TODO: PSHUFB or PUNPCKHBW & mask ? (test)
-
-
-            movdqu xmm4, [rdi]
-            movdqu xmm6, [rdi]
-
-
-            add rdi, 4
-            add rsi, 4
-        loop .colLoop
-
-        ; Do a direct copy of the last two columns
-        movq xmm0, [rdi]
-        movq [rsi], xmm0
-        add rdi, 8
-        add rsi, 8
-
-        inc ebx
-        cmp ebx, edx
-    jne .lineLoop
-
-
-
-    ; Do a direct copy of the last two lines
-    ; Loop (4B * 2 * filas / 128b) = filas/2 times
-    shr rcx, 1
-    .copyDown:
-        movq xmm0, [rdi]
-        movq [rsi], xmm0
+        dec rcx
+        jz .copy64End
+        jmp .copy64
+    .copy64End:
+    mov rcx, rbx
+    shr rcx, 2
+    and rcx, 0xf
+    jrcxz .copy4End
+    .copy4:
+        ; 4 pixels (16B) per loop
+        movq xmm0, [rsi]
+        movq [rdi], xmm0
 
         add rdi, 16
         add rsi, 16
-    loop .copyDown
+    loop .copy4
+    .copy4End:
+    mov rcx, rbx
+    and rcx, 0x3
+    jrcxz .copy1End
+    .copy1:
+        ; 1 pixel (4B) per loop
+        mov r11d, [rsi]
+        mov [rdi], r11d
 
-    pop rbp
+        add rdi, 4
+        add rsi, 4
+    loop .copy1
+    .copy1End:
+
     ret
 
