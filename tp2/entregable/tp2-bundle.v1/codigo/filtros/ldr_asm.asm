@@ -4,9 +4,9 @@ global ldr_asm
 section .data
 
 ; 1/max = 1/(5*5*255*3*255) = 1/4876875 ~= 2.050493399974369e-7
-align 16
-LDR_MAX_INV: dd 2.050493399974369e-7, 2.050493399974369e-7, \
-                2.050493399974369e-7, 2.050493399974369e-7
+align 8
+LDR_MAX_INV: dd 2.050493399974369e-7, 2.050493399974369e-7
+PIXEL_MAX: dd 255.0, 255.0
 
 section .text
 ;void ldr_asm    (
@@ -16,45 +16,42 @@ section .text
     ; ecx | int cols,
     ; r8d | int src_row_size,
     ; r9d | int dst_row_size,
-    ; bp+16 | char alpha
+    ; bp+16 | int alpha
 ;)
 ldr_asm:
-    ; Requires SSSE3
+    ; Requires SSE4.1
     push rbp
     mov rbp, rsp
     push rbx
     push r15 ; Stack aligned
+    push r14
+    push r13
+    push r12
+
+    ; line offsets
+    ; r12: -2
+    ; r13: -1
+    ; r14: +1
+    ; r15: +2
+    mov r13, r8
+    mov r14, r8
+    neg r13
+    lea r12, [r13*2]
+    lea r15, [r8*2]
 
     ; rax = cols
+    ; rdx = filas
+    ; r8 = src
+    ; r9 = dst
+    ; r10 = alpha
     ; rdi = current pixel src
     ; rsi = current pixel dst
-    ; r10 = src
-    ; r11 = dst
-    ; r15 = alpha
     mov rax, rcx
-    mov r10, rdi
-    mov r11, rsi
-    movzx r15, byte [rbp+16]
-
-    ; Do a direct copy of the first two lines
-    ; Loop (4B * 2 * cols / 128b) = cols/2 times
-    shr rcx, 1
-    .copyUp:
-        movdqu xmm0, [rdi]
-        movdqu [rsi], xmm0
-
-        add rdi, 16
-        add rsi, 16
-    loop .copyUp
-    ; Copy the last two pixels if cols is odd
-    test rax, 1
-    jz .endCopyUp
-        movq xmm0, [rdi]
-        movq [rsi], xmm0
-
-        add rdi, 8
-        add rsi, 8
-    .endCopyUp:
+    mov r8, rdi
+    mov r9, rsi
+    movsx r10, word [rbp+16]
+    mov rsi, r8
+    mov rdi, r9
 
     ; Recorrer la imagen linealmente de a grupos de 4,
     ; manteniendo la suma de los pixeles vecinos en xmm0-4
@@ -67,9 +64,28 @@ ldr_asm:
     ; xmm15 is always zero
     pxor xmm15, xmm15
 
-    ; Magic loop
-    ; TODO: generar cosas para las primeras dos columnas
-    ;mov rcx, ??
+    ; mm0 = | LDR_MAX_INV. | LDR_MAX_INV. |
+    ; mm1 = |     255.     |     255.     |
+    ; mm2 = |    alpha.    |    alpha.    |
+    movq mm0, [LDR_MAX_INV]
+    movq mm1, [PIXEL_MAX]
+    pinsrd xmm6, r10d, 0
+    pinsrd xmm6, r10d, 1
+    pinsrd xmm6, r10d, 2
+    pinsrd xmm6, r10d, 3
+    cvtdq2ps xmm6, xmm6
+    movdq2q mm2, xmm6
+
+    ; Empezamos a procesar desde fila2 - 4px
+    lea rsi, [r8 + r15 - 16]
+    lea rdi, [r9 + r15 - 16]
+
+    ; Magic loop, correr sobre ((filas-4)*cols+4)/4
+    lea rcx, [rdx-4]    ; rcx = filas-4
+    imul rcx, rax       ; rcx = (filas-4)*cols
+    add rcx, 4          ; rcx = (filas-4)*cols+4
+    shr rcx, 2          ; rcx = ((filas-4)*cols+4)/4
+
     .magicLoop:
 
         ; xmmL tiene la suma de los primeros 4 pixeles vecinos y la parte alta en 0
@@ -78,11 +94,11 @@ ldr_asm:
         ; load the new pixels
         ; ->
 ; | A7 | R7 | G7 | B7 | A6 | R6 | G6 | B6 | A5 | R5 | G5 | B5 | A4 | R4 | G4 | B4 | xmmN
-        ;movdqu xmm5, [] ; TODO
-        ;movdqu xmm6, []
-        ;movdqu xmm7, []
-        ;movdqu xmm8, []
-        ;movdqu xmm9, []
+        movdqu xmm5, [rsi+r12+16]
+        movdqu xmm6, [rsi+r13+16]
+        movdqu xmm7, [rsi+16]
+        movdqu xmm8, [rsi+r14+16]
+        movdqu xmm9, [rsi+r15+16]
 
         ; shift to clear the alpha bits
         ; ->
@@ -155,41 +171,41 @@ ldr_asm:
         movdqa xmm7, xmm2
         movdqa xmm8, xmm3
         movdqa xmm9, xmm4
-        psrld xmm0, 16 ; Desechar valor viejo j-2
-        psrld xmm1, 16
-        psrld xmm2, 16
-        psrld xmm3, 16
-        psrld xmm4, 16
+        psrldq xmm0, 2 ; Desechar valor viejo j-2
+        psrldq xmm1, 2
+        psrldq xmm2, 2
+        psrldq xmm3, 2
+        psrldq xmm4, 2
         paddw xmm5, xmm0 ; Sumar j-1
         paddw xmm6, xmm1
         paddw xmm7, xmm2
         paddw xmm8, xmm3
         paddw xmm9, xmm4
-        psrld xmm0, 16 ; Desechar valor viejo j-1
-        psrld xmm1, 16
-        psrld xmm2, 16
-        psrld xmm3, 16
-        psrld xmm4, 16
+        psrldq xmm0, 2 ; Desechar valor viejo j-1
+        psrldq xmm1, 2
+        psrldq xmm2, 2
+        psrldq xmm3, 2
+        psrldq xmm4, 2
         paddw xmm5, xmm0 ; Sumar j
         paddw xmm6, xmm1
         paddw xmm7, xmm2
         paddw xmm8, xmm3
         paddw xmm9, xmm4
-        psrld xmm0, 16 ; Desechar valor viejo j
-        psrld xmm1, 16
-        psrld xmm2, 16
-        psrld xmm3, 16
-        psrld xmm4, 16
+        psrldq xmm0, 2 ; Desechar valor viejo j
+        psrldq xmm1, 2
+        psrldq xmm2, 2
+        psrldq xmm3, 2
+        psrldq xmm4, 2
         paddw xmm5, xmm0 ; Sumar j+1
         paddw xmm6, xmm1
         paddw xmm7, xmm2
         paddw xmm8, xmm3
         paddw xmm9, xmm4
-        psrld xmm0, 16 ; Desechar valor viejo j+1
-        psrld xmm1, 16
-        psrld xmm2, 16
-        psrld xmm3, 16
-        psrld xmm4, 16
+        psrldq xmm0, 2 ; Desechar valor viejo j+1
+        psrldq xmm1, 2
+        psrldq xmm2, 2
+        psrldq xmm3, 2
+        psrldq xmm4, 2
         paddw xmm5, xmm0 ; Sumar j+2
         paddw xmm6, xmm1
         paddw xmm7, xmm2
@@ -207,10 +223,8 @@ ldr_asm:
         ; Cargar alpha en xmm6 por cuadriplicado en fp
         ; ->
 ;|       alpha.      |       alpha.      |       alpha.      |       alpha.      | xmm6
-        pinsrw xmm6, r15w, 0
-        pshuflw xmm6, xmm6, 0
-        punpcklwd xmm6, xmm15
-        cvtdq2ps xmm6, xmm6
+        movq2dq xmm6, mm2
+        movddup xmm6, xmm6
 
         ; Expandir las sumas y, convertirlas a fp y multiplicarlas por alpha
         ; ->
@@ -222,7 +236,8 @@ ldr_asm:
         ; Cargamos el 1/max en xmm14 en fp
         ; ->
 ;|      1/MAX.       |      1/MAX.       |      1/MAX.       |      1/MAX.       | xmm14
-        movdqa xmm14, [LDR_MAX_INV]
+        movq2dq xmm14, mm0
+        movddup xmm14, xmm14
 
         ; Movemos las sumas cada una replicada en un vector
         ; ->
@@ -238,7 +253,7 @@ ldr_asm:
         ; cargamos los valores de los pixeles a xmm9
         ; ->
 ;| R3 | G3 | B3 |  0 | R2 | G2 | B2 |  0 | R1 | G1 | B1 |  0 | R0 | G0 | B0 |  0 | xmm9
-        ;movdqu xmm9, [] ;TODO
+        movdqu xmm9, [rsi]
         pslld xmm9, 8 ; Clear the alpha bytes
 
         ; Separar los valores de cada pixel, mandarlos a double word, convertirlos a fp
@@ -286,10 +301,26 @@ ldr_asm:
 ;|       ldrR2.      |       ldrG2.      |       ldrB2.      |         0.        | xmm6
 ;|       ldrR1.      |       ldrG1.      |       ldrB1.      |         0.        | xmm7
 ;|       ldrR0.      |       ldrG0.      |       ldrB0.      |         0.        | xmm8
-        vfmadd123ps xmm5, xmm9, xmm14
-        vfmadd123ps xmm6, xmm10, xmm14
-        vfmadd123ps xmm7, xmm11, xmm14
-        vfmadd123ps xmm8, xmm12, xmm14
+        vfmadd132ps xmm5, xmm9, xmm14
+        vfmadd132ps xmm6, xmm10, xmm14
+        vfmadd132ps xmm7, xmm11, xmm14
+        vfmadd132ps xmm8, xmm12, xmm14
+
+        ; Cargamos 255 para aplicar max/min
+        ; ->
+;|       255.        |       255.        |       255.        |       255.        | xmm13
+        movq2dq xmm13, mm1
+        movddup xmm13, xmm13
+
+        ; Aplicar min(max(xmmN,0.),255.)
+        maxps xmm5, xmm15
+        maxps xmm6, xmm15
+        maxps xmm7, xmm15
+        maxps xmm8, xmm15
+        minps xmm5, xmm13
+        minps xmm6, xmm13
+        minps xmm7, xmm13
+        minps xmm8, xmm13
 
         ; Convert the numbers back to integers
         ; ->
@@ -304,38 +335,64 @@ ldr_asm:
 
         ; Pack the results into a single line again
         ; ->
-;| R3 | G3 | B3 |  0 | R2 | G2 | B2 |  0 | R1 | G1 | B1 |  0 | R0 | G0 | B0 |  0 | xmm8
+;|  0 | R3 | G3 | B3 |  0 | R2 | G2 | B2 |  0 | R1 | G1 | B1 |  0 | R0 | G0 | B0 | xmm8
         packusdw xmm8, xmm7
         packusdw xmm6, xmm5
         packuswb xmm8, xmm6
+        psrld xmm8, 8
 
         ; Store in the destination
-        ;movdqu [], xmm9 ;TODO
+        movdqu [rdi], xmm8
 
+        add rsi, 16
+        add rdi, 16
         dec rcx
     jnz .magicLoop
 
-    ; Do a direct copy of the last two lines
-    ; Loop (4B * 2 * cols / 128b) = cols/2 times
-    mov rcx, rax
-    shr rcx, 1
-    .copyDown:
-        movdqu xmm0, [rdi]
-        movdqu [rsi], xmm0
+;   ; Do a direct copy of the first two lines
+;   ; Loop (4B * 2 * cols / 128b) = cols/2 times
+;   shr rcx, 1
+;   .copyUp:
+;       movdqu xmm0, [rdi]
+;       movdqu [rsi], xmm0
 
-        add rdi, 16
-        add rsi, 16
-    loop .copyDown
-    ; Copy the last two pixels if cols is odd
-    test rax, 1
-    jz .endCopyDown
-        movq xmm0, [rdi]
-        movq [rsi], xmm0
+;       add rdi, 16
+;       add rsi, 16
+;   loop .copyUp
+;   ; Copy the last two pixels if cols is odd
+;   test rax, 1
+;   jz .endCopyUp
+;       movq xmm0, [rdi]
+;       movq [rsi], xmm0
 
-        add rdi, 8
-        add rsi, 8
-    .endCopyDown:
+;       add rdi, 8
+;       add rsi, 8
+;   .endCopyUp:
 
+;   ; Do a direct copy of the last two lines
+;   ; Loop (4B * 2 * cols / 128b) = cols/2 times
+;   mov rcx, rax
+;   shr rcx, 1
+;   .copyDown:
+;       movdqu xmm0, [rdi]
+;       movdqu [rsi], xmm0
+
+;       add rdi, 16
+;       add rsi, 16
+;   loop .copyDown
+;   ; Copy the last two pixels if cols is odd
+;   test rax, 1
+;   jz .endCopyDown
+;       movq xmm0, [rdi]
+;       movq [rsi], xmm0
+
+;       add rdi, 8
+;       add rsi, 8
+;   .endCopyDown:
+
+    pop r12
+    pop r13
+    pop r14
     pop r15
     pop rbx
     pop rbp
