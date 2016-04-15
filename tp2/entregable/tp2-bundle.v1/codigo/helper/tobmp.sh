@@ -5,5 +5,5 @@ if [[ $# -ne 2 ]]; then
     exit 1;
 fi
 
-convert "$1" -colorspace rgb -type truecolor -depth 8 -colors 256 +compress -alpha on "$2"
+convert "$1" -colorspace rgb -type TrueColor -depth 8 -alpha on -compress none "BMP3:$2"
 

@@ -14,7 +14,7 @@ if [[ ! $FILE =~ "PC bitmap" ]]; then
     echo $FILE
     exit 2;
 fi
-if [[ ! $CHAN == "srgba" ]]; then
+if [[ ! $CHAN == "srgb" ]]; then
     echo "Invalid channels: $CHAN"
     exit 3;
 fi
