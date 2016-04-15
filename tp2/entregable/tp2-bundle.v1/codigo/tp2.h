@@ -1,8 +1,8 @@
-
 #ifndef __TP2__H__
 #define __TP2__H__
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define FILTRO_C   0
 #define FILTRO_ASM 1
