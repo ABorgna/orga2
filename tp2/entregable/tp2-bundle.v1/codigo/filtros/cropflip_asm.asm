@@ -52,37 +52,37 @@ cropflip_asm:
 	movsx r12, dword [rbp+24]
 	mov rdx, r12
 	movsx r13, dword [rbp+16]
-	sar r13, 2					; r13 <- tamx/4
+	sar r13, 2			; r13 <- tamx/4
 	movsx r10, dword [rbp+32]
 	movsx r11, dword [rbp+40]
 	
 	movsxd r8, r8d 				
 	movsxd r9, r9d		
 			
-	mov r14, r11				; src1 = offsety
-	imul r14, r8				; src1 = offsety*src_row_size
+	mov r14, r11			; src1 = offsety
+	imul r14, r8			; src1 = offsety*src_row_size
 	lea r14, [r14+ 4*r11]   	; src1 = 4*offstx + offsety*src_row_size
 	lea r14, [r14 + rdi]		; src1 = src + 4*offstx + offsety*src_row_size
 	
-	mov r15, r12				; dst1 = tamy
-	dec r15						; dst1 = tamy -1
-	imul r15, r9				; dst1 = (tamy-1)*dst_row_size
+	mov r15, r12			; dst1 = tamy
+	dec r15				; dst1 = tamy -1
+	imul r15, r9			; dst1 = (tamy-1)*dst_row_size
 	lea r15, [r15 + rsi]		; dst1 = dst + (tamy-1)*dst_row_size
 	
 
 
 
-	;		rdi  | src
+	;		rdi	 | src
 	;		rsi	 | dst
 	;		rdx	 | iterador filas / "i" 	
-	;		rcx  | iterador columnas / "j" 	
-	;       r8   | src_row_size,
-	;       r9   | dst_row_size,
-	;		r10  | offsetx
-	;		r11  | offsety
-	;		r12  | tamy
-	;		r13  | tamx/4
-	;		r14  | src1 
+	;		rcx	 | iterador columnas / "j" 	
+			r8   	 | src_row_size,
+			r9   	 | dst_row_size,
+	;		r10  	 | offsetx
+	;		r11  	 | offsety
+	;		r12  	 | tamy
+	;		r13  	 | tamx/4
+	;		r14  	 | src1 
 	;		r15	 | dst1
 	;		Loop in y: tamy times
 	; 		Loop in x: (32b * tamx / 128b) = tamx/4 times
