@@ -5,5 +5,10 @@ if [[ $# -ne 2 ]]; then
     exit 1;
 fi
 
-convert "$1" -colorspace rgb -type TrueColor -depth 8 -alpha on -compress none "BMP3:$2"
+# Resize the image's width to the nearest multiple of 8
+width="$(identify -format '%w' "$1")"
+newWidth="$(expr $width - $width % 8)"
+
+convert "$1" -resize ${newWidth}x -colorspace rgb -type TrueColor \
+   -channel rgb -depth 8 -alpha on -compress none "BMP3:$2"
 
