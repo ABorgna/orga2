@@ -76,8 +76,8 @@ cropflip_asm:
 	;		rsi	 | dst
 	;		rdx	 | iterador filas / "i" 	
 	;		rcx	 | iterador columnas / "j" 	
-			r8   	 | src_row_size,
-			r9   	 | dst_row_size,
+	;		r8   	 | src_row_size,
+	;		r9   	 | dst_row_size,
 	;		r10  	 | offsetx
 	;		r11  	 | offsety
 	;		r12  	 | tamy
