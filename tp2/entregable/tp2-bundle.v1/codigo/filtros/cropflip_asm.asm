@@ -30,8 +30,6 @@ section .text
 cropflip_asm:
 	push rbp
 	mov rbp, rsp
-	push r10
-	push r11
 	push r12
 	push r13
 	push r14
@@ -41,24 +39,22 @@ cropflip_asm:
 	mov rdx, r12
 
 	movsx r13, dword [rbp+16]
-	sar r13, 2								; r13 <- tamx/4
+	sar r13, 2					; r13 <- tamx/4
 
 	movsx r10, dword [rbp+32]
 	movsx r11, dword [rbp+40]
 	
-	movsxd r8, r8d 		
+	movsxd r8, r8d 					
 	movsxd r9, r9d		
 
-	mov rax, r8								; rax = src_row_size
-	add rax, r9								; rax = src_row_size + dst_row_size	
+	mov rax, r8					; rax = src_row_size
+	add rax, r9					; rax = src_row_size + dst_row_size	
 			
-	movsxd r14, ecx						; src1 = filas
-	dec r14									; srci = filas-1
-	imul r14, r8							; src1 = (filas-1)*src_row_size
+	movsxd r14, ecx					; src1 = filas
+	dec r14						; srci = filas-1
+	imul r14, r8					; src1 = (filas-1)*src_row_size
 	lea r14, [r14+ 4*r10]   			; src1 = 4*offsetx + (filas-1)*src_row_size
-	add r14, rdi							
-	
-	; src1 = src + 4*offsetx + (filas-1)*src_row_size 
+	add r14, rdi					; src1 = src + 4*offsetx + (filas-1)*src_row_size 
 
 	
 
@@ -74,7 +70,7 @@ cropflip_asm:
 	;		r12  	 | tamy
 	;		r13  	 | tamx/4
 	;		r14  	 | src1
-	;		rax    | -(dst_row_size + src_row_size)
+	;		rax	 | -(dst_row_size + src_row_size)
 	;		Loop in y: tamy times
 	; 		Loop in x: (32b * tamx / 128b) = tamx/4 times
 	
@@ -100,7 +96,5 @@ cropflip_asm:
 	pop r14
 	pop r13
 	pop r12
-	pop r11
-	pop r10
 	pop rbp
 	ret
