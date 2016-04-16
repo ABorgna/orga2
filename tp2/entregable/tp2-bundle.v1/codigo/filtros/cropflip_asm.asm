@@ -78,7 +78,7 @@ cropflip_asm:
 .loopSkywalkerY:
 	cmp rdx, 0
 	je .fin
-		mov rcx, r13
+	mov rcx, r13
 		
 		.loopSkywalkerX:
 			movdqu xmm0, [r14] 
