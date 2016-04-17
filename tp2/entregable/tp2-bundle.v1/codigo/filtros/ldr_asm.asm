@@ -1,5 +1,6 @@
 
 global ldr_asm
+global copyN
 
 section .data
 
@@ -409,9 +410,9 @@ copyN:
         movdqu xmm10, [rsi+160]
         movdqu xmm11, [rsi+176]
         movdqu xmm12, [rsi+192]
-        movdqu xmm13, [rsi+108]
-        movdqu xmm14, [rsi+124]
-        movdqu xmm15, [rsi+140]
+        movdqu xmm13, [rsi+208]
+        movdqu xmm14, [rsi+224]
+        movdqu xmm15, [rsi+240]
 
         movdqu [rdi], xmm0
         movdqu [rdi+16], xmm1
@@ -426,9 +427,9 @@ copyN:
         movdqu [rdi+160], xmm10
         movdqu [rdi+176], xmm11
         movdqu [rdi+192], xmm12
-        movdqu [rdi+108], xmm13
-        movdqu [rdi+124], xmm14
-        movdqu [rdi+140], xmm15
+        movdqu [rdi+208], xmm13
+        movdqu [rdi+224], xmm14
+        movdqu [rdi+240], xmm15
 
         add rdi, 256
         add rsi, 256
