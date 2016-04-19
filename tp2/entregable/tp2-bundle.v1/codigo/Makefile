@@ -13,7 +13,7 @@ BIN = tp2
 FILTROS = cropflip sepia ldr
 
 FILTROS_OBJ = $(addsuffix .o, $(FILTROS)) $(addsuffix _asm.o, $(FILTROS)) $(addsuffix _c.o, $(FILTROS))
-LIBS_OBJS   = libbmp.o imagenes.o
+LIBS_OBJS   = libbmp.o imagenes.o copyN.o
 MAIN_OBJS   = tp2.o cli.o
 MAIN_OBJS_CON_PATH = $(addprefix $(BUILD_DIR)/, $(MAIN_OBJS))
 
@@ -32,6 +32,7 @@ export CFLAGS64
 FORCE:
 	make -C helper
 	make -C filtros
+	make -C lib
 
 $(BUILD_DIR)/%.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $< -lm

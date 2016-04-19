@@ -12,6 +12,7 @@
 DECLARE_LDR_EXT(c);
 DECLARE_LDR_EXT(asm);
 DECLARE_LDR_EXT(sse);
+DECLARE_LDR_EXT(sse_float);
 DECLARE_LDR_EXT(avx);
 DECLARE_LDR_EXT(avx2);
 
@@ -36,6 +37,8 @@ void aplicar_ldr(configuracion_t *config)
         ldr = ldr_asm;
     } else if(strcmp(config->tipo_filtro,"sse") == 0) {
         ldr = ldr_sse;
+    } else if(strcmp(config->tipo_filtro,"sse_float") == 0) {
+        ldr = ldr_sse_float;
     } else if(strcmp(config->tipo_filtro,"avx") == 0) {
         ldr = ldr_avx;
     } else if(strcmp(config->tipo_filtro,"avx2") == 0) {
@@ -55,7 +58,7 @@ void ayuda_ldr()
 {
     printf ( "       * ldr\n" );
     printf ( "           Parámetros       : \n"
-             "                         alpha - valor entre -255 y 255. En caso"
+             "                         alpha - valor entre -255 y 255. En caso\n"
              "                         de querer pasar un valor negativo anteponer --\n");
     printf ( "           Implementaciones : \n"
              "                         c, asm, sse, avx, avx2\n");
