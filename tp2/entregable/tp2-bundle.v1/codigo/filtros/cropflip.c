@@ -11,6 +11,8 @@
 
 DECLARE_CROPFLIP_EXT(c);
 DECLARE_CROPFLIP_EXT(asm);
+DECLARE_CROPFLIP_EXT(asm_COPYN);
+DECLARE_CROPFLIP_EXT(asm_COPYN_avx2);
 
 void ayuda_cropflip();
 
@@ -42,8 +44,11 @@ void aplicar_cropflip(configuracion_t *config)
         cropflip = cropflip_c;
     } else if(strcmp(config->tipo_filtro,"asm") == 0) {
         cropflip = cropflip_asm;
+	} else if(strcmp(config->tipo_filtro,"asm_paralelo") == 0) {
+        cropflip = cropflip_asm_COPYN;
+} else if(strcmp(config->tipo_filtro,"asm_paralelo_avx2") == 0) {
+        cropflip = cropflip_asm_COPYN_avx2;
     } else {
-        ayuda_cropflip();
         return;
     }
 

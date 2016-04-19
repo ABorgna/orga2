@@ -132,7 +132,7 @@ copyN_avx2:
         jmp .copy128
     .copy128End:
     mov rcx, rbx
-    shr rcx, 8
+    shr rcx, 3
     and rcx, 0xf
     jrcxz .copy8End
     .copy8:

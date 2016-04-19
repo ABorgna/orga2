@@ -1,6 +1,6 @@
 extern copyN
 
-global cropflip_asm
+global cropflip_asm_COPYN
 
 
 section .text
@@ -25,7 +25,7 @@ section .text
 ;		src1 = src1 - src_row_size
 
 
-cropflip_asm:
+cropflip_asm_COPYN:
 	push rbp
 	mov rbp, rsp
 	push rbx
