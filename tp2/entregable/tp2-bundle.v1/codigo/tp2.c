@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "tp2.h"
 #include "helper/tiempo.h"
@@ -80,9 +81,13 @@ void imprimir_tiempos_ejecucion(unsigned long long int start, unsigned long long
 
 void correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador)
 {
+    char *tipo_filtro_UPPER = (char*) malloc(strlen(config->tipo_filtro));
+    strcpy(tipo_filtro_UPPER,config->tipo_filtro);
+    for(char *p = tipo_filtro_UPPER; *p; p++) *p = toupper(*p);
+
     snprintf(config->archivo_salida, sizeof  (config->archivo_salida), "%s/%s.%s.%s%s.bmp",
              config->carpeta_salida, basename(config->archivo_entrada),
-             config->nombre_filtro,  config->tipo_filtro, config->extra_archivo_salida );
+             config->nombre_filtro,  tipo_filtro_UPPER, config->extra_archivo_salida );
 
     if (config->nombre)
     {
@@ -101,4 +106,6 @@ void correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador)
         imagenes_liberar(config);
         imprimir_tiempos_ejecucion(start, end, config->cant_iteraciones);
     }
+
+    free(tipo_filtro_UPPER);
 }
