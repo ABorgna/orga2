@@ -23,8 +23,8 @@ section .text
 ;void ldr_asm    (
     ; rdi | unsigned char *src,
     ; rsi | unsigned char *dst,
-    ; edx | int filas,
-    ; ecx | int cols,
+    ; edx | int cols,
+    ; ecx | int filas,
     ; r8d | int src_row_size,
     ; r9d | int dst_row_size,
     ; bp+16 | int alpha
@@ -56,9 +56,10 @@ ldr_sse:
     ; r8 = src
     ; r9 = dst
     ; r10 = alpha
-    ; rdi = current pixel src
-    ; rsi = current pixel dst
-    mov rax, rcx
+    ; rsi = current pixel src
+    ; rdi = current pixel dst
+    mov rax, rdx
+    mov rdx, rcx
     mov r8, rdi
     mov r9, rsi
     movsx r10, word [rbp+16]
@@ -76,13 +77,16 @@ ldr_sse:
     ; xmm15 is always zero
     pxor xmm15, xmm15
 
-    ; mm0 = | LDR_MAX_MAGIC| LDR_MAX_MAGIC|
-    ; mm1 = |     255      |     255      |
-    ; mm2 = |    alpha     |    alpha     |
+    ; mm0 = |   LDR_MAX_MAGIC   |   LDR_MAX_MAGIC   |
+    ; mm1 = |        255        |        255        |
+    ; mm2 = |  alpha  |  alpha  |  alpha  |  alpha  |
     movq mm0, [LDR_MAX_MAGIC]
     movq mm1, [PIXEL_MAX]
-    pinsrd xmm6, r10d, 0
-    pinsrd xmm6, r10d, 1
+    pxor xmm6, xmm6
+    pinsrw xmm6, r10w, 0
+    pinsrw xmm6, r10w, 1
+    pinsrw xmm6, r10w, 2
+    pinsrw xmm6, r10w, 3
     movdq2q mm2, xmm6
 
     ; Empezamos a procesar desde fila2 - 4px
@@ -229,17 +233,21 @@ ldr_sse:
         paddw xmm7, xmm8
         paddw xmm5, xmm7
 
-        ; Cargar alpha en xmm6 por cuadriplicado en fp
+        ; Cargar alpha en xmm6 por cuadriplicado
         ; ->
-;|       alpha       |       alpha       |       alpha       |       alpha       | xmm6
+;|    X    |    X    |    X    |    X    |  alpha  |  alpha  |  alpha  |  alpha  | xmm6
         movq2dq xmm6, mm2
-        movddup xmm6, xmm6
 
         ; Expandir las sumas y multiplicarlas por alpha
         ; ->
+;|    X    |    X    |    X    |    X    |L(sum3*a)|L(sum2*a)|L(sum1*a)|L(sum0*a)| xmm5
+;|    X    |    X    |    X    |    X    |H(sum3*a)|H(sum2*a)|H(sum1*a)|H(sum0*a)| xmm7
+        movdqa xmm7, xmm5
+        pmullw xmm5, xmm6
+        pmulhw xmm7, xmm6
+        ; ->
 ;| sumargb3 * alpha  | sumargb2 * alpha  | sumargb1 * alpha  | sumargb0 * alpha  | xmm5
-        punpcklwd xmm5, xmm15
-        pmuldq xmm5, xmm6
+        punpcklwd xmm5, xmm7
 
         ; Cargamos el magic number en xmm14 en fp
         ; ->
@@ -261,7 +269,7 @@ ldr_sse:
         ; cargamos los valores de los pixeles a xmm9
         ; ->
 ;| R3 | G3 | B3 |  0 | R2 | G2 | B2 |  0 | R1 | G1 | B1 |  0 | R0 | G0 | B0 |  0 | xmm9
-        movdqu xmm9, [rsi]
+        movdqu xmm9, [rsi+8]
         pslld xmm9, 8 ; Clear the alpha bytes
 
         ; Separar los valores de cada pixel, mandarlos a double word
@@ -337,8 +345,10 @@ ldr_sse:
         packuswb xmm8, xmm6
         psrld xmm8, 8
 
+        .continue:
+
         ; Store in the destination
-        movdqu [rdi], xmm8
+        movdqu [rdi+8], xmm8
 
         add rsi, 16
         add rdi, 16
@@ -367,7 +377,7 @@ ldr_sse:
     ; copia directa de los bordes
     lea rsi, [r8 + r15 - 8]
     lea rdi, [r9 + r15 - 8]
-    ; rcx = #filas-3 = ((filas-4)*cols+4)/4
+    ; rcx = #filas-3
     lea rcx, [rdx-3]
     .copyBorders:
         movdqu xmm0, [rsi]
@@ -619,7 +629,7 @@ ldr_sse_float:
         ; cargamos los valores de los pixeles a xmm9
         ; ->
 ;| R3 | G3 | B3 |  0 | R2 | G2 | B2 |  0 | R1 | G1 | B1 |  0 | R0 | G0 | B0 |  0 | xmm9
-        movdqu xmm9, [rsi]
+        movdqu xmm9, [rsi+8]
         pslld xmm9, 8 ; Clear the alpha bytes
 
         ; Separar los valores de cada pixel, mandarlos a double word, convertirlos a fp
@@ -711,8 +721,10 @@ ldr_sse_float:
         packuswb xmm8, xmm6
         psrld xmm8, 8
 
+        .continue:
+
         ; Store in the destination
-        movdqu [rdi], xmm8
+        movdqu [rdi+8], xmm8
 
         add rsi, 16
         add rdi, 16
