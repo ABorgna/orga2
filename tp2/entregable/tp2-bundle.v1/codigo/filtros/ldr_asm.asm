@@ -246,6 +246,13 @@ ldr_sse:
         punpckhwd xmm3, xmm15
         punpcklwd xmm4, xmm15
 
+        ; Cargar una mascara para borrar el canal alpha
+        ; ->
+;|    0xffffffff     |    0xffffffff     |    0xffffffff     |    0xffffffff     | xmm13
+        pxor xmm13, xmm13 ; remove dependencies
+        pcmpeqq xmm13, xmm13
+        psrldq xmm13, 4
+
         ; Multiplicamos cada valor de cada pixel por sumargb*alpha, borrando el canal alpha
         ; ->
 ;|         0         | R3*sumargb3*alpha | G3*sumargb3*alpha | B3*sumargb3*alpha | xmm5
@@ -256,14 +263,10 @@ ldr_sse:
         pmulld xmm6, xmm2
         pmulld xmm7, xmm3
         pmulld xmm8, xmm4
-        pslldq xmm5, 4
-        pslldq xmm6, 4
-        pslldq xmm7, 4
-        pslldq xmm8, 4
-        psrldq xmm5, 4
-        psrldq xmm6, 4
-        psrldq xmm7, 4
-        psrldq xmm8, 4
+        pand xmm5, xmm13
+        pand xmm6, xmm13
+        pand xmm7, xmm13
+        pand xmm8, xmm13
 
         ; Cargar el magic number
         ; ->
@@ -271,7 +274,15 @@ ldr_sse:
         movq2dq xmm14, mm0
         movddup xmm14, xmm14
 
-        ; Dividir por MAX, multiplicando por MAGIC y shifteando 53
+        ; Cargar una mascara para borrar la parte baja de MAGIC * G
+        ; ->
+;|    0xffffffff     |    0xffffffff     |    0xffffffff     |         0         | xmm13
+        pxor xmm13, xmm13 ; remove dependencies
+        pcmpeqq xmm13, xmm13
+        psrldq xmm13, 12
+        pcmpeqd xmm13, xmm15
+
+        ; Dividir por MAX, multiplicando por MAGIC y shifteando 53 (division exacta)
         ; Esto es hiper complicado y tira el performance a la basura,
         ; pero el SSE no tiene PMULHD :/
         ; ->
@@ -279,14 +290,14 @@ ldr_sse:
 ;|         0         |    delta ldrR2    |    delta ldrG2    |    delta ldrB2    | xmm6
 ;|         0         |    delta ldrR1    |    delta ldrG1    |    delta ldrB1    | xmm7
 ;|         0         |    delta ldrR0    |    delta ldrG0    |    delta ldrB0    | xmm8
-        movdqa xmm5, xmm9
-        movdqa xmm6, xmm10
-        movdqa xmm7, xmm11
-        movdqa xmm8, xmm12
-        psrlq xmm5, 32
-        psrlq xmm6, 32
-        psrlq xmm7, 32
-        psrlq xmm8, 32
+        movdqa xmm9, xmm5
+        movdqa xmm10, xmm6
+        movdqa xmm11, xmm7
+        movdqa xmm12, xmm8
+        psrlq xmm9, 32
+        psrlq xmm10, 32
+        psrlq xmm11, 32
+        psrlq xmm12, 32
         pmuldq xmm5, xmm14
         pmuldq xmm6, xmm14
         pmuldq xmm7, xmm14
@@ -299,14 +310,14 @@ ldr_sse:
         psrlq xmm6, 53
         psrlq xmm7, 53
         psrlq xmm8, 53
-        psrlq xmm9, 53
-        psrlq xmm10, 53
-        psrlq xmm11, 53
-        psrlq xmm12, 53
-        psllq xmm5, 32
-        psllq xmm6, 32
-        psllq xmm7, 32
-        psllq xmm8, 32
+        psrlq xmm9, 21
+        psrlq xmm10, 21
+        psrlq xmm11, 21
+        psrlq xmm12, 21
+        pand xmm9, xmm13
+        pand xmm10, xmm13
+        pand xmm11, xmm13
+        pand xmm12, xmm13
         por xmm5, xmm9
         por xmm6, xmm10
         por xmm7, xmm11
