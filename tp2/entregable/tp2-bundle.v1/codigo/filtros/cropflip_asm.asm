@@ -17,7 +17,7 @@ section .text
 
 
 ;			PSEUDO-ALTERNATIVA  FALOPA
-;	src1 = src + offsetx*4 +src_row_size*(filas-1)
+;	src1 = src + offsetx*4 +src_row_size*(offsety+tamy-1)
 ;	for(i = tamy ; i > 0 ; i--)
 ;		for (j = tamx/4 ; j > 0 ; j--)
 ;			xmm0 = [src1]
@@ -50,11 +50,12 @@ cropflip_asm:
 	mov rax, r8					; rax = src_row_size
 	add rax, r9					; rax = src_row_size + dst_row_size	
 			
-	movsxd r14, ecx					; src1 = filas
-	dec r14						; srci = filas-1
-	imul r14, r8					; src1 = (filas-1)*src_row_size
-	lea r14, [r14+ 4*r10]   			; src1 = 4*offsetx + (filas-1)*src_row_size
-	add r14, rdi					; src1 = src + 4*offsetx + (filas-1)*src_row_size 
+	mov r14, r12
+	dec r14
+	add r14, r11
+	imul r14, r8					; src1 = (tamy+offsety-1)*src_row_size
+	lea r14, [r14+ 4*r10]				; src1 = 4*offsetx + (tamy+offsety-1)*src_row_size
+	add r14, rdi					; src1 = src + 4*offsetx + (tamy+offsety-1)*src_row_size 
 
 	
 
