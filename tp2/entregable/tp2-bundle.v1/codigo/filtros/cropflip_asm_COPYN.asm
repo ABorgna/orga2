@@ -19,7 +19,7 @@ section .text
 
 
 ;			CON COPYN
-;	src1 = src + offsetx*4 +src_row_size*(filas-1)
+;	src1 = src + offsetx*4 +src_row_size*(offsety+tamy-1)
 ;	for(i = tamy ; i > 0 ; i--)
 ;		copyN	(rsi = copia de src1, rdi = dst, rbx = dst_row_size)
 ;		src1 = src1 - src_row_size
@@ -41,12 +41,12 @@ cropflip_asm_COPYN:
 	movsxd r13, r8d 		
 	movsxd rbx, dword [rbp+16]		
 			
-	movsxd r14, ecx						; src1 = filas
-	dec r14									; srci = filas-1
-	imul r14, r13							; src1 = (filas-1)*src_row_size
-	movsxd r10, dword [rbp+32]
-	lea r14, [r14+ 4*r10]				; src1 = 4*offsetx + (filas-1)*src_row_size
-	add r14, rsi							; src1 = src + 4*offsetx + (filas-1)*src_row_size 
+	mov r14, r12
+	dec r14
+	add r14, r11
+	imul r14, r8							; src1 = (tamy+offsety-1)*src_row_size
+	lea r14, [r14+ 4*r10]						; src1 = 4*offsetx + (tamy+offsety-1)*src_row_size
+	add r14, rdi							; src1 = src + 4*offsetx + (tamy+offsety-1)*src_row_size ilas-1)*src_row_size 
 
 
 	;		rsi		| src 
