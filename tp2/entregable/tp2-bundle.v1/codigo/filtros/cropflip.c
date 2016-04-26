@@ -11,6 +11,7 @@
 
 DECLARE_CROPFLIP_EXT(c);
 DECLARE_CROPFLIP_EXT(asm);
+DECLARE_CROPFLIP_EXT(sse);
 DECLARE_CROPFLIP_EXT(asm_COPYN);
 DECLARE_CROPFLIP_EXT(asm_COPYN_avx2);
 
@@ -44,9 +45,11 @@ void aplicar_cropflip(configuracion_t *config)
         cropflip = cropflip_c;
     } else if(strcmp(config->tipo_filtro,"asm") == 0) {
         cropflip = cropflip_asm;
-	} else if(strcmp(config->tipo_filtro,"asm_paralelo") == 0) {
+    } else if(strcmp(config->tipo_filtro,"sse") == 0) {
+        cropflip = cropflip_sse;
+    } else if(strcmp(config->tipo_filtro,"sse_par") == 0) {
         cropflip = cropflip_asm_COPYN;
-} else if(strcmp(config->tipo_filtro,"asm_paralelo_avx2") == 0) {
+    } else if(strcmp(config->tipo_filtro,"avx2") == 0) {
         cropflip = cropflip_asm_COPYN_avx2;
     } else {
         return;
@@ -67,7 +70,7 @@ void ayuda_cropflip()
              "                         offsetx pixels a partir de los cuales copiar del source\n"
              "                         offsety pixels a partir de los cuales copiar del source\n");
     printf ( "           Implementaciones : \n"
-             "                         c, asm\n");
+             "                         c, asm, sse, sse_par, avx2\n");
     printf ( "           Ejemplo de uso   : \n"
              "                         cropflip -i c facil.bmp 32 32 40 50\n" );
 }

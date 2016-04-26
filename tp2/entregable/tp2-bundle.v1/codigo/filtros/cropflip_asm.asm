@@ -1,4 +1,5 @@
 global cropflip_asm
+global cropflip_sse
 
 
 section .text
@@ -28,6 +29,8 @@ section .text
 
 
 cropflip_asm:
+
+cropflip_sse:
 	push rbp
 	mov rbp, rsp
 	push r12
