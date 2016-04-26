@@ -597,7 +597,7 @@ ldr_sse_float:
         ; Cargar los valores de los pixeles, unpackearlos a dw y pasarlos a float
         ; ->
 ;| A3 | R3 | G3 | B3 | A2 | R2 | G2 | B2 | A1 | R1 | G1 | B1 | A0 | R0 | G0 | B0 | xmm9
-        movdqu xmm9, [rsi+8]
+        movdqu xmm9, [rsi]
         ; ->
 ;|    A3   |    R3   |    G3   |   B3    |    A2   |    R2   |    G2   |   B2    | xmm9
 ;|    A1   |    R1   |    G1   |   B1    |    A0   |    R0   |    G0   |   B0    | xmm11
@@ -625,18 +625,6 @@ ldr_sse_float:
         cvtdq2ps xmm11, xmm11
         cvtdq2ps xmm12, xmm12
 
-        ; Cargamos el 1/max en xmm14 en fp
-        ; ->
-;|      1/MAX.       |      1/MAX.       |      1/MAX.       |      1/MAX.       | xmm14
-        movq2dq xmm14, mm0
-        movddup xmm14, xmm14
-
-        ; Dividir por MAX
-        mulps xmm5, xmm14
-        mulps xmm6, xmm14
-        mulps xmm7, xmm14
-        mulps xmm8, xmm14
-
         ; Cargar una mascara para borrar el canal alpha
         ; ->
 ;|         0         |    0xffffffff     |    0xffffffff     |    0xffffffff     | xmm13
@@ -660,12 +648,23 @@ ldr_sse_float:
         pand xmm7, xmm13
         pand xmm8, xmm13
 
+
+        ; Cargamos el 1/max en xmm14 en fp
+        ; ->
+;|      1/MAX.       |      1/MAX.       |      1/MAX.       |      1/MAX.       | xmm14
+        movq2dq xmm14, mm0
+        movddup xmm14, xmm14
+
         ; Dividir por MAX y sumarle el valor original de cada pixel
         ; ->
 ;|        A3.        |       ldrR3.      |       ldrG3.      |       ldrB3.      | xmm5
 ;|        A2.        |       ldrR2.      |       ldrG2.      |       ldrB2.      | xmm6
 ;|        A1.        |       ldrR1.      |       ldrG1.      |       ldrB1.      | xmm7
 ;|        A0.        |       ldrR0.      |       ldrG0.      |       ldrB0.      | xmm8
+        mulps xmm5, xmm14
+        mulps xmm6, xmm14
+        mulps xmm7, xmm14
+        mulps xmm8, xmm14
         addps xmm5, xmm9
         addps xmm6, xmm10
         addps xmm7, xmm11
@@ -708,7 +707,7 @@ ldr_sse_float:
         .continue:
 
         ; Store in the destination
-        movdqu [rdi+8], xmm8
+        movdqu [rdi], xmm8
 
         add rsi, 16
         add rdi, 16
