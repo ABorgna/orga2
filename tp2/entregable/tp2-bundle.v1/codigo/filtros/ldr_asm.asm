@@ -6,16 +6,20 @@ extern copyN_avx2
 global ldr_asm
 global ldr_sse
 global ldr_sse_float
+global ldr_sse_double
 
 section .data
 
 align 8
 ; 1/max = 1/(5*5*255*3*255) = 1/4876875 ~= 2.050493399974369e-7
 LDR_MAX_INV: dd 2.050493399974369e-7, 2.050493399974369e-7
+LDR_MAX_INV_DOUBLE: dq 2.050493399974369e-7
 ; Floating point max
 PIXEL_MAX_F: dd 255.0, 255.0
+PIXEL_MAX_F_DOUBLE: dq 255.0
 ; Integer max
 PIXEL_MAX: dd 255, 255
+PIXEL_MAX_W: dw 255, 255, 255, 255
 ; x / max = x * MAGIC >> 53
 LDR_MAX_MAGIC: dd 0x6e15c447, 0x6e15c447
 
@@ -30,7 +34,7 @@ section .text
     ; bp+16 | int alpha
 ;)
 ldr_asm:
-    ;jmp ldr_sse_float
+    jmp ldr_sse_double
 
 ldr_sse:
     ; Requires SSE4.1
@@ -597,7 +601,7 @@ ldr_sse_float:
         ; Cargar los valores de los pixeles, unpackearlos a dw y pasarlos a float
         ; ->
 ;| A3 | R3 | G3 | B3 | A2 | R2 | G2 | B2 | A1 | R1 | G1 | B1 | A0 | R0 | G0 | B0 | xmm9
-        movdqu xmm9, [rsi+8]
+        movdqu xmm9, [rsi]
         ; ->
 ;|    A3   |    R3   |    G3   |   B3    |    A2   |    R2   |    G2   |   B2    | xmm9
 ;|    A1   |    R1   |    G1   |   B1    |    A0   |    R0   |    G0   |   B0    | xmm11
@@ -625,18 +629,6 @@ ldr_sse_float:
         cvtdq2ps xmm11, xmm11
         cvtdq2ps xmm12, xmm12
 
-        ; Cargamos el 1/max en xmm14 en fp
-        ; ->
-;|      1/MAX.       |      1/MAX.       |      1/MAX.       |      1/MAX.       | xmm14
-        movq2dq xmm14, mm0
-        movddup xmm14, xmm14
-
-        ; Dividir por MAX
-        mulps xmm5, xmm14
-        mulps xmm6, xmm14
-        mulps xmm7, xmm14
-        mulps xmm8, xmm14
-
         ; Cargar una mascara para borrar el canal alpha
         ; ->
 ;|         0         |    0xffffffff     |    0xffffffff     |    0xffffffff     | xmm13
@@ -660,12 +652,22 @@ ldr_sse_float:
         pand xmm7, xmm13
         pand xmm8, xmm13
 
+        ; Cargamos el 1/max en xmm14 en fp
+        ; ->
+;|      1/MAX.       |      1/MAX.       |      1/MAX.       |      1/MAX.       | xmm14
+        movq2dq xmm14, mm0
+        movddup xmm14, xmm14
+
         ; Dividir por MAX y sumarle el valor original de cada pixel
         ; ->
 ;|        A3.        |       ldrR3.      |       ldrG3.      |       ldrB3.      | xmm5
 ;|        A2.        |       ldrR2.      |       ldrG2.      |       ldrB2.      | xmm6
 ;|        A1.        |       ldrR1.      |       ldrG1.      |       ldrB1.      | xmm7
 ;|        A0.        |       ldrR0.      |       ldrG0.      |       ldrB0.      | xmm8
+        mulps xmm5, xmm14
+        mulps xmm6, xmm14
+        mulps xmm7, xmm14
+        mulps xmm8, xmm14
         addps xmm5, xmm9
         addps xmm6, xmm10
         addps xmm7, xmm11
@@ -708,7 +710,411 @@ ldr_sse_float:
         .continue:
 
         ; Store in the destination
-        movdqu [rdi+8], xmm8
+        movdqu [rdi], xmm8
+
+        add rsi, 16
+        add rdi, 16
+        dec rcx
+    jnz .magicLoop
+
+    ; Do a direct copy of the first and last two lines
+    lea rbx, [rax*2+2] ; rbx = cols * 2 + 2 = pixels to copy
+    mov rsi, r8 ; rsi = src start
+    mov rdi, r9 ; rdi = dst start
+    call copyN_sse
+
+    ; rax: cols
+    ; rdx: filas
+    ; r8: srcBase
+    ; r9: dstBase
+    ; startDir = (filas - 2) * row_size - 2 + base
+    lea r11, [rdx-2]
+    imul r11, rax
+    sub r11, 2
+    shl r11, 2 ; #pixels -> #bytes
+    lea rsi, [r11+r8]
+    lea rdi, [r11+r9]
+    call copyN_sse
+
+    ; copia directa de los bordes
+    lea rsi, [r8 + r15 - 8]
+    lea rdi, [r9 + r15 - 8]
+    ; rcx = #filas-3 = ((filas-4)*cols+4)/4
+    lea rcx, [rdx-3]
+    .copyBorders:
+        movdqu xmm0, [rsi]
+        movdqu [rdi], xmm0
+
+        add rsi, r14
+        add rdi, r14
+    loop .copyBorders
+
+    pop r12
+    pop r13
+    pop r14
+    pop r15
+    pop rbx
+    pop rbp
+    ret
+
+
+ldr_sse_double:
+    ; Requires SSE4.1
+    push rbp
+    mov rbp, rsp
+    push rbx
+    push r15 ; Stack aligned
+    push r14
+    push r13
+    push r12
+
+    ; line offsets
+    ; r12: -2
+    ; r13: -1
+    ; r14: +1
+    ; r15: +2
+    mov r13, r8
+    mov r14, r8
+    neg r13
+    lea r12, [r13*2]
+    lea r15, [r8*2]
+
+    ; rax = cols
+    ; rdx = filas
+    ; r8 = src
+    ; r9 = dst
+    ; r10 = alpha
+    ; rdi = current pixel src
+    ; rsi = current pixel dst
+    mov rax, rdx
+    mov rdx, rcx
+    mov r8, rdi
+    mov r9, rsi
+    movsx r10, word [rbp+16]
+    mov rsi, r8
+    mov rdi, r9
+
+    ; Recorrer la imagen linealmente de a grupos de 4,
+    ; manteniendo la suma de los pixeles vecinos en xmm0-4
+    pxor xmm0, xmm0
+    pxor xmm1, xmm1
+    pxor xmm2, xmm2
+    pxor xmm3, xmm3
+    pxor xmm4, xmm4
+
+    ; xmm15 is always zero
+    pxor xmm15, xmm15
+
+    ; mm0 = |            LDR_MAX_MAGIC.             |
+    ; mm1 = |                  255.                 |
+    ; mm2 = |                 alpha.                |
+    movq mm0, [LDR_MAX_INV_DOUBLE]
+    movq mm1, [PIXEL_MAX_W]
+    pinsrd xmm6, r10d, 0
+    cvtdq2pd xmm6, xmm6
+    movdq2q mm2, xmm6
+
+    ; Empezamos a procesar desde fila2 - 4px
+    lea rsi, [r8 + r15 - 8]
+    lea rdi, [r9 + r15 - 8]
+
+    ; Magic loop, correr sobre ((filas-4)*cols+4)/4
+    lea rcx, [rdx-4]    ; rcx = filas-4
+    imul rcx, rax       ; rcx = (filas-4)*cols
+    add rcx, 4          ; rcx = (filas-4)*cols+4
+    shr rcx, 2          ; rcx = ((filas-4)*cols+4)/4
+
+    .magicLoop:
+
+        ; xmm0 tiene la suma de las primeras cuatro columnas que necesitamos y lo demas en 0
+; |    0    |    0    |    0    |    0    |sum_col3 |sum_col2 |sum_col1 |sum_col0 | xmm0
+
+        ; load the new pixels
+        ; ->
+; | A7 | R7 | G7 | B7 | A6 | R6 | G6 | B6 | A5 | R5 | G5 | B5 | A4 | R4 | G4 | B4 | xmmN
+        movdqu xmm5, [rsi+r12+8]
+        movdqu xmm6, [rsi+r13+8]
+        movdqu xmm7, [rsi+8]
+        movdqu xmm8, [rsi+r14+8]
+        movdqu xmm9, [rsi+r15+8]
+
+        ; shift to clear the alpha bits
+        ; ->
+; | R7 | G7 | B7 |  0 | R6 | G6 | B6 |  0 | R5 | G5 | B5 |  0 | R4 | G4 | B4 |  0 | xmmN
+        pslld xmm5, 8
+        pslld xmm6, 8
+        pslld xmm7, 8
+        pslld xmm8, 8
+        pslld xmm9, 8
+
+        ; unpack bytes to words, xmmN -> xmm{N+5}:xmmN
+        ; ->
+; |    R7   |    G7   |    B7   |     0   |    R6   |    G6   |    B6   |     0   | xmm{N+5}
+; |    R5   |    G5   |    B5   |     0   |    R4   |    G4   |    B4   |     0   | xmmN
+        movdqa xmm10, xmm5
+        movdqa xmm11, xmm6
+        movdqa xmm12, xmm7
+        movdqa xmm13, xmm8
+        movdqa xmm14, xmm9
+        punpcklbw xmm5, xmm15
+        punpcklbw xmm6, xmm15
+        punpcklbw xmm7, xmm15
+        punpcklbw xmm8, xmm15
+        punpcklbw xmm9, xmm15
+        punpckhbw xmm10, xmm15
+        punpckhbw xmm11, xmm15
+        punpckhbw xmm12, xmm15
+        punpckhbw xmm13, xmm15
+        punpckhbw xmm14, xmm15
+
+        ; Get the horizontal sum
+        ; ->
+; | R7 + G7 |    B7   | R6 + G6 |    B6   | R5 + G5 |    B5   | R4 + G4 |    B4   | xmmN
+        phaddw xmm5, xmm10
+        phaddw xmm6, xmm11
+        phaddw xmm7, xmm12
+        phaddw xmm8, xmm13
+        phaddw xmm9, xmm14
+        ; ->
+;| R7+G7+B7| R6+G6+B6| R5+G5+B5| R4+G4+B4|    0    |    0    |    0    |    0     | xmm{N+5}
+        ; ==
+;|   sum7  |   sum6  |   sum5  |   sum4  |    0    |    0    |    0    |    0     | xmm{N+5}
+        pxor xmm10, xmm10
+        pxor xmm11, xmm11
+        pxor xmm12, xmm12
+        pxor xmm13, xmm13
+        pxor xmm14, xmm14
+        phaddw xmm10, xmm5
+        phaddw xmm11, xmm6
+        phaddw xmm12, xmm7
+        phaddw xmm13, xmm8
+        phaddw xmm14, xmm9
+
+        ; Reducir todas las sumargb_i a una unica sumargb
+        ; ->
+;|sum_col7 |sum_col6 |sum_col5 |sum_col4 |    0    |    0    |    0    |    0     | xmm10
+        paddw xmm13, xmm14
+        paddw xmm10, xmm11
+        paddw xmm12, xmm13
+        paddw xmm10, xmm12
+
+        ; Save the sums in xmm0
+        ; ->
+;|sum_col7 |sum_col6 |sum_col5 |sum_col4 |sum_col3 |sum_col2 |sum_col1 |sum_col0 | xmm0
+        por xmm0, xmm10
+
+        ; Calcular sumargb para cada uno de los 4 pixeles que vamos a procesar
+        ; En el proceso vamos eliminando las sumas de pixeles viejos y dejamos xmm0
+        ; listo para la siguiente vuelta
+        ; ->
+;|    X    |    X    |    X    |    X    |sumargb3 |sumargb2 |sumargb1 |sumargb0 | xmm5
+;|    0    |    0    |    0    |    0    |sum_col7 |sum_col6 |sum_col5 |sum_col4 | xmm0
+        movdqa xmm5, xmm0 ; Mover valor inicial, j-2
+        psrldq xmm0, 2 ; Desechar valor viejo j-2
+        paddw xmm5, xmm0 ; Sumar j-1
+        psrldq xmm0, 2 ; Desechar valor viejo j-1
+        paddw xmm5, xmm0 ; Sumar j
+        psrldq xmm0, 2 ; Desechar valor viejo j
+        paddw xmm5, xmm0 ; Sumar j+1
+        psrldq xmm0, 2 ; Desechar valor viejo j+1
+        paddw xmm5, xmm0 ; Sumar j+2
+
+        ; Cargar alpha en xmm6 por cuadriplicado en fp
+        ; ->
+;|                 alpha.                |                 alpha.                | xmm6
+        movq2dq xmm6, mm2
+        movddup xmm6, xmm6
+
+        ; Expandir las sumas, convertirlas a doubles y multiplicarlas por alpha
+        ; ->
+;|           sumargb3 * alpha.           |           sumargb2 * alpha.           | xmm5
+;|           sumargb1 * alpha.           |           sumargb0 * alpha.           | xmm7
+        punpcklwd xmm5, xmm15
+        movdqa xmm7, xmm5
+        psrldq xmm5, 8
+        cvtdq2pd xmm5, xmm5
+        cvtdq2pd xmm7, xmm7
+        mulps xmm5, xmm6
+        mulps xmm7, xmm6
+
+        ; Movemos las sumas cada una replicada en un vector
+        ; ->
+;|           sumargb3 * alpha.           |           sumargb3 * alpha.           | xmm5
+;|           sumargb2 * alpha.           |           sumargb2 * alpha.           | xmm6
+;|           sumargb1 * alpha.           |           sumargb1 * alpha.           | xmm7
+;|           sumargb0 * alpha.           |           sumargb0 * alpha.           | xmm8
+        pshufd xmm8, xmm5, 0b01000100
+        pshufd xmm7, xmm5, 0b11111010
+        pshufd xmm6, xmm7, 0b01000100
+        pshufd xmm5, xmm7, 0b11111010
+
+        ; Cargar los valores de los pixeles, unpackearlos a dw y pasarlos a float
+        ; dejando una copia en words en xmm13-14
+        ; ->
+;| A3 | R3 | G3 | B3 | A2 | R2 | G2 | B2 | A1 | R1 | G1 | B1 | A0 | R0 | G0 | B0 | xmm13
+        movdqu xmm13, [rsi+8]
+        ; ->
+;|    A3   |    R3   |    G3   |   B3    |    A2   |    R2   |    G2   |   B2    | xmm13
+;|    A1   |    R1   |    G1   |   B1    |    A0   |    R0   |    G0   |   B0    | xmm14
+        movdqa xmm14, xmm13
+        punpckhbw xmm13, xmm15
+        punpcklbw xmm14, xmm15
+        ; ->
+;|        A3         |         R3        |         G3        |         B3        | xmm9
+;|        A2         |         R2        |         G2        |         B2        | xmm10
+;|        A1         |         R1        |         G1        |         B1        | xmm11
+;|        A0         |         R0        |         G0        |         B0        | xmm12
+        movdqa xmm9, xmm13
+        movdqa xmm10, xmm13
+        movdqa xmm11, xmm14
+        movdqa xmm12, xmm14
+        punpckhwd xmm9, xmm15
+        punpcklwd xmm10, xmm15
+        punpckhwd xmm11, xmm15
+        punpcklwd xmm12, xmm15
+        ; ->
+;|                   A3.                 |                   R3.                 | xmm1
+;|                   A2.                 |                   R2.                 | xmm2
+;|                   A1.                 |                   R1.                 | xmm3
+;|                   A0.                 |                   R0.                 | xmm4
+;|                   G3.                 |                   B3.                 | xmm9
+;|                   G2.                 |                   B2.                 | xmm10
+;|                   G1.                 |                   B1.                 | xmm11
+;|                   G0.                 |                   B0.                 | xmm12
+        movdqa xmm1, xmm9
+        movdqa xmm2, xmm10
+        movdqa xmm3, xmm11
+        movdqa xmm4, xmm12
+        psrldq xmm1, 8
+        psrldq xmm2, 8
+        psrldq xmm3, 8
+        psrldq xmm4, 8
+        cvtdq2pd xmm9, xmm9
+        cvtdq2pd xmm10, xmm10
+        cvtdq2pd xmm11, xmm11
+        cvtdq2pd xmm12, xmm12
+        cvtdq2pd xmm1, xmm1
+        cvtdq2pd xmm2, xmm2
+        cvtdq2pd xmm3, xmm3
+        cvtdq2pd xmm4, xmm4
+
+        ; Cargar una mascara y borrar el canal alpha
+        ; ->
+;|                    0.                 |                   R3.                 | xmm1
+;|                    0.                 |                   R2.                 | xmm2
+;|                    0.                 |                   R1.                 | xmm3
+;|                    0.                 |                   R0.                 | xmm4
+        ;
+;|                   0                   |              0xffffffff               | xmm15
+        pcmpeqq xmm15, xmm15
+        psrldq xmm15, 8
+        pand xmm1, xmm15
+        pand xmm2, xmm15
+        pand xmm3, xmm15
+        pand xmm4, xmm15
+        pxor xmm15, xmm15
+
+        ; Multiplicamos cada valor de cada pixel por sumargb*alpha
+        ; y borramos el canal alpha
+        ; ->
+;|                   0                   |            R3*sumargb3*alpha.         | xmm1
+;|                   0                   |            R2*sumargb2*alpha.         | xmm2
+;|                   0                   |            R1*sumargb1*alpha.         | xmm3
+;|                   0                   |            R0*sumargb0*alpha.         | xmm4
+;|            G3*sumargb3*alpha.         |            B3*sumargb3*alpha.         | xmm9
+;|            G2*sumargb2*alpha.         |            B2*sumargb2*alpha.         | xmm10
+;|            G1*sumargb1*alpha.         |            B1*sumargb1*alpha.         | xmm11
+;|            G0*sumargb0*alpha.         |            B0*sumargb0*alpha.         | xmm12
+        mulps xmm9, xmm5
+        mulps xmm10, xmm6
+        mulps xmm11, xmm7
+        mulps xmm12, xmm8
+        mulps xmm1, xmm5
+        mulps xmm2, xmm6
+        mulps xmm3, xmm7
+        mulps xmm4, xmm8
+
+        ; Cargamos el 1/max en xmm14 en fp y hacemos la division
+        ; ->
+;|                 1/MAX.                |                 1/MAX.                | xmm5
+        pxor xmm5, xmm5
+        movq2dq xmm5, mm0
+        movddup xmm5, xmm5
+        ; ->
+;|                   0                   |            R3*sumargb3*alpha. / M     | xmm1
+;|                   0                   |            R2*sumargb2*alpha. / M     | xmm2
+;|                   0                   |            R1*sumargb1*alpha. / M     | xmm3
+;|                   0                   |            R0*sumargb0*alpha. / M     | xmm4
+;|            G3*sumargb3*alpha. / M     |            B3*sumargb3*alpha. / M     | xmm9
+;|            G2*sumargb2*alpha. / M     |            B2*sumargb2*alpha. / M     | xmm10
+;|            G1*sumargb1*alpha. / M     |            B1*sumargb1*alpha. / M     | xmm11
+;|            G0*sumargb0*alpha. / M     |            B0*sumargb0*alpha. / M     | xmm12
+        mulps xmm1, xmm5
+        mulps xmm2, xmm5
+        mulps xmm3, xmm5
+        mulps xmm4, xmm5
+        mulps xmm9, xmm5
+        mulps xmm10, xmm5
+        mulps xmm11, xmm5
+        mulps xmm12, xmm5
+
+        ; Reconvertir los valores a word y sumarles el valor original
+        ; ->
+;|         0         |     d ldrR3       |     d ldrG3       |     d ldrB3       | xmm1
+;|         0         |     d ldrR2       |     d ldrG2       |     d ldrB2       | xmm2
+;|         0         |     d ldrR1       |     d ldrG1       |     d ldrB1       | xmm3
+;|         0         |     d ldrR0       |     d ldrG0       |     d ldrB0       | xmm4
+        cvtpd2dq xmm1, xmm1
+        cvtpd2dq xmm2, xmm2
+        cvtpd2dq xmm3, xmm3
+        cvtpd2dq xmm4, xmm4
+        cvtpd2dq xmm9 , xmm9
+        cvtpd2dq xmm10, xmm10
+        cvtpd2dq xmm11, xmm11
+        cvtpd2dq xmm12, xmm12
+        pslldq xmm1, 8
+        pslldq xmm2, 8
+        pslldq xmm3, 8
+        pslldq xmm4, 8
+        por xmm1, xmm9
+        por xmm2, xmm10
+        por xmm3, xmm11
+        por xmm4, xmm12
+        ; ->
+;|    0    | d ldrR3 | d ldrG3 | d ldrB3 |    0    | d ldrR2 | d ldrG2 | d ldrB2 | xmm2
+;|    0    | d ldrR1 | d ldrG1 | d ldrB1 |    0    | d ldrR0 | d ldrG0 | d ldrB0 | xmm4
+        packusdw xmm2, xmm1
+        packusdw xmm4, xmm3
+        ; ->
+;|    A3   |  ldrR3  |  ldrG3  |  ldrB3  |   A2    |  ldrR2  |  ldrG2  |  ldrB2  | xmm2
+;|    A1   |  ldrR1  |  ldrG1  |  ldrB1  |   A0    |  ldrR0  |  ldrG0  |  ldrB0  | xmm4
+        paddsw xmm2, xmm13
+        paddsw xmm4, xmm14
+
+        ; Cargamos 255 para aplicar max/min
+        ; ->
+;|   255   |   255   |   255   |   255   |   255   |   255   |   255   |   255   | xmm13
+        pxor xmm13,xmm13
+        movq2dq xmm13, mm1
+        movddup xmm13, xmm13
+
+        ; Aplicar min(max(xmmN,0.),255.)
+        pmaxsw xmm2, xmm15
+        pmaxsw xmm4, xmm15
+        pminsw xmm2, xmm13
+        pminsw xmm4, xmm13
+
+        ; Convert the numbers back to integers
+
+        ; Pack the results into a single line again
+        ; ->
+;| A3 | R3 | G3 | B3 | A2 | R2 | G2 | B2 | A1 | R1 | G1 | B1 | A0 | R0 | G0 | B0 | xmm8
+        packuswb xmm4, xmm2
+
+        .continue:
+
+        ; Store in the destination
+        movdqu [rdi+8], xmm4
 
         add rsi, 16
         add rdi, 16
