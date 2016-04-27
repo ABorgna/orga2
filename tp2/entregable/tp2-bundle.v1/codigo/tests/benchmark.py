@@ -1,4 +1,4 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 
 import json
 import os
@@ -17,7 +17,7 @@ TESTS = [
 
 class Benchmark:
 
-    TIME = "/bin/env time"
+    TIME = "/usr/bin/env time"
     BINARY_PATH = "../build/tp2"
     GEN_PATH = "bench/gen/"
     IMG_OUT_PATH = "bench/out/"
@@ -86,7 +86,7 @@ class Benchmark:
             os.makedirs(self.GEN_PATH)
 
         if not os.path.exists(path):
-            arguments = ["/bin/env","convert",source,
+            arguments = ["/usr/bin/env","convert",source,
                          "-resize",sizeStr+r"!",
                          "-colorspace","rgb",
                          "-type","TrueColor",
@@ -103,7 +103,7 @@ class Benchmark:
             minTime = 2.0, minIterations=100):
 
         # Use time
-        arguments = ["/bin/env", "time", "-p", self.BINARY_PATH, filterName,
+        arguments = ["/usr/bin/env", "time", "-p", self.BINARY_PATH, filterName,
                      "-t", minIterations, "-o", self.IMG_OUT_PATH,
                      "-i", implementation, img, "--"] + list(args)
         arguments = [str(s) for s in arguments]
