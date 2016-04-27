@@ -11,14 +11,14 @@ TESTS = {
     "ldr_cuadrado": {
         "filterName": "ldr",
         "img": "bench/img/lena.bmp",
-        "implementations": ["c","sse","sse_float","avx","avx2"],
+        "implementations": ["c","sse","sse_integer","avx","avx2"],
         "sizes": [(64,32),(64,64),(96,96),(128,128),(192,192),(256,256),(512,512)],
         "params": "100"
     },
     "ldr_ancho": {
         "filterName": "ldr",
         "img": "bench/img/lena.bmp",
-        "implementations": ["c","sse","sse_float","avx","avx2"],
+        "implementations": ["c","sse","sse_integer","avx","avx2"],
         "sizes": [(256,32),(256,64),(256,96),(256,128),(256,192),(256,256),
                   (256,512),(256,1024),(256,2048),(256,4096)],
         "params": "100"

@@ -5,7 +5,7 @@ extern copyN_avx2
 
 global ldr_asm
 global ldr_sse
-global ldr_sse_float
+global ldr_sse_integer
 
 section .data
 
@@ -30,9 +30,9 @@ section .text
     ; bp+16 | int alpha
 ;)
 ldr_asm:
-    ;jmp ldr_sse_float
+    jmp ldr_sse
 
-ldr_sse:
+ldr_sse_integer:
     ; Requires SSE4.1
     push rbp
     mov rbp, rsp
@@ -408,7 +408,7 @@ ldr_sse:
     ret
 
 
-ldr_sse_float:
+ldr_sse:
     ; Requires SSE4.1
     push rbp
     mov rbp, rsp
