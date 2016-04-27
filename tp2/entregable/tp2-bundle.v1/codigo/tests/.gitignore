@@ -1,0 +1,5 @@
+data/*
+bench/out/*
+bench/gen/*
+bench.json
+__pycache__/*
