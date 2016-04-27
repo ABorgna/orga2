@@ -268,14 +268,10 @@ ldr_avx:
 ;|        A2.        |       ldrR2.      |       ldrG2.      |       ldrB2.      | xmm6
 ;|        A1.        |       ldrR1.      |       ldrG1.      |       ldrB1.      | xmm7
 ;|        A0.        |       ldrR0.      |       ldrG0.      |       ldrB0.      | xmm8
-        vmulps xmm5, xmm5, xmm14
-        vmulps xmm6, xmm6, xmm14
-        vmulps xmm7, xmm7, xmm14
-        vmulps xmm8, xmm8, xmm14
-        vaddps xmm5, xmm5, xmm9
-        vaddps xmm6, xmm6, xmm10
-        vaddps xmm7, xmm7, xmm11
-        vaddps xmm8, xmm8, xmm12
+        vfmadd132ps xmm5, xmm9, xmm14
+        vfmadd132ps xmm6, xmm10, xmm14
+        vfmadd132ps xmm7, xmm11, xmm14
+        vfmadd132ps xmm8, xmm12, xmm14
 
         ; Cargamos 255 para aplicar max/min
         ; ->
