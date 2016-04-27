@@ -6,15 +6,24 @@ import re
 import subprocess
 import sys
 
-TESTS = [
-    {   "filterName": "ldr",
+# Checkear que todos los anchos sean multiplos de 8, sino explota todo
+TESTS = {
+    "ldr_cuadrado": {
+        "filterName": "ldr",
         "img": "bench/img/lena.bmp",
         "implementations": ["c","sse","sse_float","avx","avx2"],
-        #"sizes": [(256,128),(256,196),(256,256),(256,512),(256,1024),(256,2048),(256,4096)],
-        "sizes": [(256,128),(256,512)],
+        "sizes": [(64,32),(64,64),(96,96),(128,128),(192,192),(256,256),(512,512)],
+        "params": "100"
+    },
+    "ldr_ancho": {
+        "filterName": "ldr",
+        "img": "bench/img/lena.bmp",
+        "implementations": ["c","sse","sse_float","avx","avx2"],
+        "sizes": [(256,32),(256,64),(256,96),(256,128),(256,192),(256,256),
+                  (256,512),(256,1024),(256,2048),(256,4096)],
         "params": "100"
     }
-]
+}
 
 class Benchmark:
 
@@ -22,9 +31,8 @@ class Benchmark:
     BINARY_PATH = "../build/tp2"
     GEN_PATH = "bench/gen/"
     IMG_OUT_PATH = "bench/out/"
-    OUT_FILE = "bench.json"
 
-    TIME_PER_TEST = 2.0
+    TIME_PER_TEST = 1.0
 
     # Regexes matching the output of the script
 
@@ -40,14 +48,15 @@ class Benchmark:
     def __init__(self):
         self.unsuportedImplementations = []
 
-    def run(self,tests):
+    def run(self,tests,outFile):
         testCount = self.countTests(tests)
         current = 1
 
         print("Running ",testCount, " tests (~"+str(self.TIME_PER_TEST*testCount*1.5)+"s)")
 
-        for testI, test in enumerate(tests):
+        for testName, test in tests.items():
             results = []
+            print("----",testName,"----")
             for size in test["sizes"]:
                 resizedImg = self.generateTestImage(test["img"],size)
                 for implementation in test["implementations"]:
@@ -74,16 +83,16 @@ class Benchmark:
 
         outputData = {
                 "hostname": self.getHostname,
-                "cpuinfo": self.getCpuinfo()
+                "cpuinfo": self.getCpuinfo(),
                 "tests": tests
         }
 
-        with open(self.OUT_FILE, 'w') as f:
+        with open(outFile, 'w') as f:
             json.dump(outputData,f)
 
     def countTests(self,tests):
         count = 0
-        for test in tests:
+        for testName, test in tests.items():
             count += len(test["sizes"]) * len(test["implementations"])
         return count
 
@@ -176,6 +185,12 @@ class Benchmark:
         return subprocess.check_output("cat /proc/cpuinfo")
 
 if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: ./benchmark.py outfile.json")
+        sys.exit(1)
+
+    outfile = sys.argv[1]
+
     bench = Benchmark()
-    bench.run(TESTS)
+    bench.run(TESTS,outfile)
 
