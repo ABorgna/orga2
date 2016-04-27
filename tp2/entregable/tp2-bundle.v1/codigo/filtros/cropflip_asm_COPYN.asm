@@ -39,18 +39,20 @@ cropflip_asm_COPYN:
 
 	movsxd r12, dword [rbp+24]
 	movsxd r13, r8d 		
-	movsxd rbx, dword [rbp+16]		
+	movsxd rbx, dword [rbp+16]
+	movsxd rax, dword [rbp+40]
 			
 	mov r14, r12
 	dec r14
-	add r14, r11
+	add r14, rax
 	imul r14, r8							; src1 = (tamy+offsety-1)*src_row_size
-	lea r14, [r14+ 4*r10]						; src1 = 4*offsetx + (tamy+offsety-1)*src_row_size
-	add r14, rdi							; src1 = src + 4*offsetx + (tamy+offsety-1)*src_row_size ilas-1)*src_row_size 
+	lea r14, [r14+4*r10]					; src1 = 4*offsetx + (tamy+offsety-1)*src_row_size
+	add r14, rsi							; src1 = src + 4*offsetx + (tamy+offsety-1)*src_row_size ilas-1)*src_row_size 
 
 
 	;		rsi		| src 
 	;		rdi		| dst
+	;		rax		| offsety
 	;		rbx		| tamx
 	;		r12		| tamy (iterador Y)
 	;		r13		| src_row_size 
