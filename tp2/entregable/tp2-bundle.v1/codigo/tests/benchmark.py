@@ -4,6 +4,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 
 TESTS = [
     {   "filterName": "ldr",
@@ -33,10 +34,11 @@ class Benchmark:
     completedRe = re.compile(r"^\s*Tiempo de ejecución",re.M)
     iterationsRe = re.compile(r"^\s*# iteraciones\s+: ([0-9]+)",re.M)
     cyclesRe = re.compile(r"^\s*# de ciclos insumidos por llamada\s+: ([0-9.]+)",re.M)
+    invalidInstructionRe = re.compile(r"^Command terminated by signal 4",re.M)
 
 
     def __init__(self):
-        pass
+        self.unsuportedImplementations = []
 
     def run(self,tests):
         testCount = self.countTests(tests)
@@ -49,6 +51,9 @@ class Benchmark:
             for size in test["sizes"]:
                 resizedImg = self.generateTestImage(test["img"],size)
                 for implementation in test["implementations"]:
+                    if implementation in self.unsuportedImplementations:
+                        continue
+
                     print(str(current)+"/"+str(testCount),"-",
                             test["filterName"]+":"+implementation,
                             test["img"],str(size[0])+"x"+str(size[1]))
@@ -67,8 +72,14 @@ class Benchmark:
 
             tests[testI]["results"] = results
 
+        outputData = {
+                "hostname": self.getHostname,
+                "cpuinfo": self.getCpuinfo()
+                "tests": tests
+        }
+
         with open(self.OUT_FILE, 'w') as f:
-            json.dump(tests,f)
+            json.dump(outputData,f)
 
     def countTests(self,tests):
         count = 0
@@ -95,7 +106,7 @@ class Benchmark:
                          "-alpha","on",
                          "-compress","none",
                          "BMP3:"+str(path)]
-            process = subprocess.run(arguments)
+            subprocess.check_call(arguments)
 
         return path
 
@@ -126,10 +137,19 @@ class Benchmark:
             else:
                 first = False
 
+            try:
+                out = subprocess.check_output(arguments, stderr=subprocess.STDOUT,
+                                              universal_newlines=True)
+            except subprocess.CalledProcessError as e:
+                if self.invalidInstructionRe.search(e.output):
+                    if not implementation in self.unsuportedImplementations:
+                        print(implementation,"won't run in this processor!")
+                        self.unsuportedImplementations.append(implementation)
+                    return None
 
-            process = subprocess.run(arguments, stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE, universal_newlines=True)
-            out = process.stderr + process.stdout
+                print("Error!")
+                print("Output: ",e.output)
+                raise
 
             userTime = float(self.userTimeRe.search(out).group(1))
 
@@ -148,6 +168,12 @@ class Benchmark:
             "iterations": iterations,
             "cycles": cycles
         }
+
+    def getHostname(self):
+        return subprocess.check_output("cat /etc/hostname")
+
+    def getCpuinfo(self):
+        return subprocess.check_output("cat /proc/cpuinfo")
 
 if __name__ == "__main__":
     bench = Benchmark()
