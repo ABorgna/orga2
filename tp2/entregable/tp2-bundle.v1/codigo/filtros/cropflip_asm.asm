@@ -57,7 +57,7 @@ cropflip_sse:
 	dec r14
 	add r14, r11
 	imul r14, r8					; src1 = (tamy+offsety-1)*src_row_size
-	lea r14, [r14+ 4*r10]				; src1 = 4*offsetx + (tamy+offsety-1)*src_row_size
+	lea r14, [r14+ 4*r10]			; src1 = 4*offsetx + (tamy+offsety-1)*src_row_size
 	add r14, rdi					; src1 = src + 4*offsetx + (tamy+offsety-1)*src_row_size 
 
 	
