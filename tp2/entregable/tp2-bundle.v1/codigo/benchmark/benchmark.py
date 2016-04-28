@@ -83,12 +83,12 @@ class Benchmark:
                                 continue
 
                             print(str(current)+"/"+str(testCount),"-",
-                                    test["filter"]+":"+implementation, 
+                                    test["filter"]+":"+implementation,
                                     "("+param+")" if len(param.strip()) else "",
                                     img, str(size[0])+"x"+str(size[1]))
 
                             result = self.runTest(resizedImg,test["filter"],
-                                                  implementation, test["params"],
+                                                  implementation, param,
                                                   minTime=TIME_PER_TEST,
                                                   singleRun=test.get("singleRun",False),
                                                   referenceImplementation=
