@@ -19,19 +19,19 @@ TIME_PER_TEST = 1.0
 # Checkear que todos los anchos sean multiplos de 8, sino explota todo
 TESTS = {
     "ldr_implementaciones": {
-        "filterName": "ldr",
-        "img": "img/lena.bmp",
+        "filter": "ldr",
+        "imgs": ["img/lena.bmp"],
         "implementations": ["c","sse","avx","avx2"],
         "sizes": [(512,512)],
-        "params": "100",
+        "params": ["100"],
         "singleRun": True
     },
     "ldr_precision": {
-        "filterName": "ldr",
-        "img": "img/lena.bmp",
+        "filter": "ldr",
+        "imgs": ["img/lena.bmp"],
         "implementations": ["sse","sse_integer"],
         "sizes": [(512,512)],
-        "params": "100",
+        "params": ["100","255","-255"],
         "singleRun": True,              # Optional, defaults to False
         "referenceImplementation": "c"  # Optional, will generate "maxDiff" if not None
     }
@@ -69,34 +69,40 @@ class Benchmark:
                           ". Width must be a multiple of 8")
                     continue
 
-                resizedImg = self.generateTestImage(test["img"],size)
+                for img in test["imgs"]:
+                    resizedImg = self.generateTestImage(img,size)
 
-                if test.get("referenceImplementation", None) is not None:
-                    self.runTest(resizedImg,test["filterName"],test["referenceImplementation"],
-                                 test["params"], singleRun=True)
+                    for param in test["params"]:
 
-                for implementation in test["implementations"]:
-                    if implementation in self.unsuportedImplementations:
-                        continue
+                        if test.get("referenceImplementation", None) is not None:
+                            self.runTest(resizedImg,test["filter"],test["referenceImplementation"],
+                                         param, singleRun=True)
 
-                    print(str(current)+"/"+str(testCount),"-",
-                            test["filterName"]+":"+implementation,
-                            test["img"],str(size[0])+"x"+str(size[1]))
+                        for implementation in test["implementations"]:
+                            if implementation in self.unsuportedImplementations:
+                                continue
 
-                    result = self.runTest(resizedImg,test["filterName"],
-                                          implementation, test["params"],
-                                          minTime=TIME_PER_TEST,
-                                          singleRun=test.get("singleRun",False),
-                                          referenceImplementation=
-                                                test.get("referenceImplementation", None))
-                    if result is None:
-                        print("Error :(")
-                    else:
-                        result["size"] = size
-                        result["implementation"] = implementation
-                        results.append(result)
+                            print(str(current)+"/"+str(testCount),"-",
+                                    test["filter"]+":"+implementation, 
+                                    "("+param+")" if len(param.strip()) else "",
+                                    img, str(size[0])+"x"+str(size[1]))
 
-                    current += 1
+                            result = self.runTest(resizedImg,test["filter"],
+                                                  implementation, test["params"],
+                                                  minTime=TIME_PER_TEST,
+                                                  singleRun=test.get("singleRun",False),
+                                                  referenceImplementation=
+                                                        test.get("referenceImplementation", None))
+                            if result is None:
+                                print("Error :(")
+                            else:
+                                result["size"] = size
+                                result["img"] = img
+                                result["param"] = param
+                                result["implementation"] = implementation
+                                results.append(result)
+
+                            current += 1
 
             tests[testName]["results"] = results
 
@@ -116,7 +122,8 @@ class Benchmark:
     def countTests(self,tests):
         count = 0
         for testName, test in tests.items():
-            count += len(test["sizes"]) * len(test["implementations"])
+            count += len(test["sizes"]) * len(test["implementations"]) \
+                   * len(test["imgs"]) * len(test["params"])
         return count
 
     def generateTestImage(self,source,size):
