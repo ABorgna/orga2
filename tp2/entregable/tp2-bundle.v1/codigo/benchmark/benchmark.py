@@ -29,8 +29,9 @@ class Benchmark:
 
     TIME = "/usr/bin/env time"
     BINARY_PATH = "../build/tp2"
-    GEN_PATH = "bench/gen/"
-    IMG_OUT_PATH = "bench/out/"
+    GEN_PATH = "gen/"
+    IMG_OUT_PATH = "out/"
+    DATA_OUT_PATH = "data/"
 
     TIME_PER_TEST = 1.0
 
@@ -48,7 +49,7 @@ class Benchmark:
     def __init__(self):
         self.unsuportedImplementations = []
 
-    def run(self,tests,outFile):
+    def run(self,tests):
         testCount = self.countTests(tests)
         current = 1
 
@@ -81,13 +82,14 @@ class Benchmark:
 
             tests[testI]["results"] = results
 
+        outfile = self.DATA_OUT_PATH + self.getHostname()
         outputData = {
-                "hostname": self.getHostname,
+                "hostname": self.getHostname(),
                 "cpuinfo": self.getCpuinfo(),
                 "tests": tests
         }
 
-        with open(outFile, 'w') as f:
+        with open(outfile, 'w') as f:
             json.dump(outputData,f)
 
     def countTests(self,tests):
@@ -185,12 +187,10 @@ class Benchmark:
         return subprocess.check_output("cat /proc/cpuinfo")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: ./benchmark.py outfile.json")
+    if len(sys.argv) != 1:
+        print("Usage: ./benchmark.py")
         sys.exit(1)
 
-    outfile = sys.argv[1]
-
     bench = Benchmark()
-    bench.run(TESTS,outfile)
+    bench.run(TESTS)
 
