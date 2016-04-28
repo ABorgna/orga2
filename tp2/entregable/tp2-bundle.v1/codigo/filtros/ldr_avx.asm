@@ -78,7 +78,7 @@ ldr_avx:
     cvtdq2ps xmm6, xmm6
     movdq2q mm2, xmm6
 
-    ; Empezamos a procesar desde fila2 - 4px
+    ; Empezamos a procesar desde fila2 - 2px
     lea rsi, [r8 + r15 - 8]
     lea rdi, [r9 + r15 - 8]
 
@@ -135,32 +135,27 @@ ldr_avx:
         vphaddw xmm8, xmm8, xmm13
         vphaddw xmm9, xmm9, xmm14
         ; ->
-;| R7+G7+B7| R6+G6+B6| R5+G5+B5| R4+G4+B4|    0    |    0    |    0    |    0     | xmm{N+5}
+;| R7+G7+B7| R6+G6+B6| R5+G5+B5| R4+G4+B4|    0    |    0    |    0    |    0     | xmmN
         ; ==
-;|   sum7  |   sum6  |   sum5  |   sum4  |    0    |    0    |    0    |    0     | xmm{N+5}
-        vpxor xmm10, xmm10, xmm10
-        vpxor xmm11, xmm11, xmm11
-        vpxor xmm12, xmm12, xmm12
-        vpxor xmm13, xmm13, xmm13
-        vpxor xmm14, xmm14, xmm14
-        vphaddw xmm10, xmm10, xmm5
-        vphaddw xmm11, xmm11, xmm6
-        vphaddw xmm12, xmm12, xmm7
-        vphaddw xmm13, xmm13, xmm8
-        vphaddw xmm14, xmm14, xmm9
+;|   sum7  |   sum6  |   sum5  |   sum4  |    0    |    0    |    0    |    0     | xmmN
+        vphaddw xmm5, xmm15, xmm5
+        vphaddw xmm6, xmm15, xmm6
+        vphaddw xmm7, xmm15, xmm7
+        vphaddw xmm8, xmm15, xmm8
+        vphaddw xmm9, xmm15, xmm9
 
         ; Reducir todas las sumargb_i a una unica sumargb
         ; ->
-;|sum_col7 |sum_col6 |sum_col5 |sum_col4 |    0    |    0    |    0    |    0     | xmm10
-        vpaddw xmm13, xmm13, xmm14
-        vpaddw xmm10, xmm10, xmm11
-        vpaddw xmm12, xmm12, xmm13
-        vpaddw xmm10, xmm10, xmm12
+;|sum_col7 |sum_col6 |sum_col5 |sum_col4 |    0    |    0    |    0    |    0     | xmm5
+        vpaddw xmm8, xmm8, xmm9
+        vpaddw xmm6, xmm6, xmm7
+        vpaddw xmm6, xmm6, xmm8
+        vpaddw xmm5, xmm6, xmm5
 
         ; Save the sums in xmm0
         ; ->
 ;|sum_col7 |sum_col6 |sum_col5 |sum_col4 |sum_col3 |sum_col2 |sum_col1 |sum_col0 | xmm0
-        vpor xmm0, xmm0, xmm10
+        vpor xmm0, xmm0, xmm5
 
         ; Calcular sumargb para cada uno de los 4 pixeles que vamos a procesar
         ; En el proceso vamos eliminando las sumas de pixeles viejos y dejamos xmm0
@@ -206,7 +201,7 @@ ldr_avx:
         ; Cargar los valores de los pixeles, unpackearlos a dw y pasarlos a float
         ; ->
 ;| A3 | R3 | G3 | B3 | A2 | R2 | G2 | B2 | A1 | R1 | G1 | B1 | A0 | R0 | G0 | B0 | xmm9
-        movdqu xmm9, [rsi]
+        vmovdqu xmm9, [rsi]
         ; ->
 ;|    A3   |    R3   |    G3   |   B3    |    A2   |    R2   |    G2   |   B2    | xmm9
 ;|    A1   |    R1   |    G1   |   B1    |    A0   |    R0   |    G0   |   B0    | xmm11
