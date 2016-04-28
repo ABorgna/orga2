@@ -74,15 +74,14 @@ ldr_avx2:
     ; ymm15 is always zero
     vzeroall
 
-    ; mm0 = |   LDR_MAX_MAGIC.  |   LDR_MAX_MAGIC   |
-    ; mm1 = |        255.       |        255        |
-    ; mm2 = |       alpha.      |       alpha.      |
-    movq mm0, [LDR_MAX_INV]
-    movq mm1, [PIXEL_MAX_F]
+    ; ebx  = |    LDR_MAX_INV.   |
+    ; r11d = |        255.       |
+    ; r10d = |       alpha.      |
+    mov ebx, [LDR_MAX_INV]
+    mov r11d, [PIXEL_MAX_F]
     pinsrd xmm6, r10d, 0
-    pinsrd xmm6, r10d, 1
     vcvtdq2ps xmm6, xmm6
-    movdq2q mm2, xmm6
+    vpextrd r10d, xmm6, 0
 
     ; Empezamos a procesar desde fila2 - 8px
     lea rsi, [r8 + r15 - 32]
@@ -222,7 +221,7 @@ ldr_avx2:
 ;|       alpha.      |       alpha.      |       alpha.      |       alpha.      |...
 ;|       alpha.      |       alpha.      |       alpha.      |       alpha.      | ymm6
         vpxor ymm6, ymm6, ymm6
-        movq2dq xmm6, mm2
+        vpinsrd xmm6, r10d, 0
         vbroadcastss ymm6, xmm6
 
         ; Expandir las sumas, convertirlas a fp y multiplicarlas por alpha
@@ -322,7 +321,7 @@ ldr_avx2:
 ;|      1/MAX.       |      1/MAX.       |      1/MAX.       |      1/MAX.       |...
 ;|      1/MAX.       |      1/MAX.       |      1/MAX.       |      1/MAX.       | ymm14
         vpxor ymm14, ymm14, ymm14
-        movq2dq xmm14, mm0
+        vpinsrd xmm14, ebx, 0
         vbroadcastss ymm14, xmm14
 
         ; Dividir por MAX y sumarle el valor original de cada pixel
@@ -348,7 +347,7 @@ ldr_avx2:
 ;|       255.        |       255.        |       255.        |       255.        |...
 ;|       255.        |       255.        |       255.        |       255.        | ymm13
         vpxor ymm13, ymm13, ymm13
-        movq2dq xmm13, mm1
+        vpinsrd xmm13, r11d, 0
         vbroadcastss ymm13, xmm13
 
         ; Aplicar min(max(xmmN,0.),255.)
