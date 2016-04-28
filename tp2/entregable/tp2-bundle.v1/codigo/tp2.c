@@ -120,9 +120,15 @@ void correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador)
 
         MEDIR_TIEMPO_STOP(end)
 
+        if(config->cant_iteraciones < timingSlice) {
+            partialMin = (end-start)/config->cant_iteraciones;
+        } else {
+            partialMin /= timingSlice;
+        }
+
         imagenes_guardar(config);
         imagenes_liberar(config);
-        imprimir_tiempos_ejecucion(start, end, partialMin/timingSlice, config->cant_iteraciones);
+        imprimir_tiempos_ejecucion(start, end, partialMin, config->cant_iteraciones);
     }
 
     free(tipo_filtro_UPPER);
