@@ -1,0 +1,4 @@
+out/*
+gen/*
+data/*
+__pycache__/*

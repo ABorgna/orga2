@@ -68,7 +68,7 @@ filtro_t* detectar_filtro(configuracion_t *config)
 }
 
 
-void imprimir_tiempos_ejecucion(unsigned long long int start, unsigned long long int end, int cant_iteraciones) {
+void imprimir_tiempos_ejecucion(unsigned long long int start, unsigned long long int end, unsigned long long minCycles, int cant_iteraciones) {
     unsigned long long int cant_ciclos = end-start;
 
     printf("Tiempo de ejecución:\n");
@@ -77,6 +77,7 @@ void imprimir_tiempos_ejecucion(unsigned long long int start, unsigned long long
     printf("  # iteraciones                     : %d\n", cant_iteraciones);
     printf("  # de ciclos insumidos totales     : %llu\n", cant_ciclos);
     printf("  # de ciclos insumidos por llamada : %.3f\n", (float)cant_ciclos/(float)cant_iteraciones);
+    printf("  # minimo de ciclos insumidos      : %llu\n", minCycles);
 }
 
 void correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador)
@@ -96,15 +97,32 @@ void correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador)
     else
     {
         imagenes_abrir(config);
-        unsigned long long start, end;
+        unsigned long long start, end, partialStart, partialEnd, partialMin=-1;
+        const unsigned short timingSlice = 32;
+
         MEDIR_TIEMPO_START(start)
-        for (int i = 0; i < config->cant_iteraciones; i++) {
+
+        for (int i = config->cant_iteraciones / timingSlice; i-->0; ){
+                unsigned long long partialTime;
+
+                MEDIR_TIEMPO_START(partialStart)
+                for(int j = timingSlice; j-->0; ){
+                    aplicador(config);
+                }
+                MEDIR_TIEMPO_STOP(partialEnd)
+
+                partialTime = partialEnd - partialStart;
+                partialMin = partialTime < partialMin ? partialTime : partialMin;
+        }
+        for (int i = config->cant_iteraciones % timingSlice; i-->0; ) {
                 aplicador(config);
         }
+
         MEDIR_TIEMPO_STOP(end)
+
         imagenes_guardar(config);
         imagenes_liberar(config);
-        imprimir_tiempos_ejecucion(start, end, config->cant_iteraciones);
+        imprimir_tiempos_ejecucion(start, end, partialMin/timingSlice, config->cant_iteraciones);
     }
 
     free(tipo_filtro_UPPER);

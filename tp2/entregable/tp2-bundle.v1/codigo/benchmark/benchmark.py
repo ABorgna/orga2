@@ -29,8 +29,9 @@ class Benchmark:
 
     TIME = "/usr/bin/env time"
     BINARY_PATH = "../build/tp2"
-    GEN_PATH = "bench/gen/"
-    IMG_OUT_PATH = "bench/out/"
+    GEN_PATH = "gen/"
+    IMG_OUT_PATH = "out/"
+    DATA_OUT_PATH = "data/"
 
     TIME_PER_TEST = 1.0
 
@@ -42,13 +43,14 @@ class Benchmark:
     completedRe = re.compile(r"^\s*Tiempo de ejecución",re.M)
     iterationsRe = re.compile(r"^\s*# iteraciones\s+: ([0-9]+)",re.M)
     cyclesRe = re.compile(r"^\s*# de ciclos insumidos por llamada\s+: ([0-9.]+)",re.M)
+    minCyclesRe = re.compile(r"^\s*# minimo de ciclos insumidos \s+: ([0-9.]+)",re.M)
     invalidInstructionRe = re.compile(r"^Command terminated by signal 4",re.M)
 
 
     def __init__(self):
         self.unsuportedImplementations = []
 
-    def run(self,tests,outFile):
+    def run(self,tests):
         testCount = self.countTests(tests)
         current = 1
 
@@ -58,6 +60,11 @@ class Benchmark:
             results = []
             print("----",testName,"----")
             for size in test["sizes"]:
+                if size[0] % 8:
+                    print("Invalid size",str(size[0]) + "x" + str(size[1]),
+                          ". Width must be a multiple of 8")
+                    continue
+
                 resizedImg = self.generateTestImage(test["img"],size)
                 for implementation in test["implementations"]:
                     if implementation in self.unsuportedImplementations:
@@ -81,13 +88,14 @@ class Benchmark:
 
             tests[testI]["results"] = results
 
+        outfile = self.DATA_OUT_PATH + self.getHostname()
         outputData = {
-                "hostname": self.getHostname,
+                "hostname": self.getHostname(),
                 "cpuinfo": self.getCpuinfo(),
                 "tests": tests
         }
 
-        with open(outFile, 'w') as f:
+        with open(outfile, 'w') as f:
             json.dump(outputData,f)
 
     def countTests(self,tests):
@@ -169,13 +177,15 @@ class Benchmark:
         # Parse the output data
         iterations = int(float(self.iterationsRe.search(out).group(1)))
         cycles = int(float(self.cyclesRe.search(out).group(1)))
+        minCycles = int(float(self.cyclesRe.search(out).group(1)))
         time = userTime/iterations
 
         return {
             "totalTime": userTime,
             "time": time,
             "iterations": iterations,
-            "cycles": cycles
+            "cycles": cycles,
+            "minCycles": minCycles
         }
 
     def getHostname(self):
@@ -185,12 +195,10 @@ class Benchmark:
         return subprocess.check_output("cat /proc/cpuinfo")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: ./benchmark.py outfile.json")
+    if len(sys.argv) != 1:
+        print("Usage: ./benchmark.py")
         sys.exit(1)
 
-    outfile = sys.argv[1]
-
     bench = Benchmark()
-    bench.run(TESTS,outfile)
+    bench.run(TESTS)
 
