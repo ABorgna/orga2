@@ -4,7 +4,7 @@ DEFAULT REL
 section .rodata
 align 16
 mskDejarSoloAlpha:	db 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF
-mskQuitarAlpha:		db 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF
+mskQuitarAlpha:		db 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00
 mskReordenar:	    db 0x00, 0x01, 0x04, 0x05, 0x08, 0x09, 0x0C, 0x0D, 0x02, 0x03, 0x06, 0x07, 0x0A, 0x0B, 0x0E, 0x0F
 vectorFactores:		dd 0.2, 0.3, 0.5, 0.0
 vectorSaturacion: 	dd 0xFFFFFFFF, 0xFFFFFFFF, 0x000000FF, 0xFFFFFFFF
@@ -31,42 +31,36 @@ sepia_asm:
 
 	;Almaceno máscaras en registros
 
-	pxor xmm5, xmm5					;Vector de ceros
+	pxor xmm5, xmm5								;Vector de ceros
 	movdqa xmm6, [mskQuitarAlpha]
 	movdqa xmm7, [mskReordenar]
 	movdqa xmm8, [vectorFactores]
 	movdqa xmm9, [mskDejarSoloAlpha]
 
 	.ciclo:
-		; Traigo el cacho de memoria a xmm0
+		; Traigo el cacho de memoria a xmm0 y xmm10
 
 		movdqu xmm0, [rdi]						; xmm0:  [ a4 | r4 | g4 | b4 | a3 | r3 | g3 | b3 | a2 | r2 | g2 | b2 | a1 | r1 | g1 | b1 ]
 		movdqu xmm10, [rdi + 16]				; xmm11: [ a8 | r8 | g8 | b8 | a7 | r7 | g7 | b7 | a6 | r6 | g6 | b6 | a5 | r5 | g5 | b5 ]
 
-		; Separo en dos para poder desempaquetar
+		; Separo en dos para poder desempaquetar y les quito el alpha
 
 		movdqa xmm1, xmm0 						; xmm1 == xmm0
-		movdqa xmm3, xmm0 						; xmm3 == xmm0
+		pand xmm1, xmm6							; xmm1:  [  0 | r4 | g4 | b4 |  0 | r3 | g3 | b3 |  0 | r2 | g2 | b2 |  0 | r1 | g1 | b1 ]
+		movdqa xmm3, xmm1 						; xmm3 == xmm1
 
 		movdqa xmm11, xmm10 					; xmm11 == xmm10
-		movdqa xmm13, xmm10		 				; xmm11 == xmm10
+		pand xmm11, xmm6						; xmm11: [  0 | r8 | g8 | b8 |  0 | r7 | g7 | b7 |  0 | r6 | g6 | b6 |  0 | r5 | g5 | b5 ]
+		movdqa xmm13, xmm11		 				; xmm13 == xmm11
 
 		; Desempaqueto para que los datos pasen de byte a word
 
-		punpcklbw xmm1, xmm5					; xmm1:  [  0 | a2 |  0 | r2 |  0 | g2 |  0 | b2 |  0 |  0 |  0 | r1 |  0 | g1 |  0 | b1 ]
-		punpckhbw xmm3, xmm5					; xmm3:  [  0 | a4 |  0 | r4 |  0 | g4 |  0 | b4 |  0 |  0 |  0 | r3 |  0 | g3 |  0 | b3 ]
+		punpcklbw xmm1, xmm5					; xmm1:  [  0 |  0 |  0 | r2 |  0 | g2 |  0 | b2 |  0 |  0 |  0 | r1 |  0 | g1 |  0 | b1 ]
+		punpckhbw xmm3, xmm5					; xmm3:  [  0 |  0 |  0 | r4 |  0 | g4 |  0 | b4 |  0 |  0 |  0 | r3 |  0 | g3 |  0 | b3 ]
 
-		punpcklbw xmm11, xmm5					; xmm11: [  0 | a6 |  0 | r6 |  0 | g6 |  0 | b6 |  0 |  0 |  0 | r5 |  0 | g5 |  0 | b5 ]
-		punpckhbw xmm13, xmm5					; xmm13: [  0 | a8 |  0 | r8 |  0 | g8 |  0 | b8 |  0 |  0 |  0 | r7 |  0 | g7 |  0 | b7 ]
+		punpcklbw xmm11, xmm5					; xmm11: [  0 |  0 |  0 | r6 |  0 | g6 |  0 | b6 |  0 |  0 |  0 | r5 |  0 | g5 |  0 | b5 ]
+		punpckhbw xmm13, xmm5					; xmm13: [  0 |  0 |  0 | r8 |  0 | g8 |  0 | b8 |  0 |  0 |  0 | r7 |  0 | g7 |  0 | b7 ]
 
-		; Utilizo una máscara para deshacerme del alpha y poder ejecutar sumas horizontales
-
-		pand xmm1, xmm6							; xmm1:  [  0 |  0 |  0 | r6 |  0 | g6 |  0 | b6 |  0 |  0 |  0 | r5 |  0 | g5 |  0 | b5 ]
-		pand xmm3, xmm6							; xmm3:  [  0 |  0 |  0 | r8 |  0 | g8 |  0 | b8 |  0 |  0 |  0 | r7 |  0 | g7 |  0 | b7 ]
-
-		pand xmm11, xmm6						; xmm11: [  0 |  0 |  0 | r2 |  0 | g2 |  0 | b2 |  0 |  0 |  0 | r5 |  0 | g5 |  0 | b5 ]
-		pand xmm13, xmm6						; xmm13: [  0 |  0 |  0 | r4 |  0 | g4 |  0 | b4 |  0 |  0 |  0 | r3 |  0 | g3 |  0 | b3 ]
-		
 		; Hago las dos sumas horizontales
 
 		phaddw xmm1, xmm1						; xmm1:  [ r2 + g2 |    b2   | r1 + g1 |    b1   | r2 + g2 |    b2   | r1 + g1 |    b1   ]
@@ -95,7 +89,7 @@ sepia_asm:
 		movdqa xmm4, xmm3						; xmm4 == xmm3
 
 		movdqa xmm12, xmm11						; xmm12 == xmm11
-		movdqa xmm14, xmm13						; xmm14 == xmm14
+		movdqa xmm14, xmm13						; xmm14 == xmm13
 
 		punpcklwd xmm1, xmm5					; xmm1:  [		  s1  		|		  s1		|		  s1		|		  s1		]
 		punpckhwd xmm2, xmm5					; xmm2:  [		  s2  		|		  s2		|		  s2		|		  s2		]
