@@ -178,7 +178,7 @@ int main(int argc, char* argv[]){
 
     // (7) mostrar summary
     if(opt.summaryop) {
-        for(i=1;i<256;i++) {
+        for(i=0;i<256;i++) {
             if(opt.summary[i]!=0) {
                 printf("%i\t%i\n", i, opt.summary[i]);
             }

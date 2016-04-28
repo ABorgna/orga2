@@ -6,34 +6,38 @@ import re
 import subprocess
 import sys
 
+TIME = "/usr/bin/env time"
+TP2_BIN = "../build/tp2"
+BMPDIFF = "../build/bmpdiff"
+
+GEN_PATH = "gen/"
+IMG_OUT_PATH = "out/"
+DATA_OUT_PATH = "data/"
+
+TIME_PER_TEST = 1.0
+
 # Checkear que todos los anchos sean multiplos de 8, sino explota todo
 TESTS = {
-    "ldr_cuadrado": {
+    "ldr_implementaciones": {
         "filterName": "ldr",
-        "img": "bench/img/lena.bmp",
-        "implementations": ["c","sse","sse_integer","avx","avx2"],
-        "sizes": [(64,32),(64,64),(96,96),(128,128),(192,192),(256,256),(512,512)],
-        "params": "100"
+        "img": "img/lena.bmp",
+        "implementations": ["c","sse","avx","avx2"],
+        "sizes": [(512,512)],
+        "params": "100",
+        "singleRun": True
     },
-    "ldr_ancho": {
+    "ldr_precision": {
         "filterName": "ldr",
-        "img": "bench/img/lena.bmp",
-        "implementations": ["c","sse","sse_integer","avx","avx2"],
-        "sizes": [(256,32),(256,64),(256,96),(256,128),(256,192),(256,256),
-                  (256,512),(256,1024),(256,2048),(256,4096)],
-        "params": "100"
+        "img": "img/lena.bmp",
+        "implementations": ["sse","sse_integer"],
+        "sizes": [(512,512)],
+        "params": "100",
+        "singleRun": True,              # Optional, defaults to False
+        "referenceImplementation": "c"  # Optional, will generate "maxDiff" if not None
     }
 }
 
 class Benchmark:
-
-    TIME = "/usr/bin/env time"
-    BINARY_PATH = "../build/tp2"
-    GEN_PATH = "gen/"
-    IMG_OUT_PATH = "out/"
-    DATA_OUT_PATH = "data/"
-
-    TIME_PER_TEST = 1.0
 
     # Regexes matching the output of the script
 
@@ -54,7 +58,7 @@ class Benchmark:
         testCount = self.countTests(tests)
         current = 1
 
-        print("Running ",testCount, " tests (~"+str(self.TIME_PER_TEST*testCount*1.5)+"s)")
+        print("Running ",testCount, " tests (~"+str(TIME_PER_TEST*testCount*1.5)+"s)")
 
         for testName, test in tests.items():
             results = []
@@ -66,6 +70,11 @@ class Benchmark:
                     continue
 
                 resizedImg = self.generateTestImage(test["img"],size)
+
+                if test.get("referenceImplementation", None) is not None:
+                    self.runTest(resizedImg,test["filterName"],test["referenceImplementation"],
+                                 test["params"], singleRun=True)
+
                 for implementation in test["implementations"]:
                     if implementation in self.unsuportedImplementations:
                         continue
@@ -76,7 +85,10 @@ class Benchmark:
 
                     result = self.runTest(resizedImg,test["filterName"],
                                           implementation, test["params"],
-                                          minTime=self.TIME_PER_TEST)
+                                          minTime=TIME_PER_TEST,
+                                          singleRun=test.get("singleRun",False),
+                                          referenceImplementation=
+                                                test.get("referenceImplementation", None))
                     if result is None:
                         print("Error :(")
                     else:
@@ -86,16 +98,19 @@ class Benchmark:
 
                     current += 1
 
-            tests[testI]["results"] = results
+            tests[testName]["results"] = results
 
-        outfile = self.DATA_OUT_PATH + self.getHostname()
+        outfile = DATA_OUT_PATH + self.getHostname() + ".json"
         outputData = {
                 "hostname": self.getHostname(),
                 "cpuinfo": self.getCpuinfo(),
                 "tests": tests
         }
 
-        with open(outfile, 'w') as f:
+        if not os.path.exists(DATA_OUT_PATH):
+            os.makedirs(DATA_OUT_PATH)
+
+        with open(outfile, 'w+') as f:
             json.dump(outputData,f)
 
     def countTests(self,tests):
@@ -108,10 +123,10 @@ class Benchmark:
         sizeStr = str(size[0]) + "x" + str(size[1])
         sourceName = os.path.basename(source)
         filename = sourceName + "." + sizeStr  + ".bmp"
-        path = self.GEN_PATH + filename
+        path = GEN_PATH + filename
 
-        if not os.path.exists(self.GEN_PATH):
-            os.makedirs(self.GEN_PATH)
+        if not os.path.exists(GEN_PATH):
+            os.makedirs(GEN_PATH)
 
         if not os.path.exists(path):
             arguments = ["/usr/bin/env","convert",source,
@@ -128,18 +143,19 @@ class Benchmark:
         return path
 
     def runTest(self, img, filterName, implementation, *args,
-            minTime = 2.0, minIterations=100):
+            minTime = 2.0, minIterations=100, singleRun=False,
+            referenceImplementation=None):
 
         # Use time
-        arguments = ["/usr/bin/env", "time", "-p", self.BINARY_PATH, filterName,
-                     "-t", minIterations, "-o", self.IMG_OUT_PATH,
+        arguments = ["/usr/bin/env", "time", "-p", TP2_BIN, filterName,
+                     "-t", minIterations, "-o", IMG_OUT_PATH,
                      "-i", implementation, img, "--"] + list(args)
         arguments = [str(s) for s in arguments]
 
         first = True
         userTime = 0
         iterations = minIterations
-        while userTime < minTime:
+        while first or (userTime < minTime and not singleRun):
             if not first:
                 if userTime < 0.01:
                     iterations *= 100
@@ -180,19 +196,44 @@ class Benchmark:
         minCycles = int(float(self.cyclesRe.search(out).group(1)))
         time = userTime/iterations
 
+        # Calculate the maximum pixel diff
+        maxDiff = -1
+        if referenceImplementation is not None:
+            outImage = IMG_OUT_PATH+os.path.basename(img)+"." \
+                +filterName+"."+implementation.upper()+".bmp"
+            referenceImage = IMG_OUT_PATH+os.path.basename(img)+"." \
+                +filterName+"."+referenceImplementation.upper()+".bmp"
+
+            maxDiff = self.getMaxPixelDiff(referenceImage,outImage)
+
         return {
             "totalTime": userTime,
             "time": time,
             "iterations": iterations,
             "cycles": cycles,
-            "minCycles": minCycles
+            "minCycles": minCycles,
+            "maxDiff": maxDiff
         }
 
+    def getMaxPixelDiff(self, baseImg, targetImg):
+        return max(self.getPixelDiffs(baseImg, targetImg), key=int)
+
+    def getPixelDiffs(self, baseImg, targetImg):
+        arguments = [BMPDIFF, "-s", baseImg, targetImg, "0"]
+        output = ""
+        try:
+            output = subprocess.check_output(arguments).decode("utf-8")
+        except subprocess.CalledProcessError as e:
+            # bmpdiff returns 255 if there are differences
+            output = e.output.decode("utf-8")
+
+        return { int(l.split()[0]) : int(l.split()[1]) for l in output.split('\n') if len(l.split()) == 2}
+
     def getHostname(self):
-        return subprocess.check_output("cat /etc/hostname")
+        return subprocess.check_output(["cat","/etc/hostname"]).decode("utf-8").strip()
 
     def getCpuinfo(self):
-        return subprocess.check_output("cat /proc/cpuinfo")
+        return subprocess.check_output(["cat","/proc/cpuinfo"]).decode("utf-8").strip()
 
 if __name__ == "__main__":
     if len(sys.argv) != 1:
