@@ -154,7 +154,7 @@ class Benchmark:
 
         first = True
         userTime = 0
-        iterations = minIterations
+        iterations = 1 if singleRun else minIterations
         while first or (userTime < minTime and not singleRun):
             if not first:
                 if userTime < 0.01:
