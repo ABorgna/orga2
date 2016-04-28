@@ -43,6 +43,7 @@ class Benchmark:
     completedRe = re.compile(r"^\s*Tiempo de ejecución",re.M)
     iterationsRe = re.compile(r"^\s*# iteraciones\s+: ([0-9]+)",re.M)
     cyclesRe = re.compile(r"^\s*# de ciclos insumidos por llamada\s+: ([0-9.]+)",re.M)
+    minCyclesRe = re.compile(r"^\s*# minimo de ciclos insumidos \s+: ([0-9.]+)",re.M)
     invalidInstructionRe = re.compile(r"^Command terminated by signal 4",re.M)
 
 
@@ -59,6 +60,11 @@ class Benchmark:
             results = []
             print("----",testName,"----")
             for size in test["sizes"]:
+                if size[0] % 8:
+                    print("Invalid size",str(size[0]) + "x" + str(size[1]),
+                          ". Width must be a multiple of 8")
+                    continue
+
                 resizedImg = self.generateTestImage(test["img"],size)
                 for implementation in test["implementations"]:
                     if implementation in self.unsuportedImplementations:
@@ -171,13 +177,15 @@ class Benchmark:
         # Parse the output data
         iterations = int(float(self.iterationsRe.search(out).group(1)))
         cycles = int(float(self.cyclesRe.search(out).group(1)))
+        minCycles = int(float(self.cyclesRe.search(out).group(1)))
         time = userTime/iterations
 
         return {
             "totalTime": userTime,
             "time": time,
             "iterations": iterations,
-            "cycles": cycles
+            "cycles": cycles,
+            "minCycles": minCycles
         }
 
     def getHostname(self):
