@@ -6,6 +6,14 @@ import re
 import subprocess
 import sys
 
+HELP = """Usage: ./benchmark.py test [test ...]
+
+Where test is one of:
+        all
+        ldr_implementaciones
+        ldr_precision
+"""
+
 TIME = "/usr/bin/env time"
 TP2_BIN = "../build/tp2"
 BMPDIFF = "../build/bmpdiff"
@@ -16,22 +24,21 @@ DATA_OUT_PATH = "data/"
 
 TIME_PER_TEST = 1.0
 
-# Checkear que todos los anchos sean multiplos de 8, sino explota todo
 TESTS = {
     "ldr_implementaciones": {
         "filter": "ldr",
         "imgs": ["img/lena.bmp"],
         "implementations": ["c","sse","avx","avx2"],
         "sizes": [(512,512)],
-        "params": ["100"],
-        "singleRun": True
+        "params": ["100"]
     },
     "ldr_precision": {
         "filter": "ldr",
-        "imgs": ["img/lena.bmp"],
+        "imgs": ["img/lena.bmp","img/12d9xx.jpg","img/18ifgk.jpg","img/15979a.jpg",
+                 "img/colores32.bmp","img/fine.png"],
         "implementations": ["sse","sse_integer"],
-        "sizes": [(512,512)],
-        "params": ["100","255","-255"],
+        "sizes": [(0,0)],               # (0,0) == original size
+        "params": ["255"],
         "singleRun": True,              # Optional, defaults to False
         "referenceImplementation": "c"  # Optional, will generate "maxDiff" if not None
     }
@@ -49,10 +56,12 @@ class Benchmark:
     cyclesRe = re.compile(r"^\s*# de ciclos insumidos por llamada\s+: ([0-9.]+)",re.M)
     minCyclesRe = re.compile(r"^\s*# minimo de ciclos insumidos \s+: ([0-9.]+)",re.M)
     invalidInstructionRe = re.compile(r"^Command terminated by signal 4",re.M)
+    cpuinfoModelRe = re.compile(r"^model name\s*:\s(.*)$",re.M)
 
 
     def __init__(self):
         self.unsuportedImplementations = []
+        self.__cpuinfo = None
 
     def run(self,tests):
         testCount = self.countTests(tests)
@@ -63,13 +72,17 @@ class Benchmark:
         for testName, test in tests.items():
             results = []
             print("----",testName,"----")
-            for size in test["sizes"]:
-                if size[0] % 8:
-                    print("Invalid size",str(size[0]) + "x" + str(size[1]),
-                          ". Width must be a multiple of 8")
-                    continue
 
-                for img in test["imgs"]:
+            for img in test["imgs"]:
+                for size in test["sizes"]:
+
+                    if size == (0,0):
+                        # Original size
+                        size = self.getImageSize(img)
+
+                    # Image width must be a multiple of 8
+                    size = (size[0] - size[0] % 8, size[1])
+
                     resizedImg = self.generateTestImage(img,size)
 
                     for param in test["params"]:
@@ -110,8 +123,11 @@ class Benchmark:
         outputData = {
                 "hostname": self.getHostname(),
                 "cpuinfo": self.getCpuinfo(),
+                "model": self.getCpuModel(),
                 "tests": tests
         }
+
+        outputData = self.mergeOldTests(outputData, outfile)
 
         if not os.path.exists(DATA_OUT_PATH):
             os.makedirs(DATA_OUT_PATH)
@@ -148,6 +164,15 @@ class Benchmark:
             subprocess.check_call(arguments)
 
         return path
+
+    def getImageSize(self,img):
+        widthArguments = ["/usr/bin/env", "identify",
+                          "-format","%w", img]
+        heightArguments = ["/usr/bin/env", "identify",
+                          "-format","%h", img]
+        width = int(subprocess.check_output(widthArguments))
+        height = int(subprocess.check_output(heightArguments))
+        return (width,height)
 
     def runTest(self, img, filterName, implementation, *args,
             minTime = 2.0, minIterations=100, singleRun=False,
@@ -240,13 +265,48 @@ class Benchmark:
         return subprocess.check_output(["cat","/etc/hostname"]).decode("utf-8").strip()
 
     def getCpuinfo(self):
-        return subprocess.check_output(["cat","/proc/cpuinfo"]).decode("utf-8").strip()
+        if self.__cpuinfo is None:
+            self.__cpuinfo = subprocess.check_output(["cat","/proc/cpuinfo"]).decode("utf-8").strip()
+        return self.__cpuinfo
+
+    def getCpuModel(self):
+        return self.cpuinfoModelRe.search(self.getCpuinfo()).group(1)
+
+    def mergeOldTests(self, outputData, outfile):
+        if os.path.exists(outfile):
+            with open(outfile, 'r') as f:
+                oldData  = json.load(f)
+
+            for t,d in oldData["tests"].items():
+                if t not in outputData["tests"]:
+                    outputData["tests"][t] = d
+
+        return outputData
 
 if __name__ == "__main__":
-    if len(sys.argv) != 1:
-        print("Usage: ./benchmark.py")
+    if len(sys.argv) < 2:
+        print(HELP)
         sys.exit(1)
 
+    test = sys.argv[1]
+    tests = {}
+
+    for i in range(1, len(sys.argv)):
+        t = sys.argv[i]
+
+        if t == "all":
+            tests = TESTS
+            break
+
+        elif t in TESTS:
+            tests[t] = TESTS[t]
+
+        else:
+            print("Test",t,"not found.")
+            print()
+            print(HELP)
+            sys.exit(2)
+
     bench = Benchmark()
-    bench.run(TESTS)
+    bench.run(tests)
 
