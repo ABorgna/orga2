@@ -259,7 +259,7 @@ sepia_avx2:
 
                     ; Fusiono con xmm0
 
-            pand xmm0, xmm9                            ; xmm0:  [ a4 |  0 |  0 |  0 | a3 |  0 |  0 |  0 | a2 |  0 |  0 |  0 | a1 |  0 |  0 |  0 ]
+            ;pand xmm0, xmm9                            ; xmm0:  [ a4 |  0 |  0 |  0 | a3 |  0 |  0 |  0 | a2 |  0 |  0 |  0 | a1 |  0 |  0 |  0 ]
 
             vpand ymm0, ymm9
             vpand ymm10, ymm9
@@ -281,7 +281,6 @@ sepia_avx2:
             vmovdqu [rsi + 32], ymm10
 
                     ;movdqa [rsi + 16], xmm10
-
 
                     ; Avanzo en el loop y chequeo si tengo que terminar
             .loopear:
