@@ -35,6 +35,7 @@ sepia_avx2:
     vmovdqa ymm8, [vectorFactores]
     vmovdqa ymm9, [mskDejarSoloAlpha]
 
+    mov edx, ecx
     test ecx, 0xf
     jz .dividirPor16
     dec ecx
@@ -74,17 +75,6 @@ sepia_avx2:
 
             vphaddw ymm11, ymm13, ymm11
 
-;|    S7   |    S6   |    S3   |    S2   |    S7   |    S6   |    S3   |    S2   |...
-;|    S7   |    S6   |    S3   |    S2   |    S7   |    S6   |    S3   |    S2   | xmm3
-            ; &
-;|    S5   |    S4   |    S1   |    S0   |    S5   |    S4   |    S1   |    S0   |...
-;|    S5   |    S4   |    S1   |    S0   |    S5   |    S4   |    S1   |    S0   | xmm1
-            vphaddw ymm1, ymm1, ymm1
-            vphaddw ymm3, ymm3, ymm3
-
-            vphaddw ymm11, ymm11, ymm11
-            vphaddw ymm13, ymm13, ymm13
-
 ;|    0    |    0    |    0    |    0    |    S7   |    S6   |    S5   |    S4   |...
 ;|    0    |    0    |    0    |    0    |    S3   |    S2   |    S1   |    S0   | xmm1
             vphaddw ymm1, ymm1, ymm5
@@ -93,9 +83,9 @@ sepia_avx2:
 
 ;|         S7        |         S6        |         S5        |         S4        |...
 ;|         S3        |         S2        |         S1        |         S0        | xmm1
-            vpunpcklbw ymm1, ymm1, ymm5
+            vpunpcklwd ymm1, ymm1, ymm5
 
-            vpunpcklbw ymm11, ymm11, ymm5
+            vpunpcklwd ymm11, ymm11, ymm5
 
 
             ; Convierto cada uno a float
@@ -171,13 +161,12 @@ sepia_avx2:
 
             vpackusdw ymm11, ymm12
             vpackusdw ymm13, ymm14
-                ;    packuswb xmm1, xmm3                        ; xmm1:  [  0 |Ir4 |Ig4 |Ib4 |  0 |Ir3 |Ig3 |Ib3 |  0 |Ir2 |Ig2 |Ib2 |  0 |Ir1 |Ig1 |Ib1 ]
 
 ;|  0 |Ir7 |Ig7 |Ib7 |  0 |Ir6 |Ig6 |Ib6 |  0 |Ir5 |Ig5 |Ib5 |  0 |Ir4 |Ig4 |Ib4 |...
 ;|  0 |Ir3 |Ig3 |Ib3 |  0 |Ir2 |Ig2 |Ib2 |  0 |Ir1 |Ig1 |Ib1 |  0 |Ir0 |Ig0 |Ib0 | ymm1
-            vpackuswb ymm1, ymm3
+            vpackuswb ymm1, ymm3, ymm1
 
-            vpackuswb ymm11, ymm13
+            vpackuswb ymm11, ymm13, ymm11
 
             ; Fusiono con ymm0
 ;| A7 |  0 |  0 |  0 | A6 |  0 |  0 |  0 | A5 |  0 |  0 |  0 | A4 |  0 |  0 |  0 |...
@@ -210,7 +199,7 @@ sepia_avx2:
     ;.soloDeAUno:
     ;        sar ecx, 3                                    ; divide por 8
 
-    cmp edx, 0
+    test edx, 1
     je .fin
                 ; Traigo el cacho de memoria a xmm0
 
