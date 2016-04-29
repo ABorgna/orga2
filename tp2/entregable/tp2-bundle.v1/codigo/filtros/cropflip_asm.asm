@@ -36,10 +36,11 @@ cropflip_sse:
 	push r12
 	push r13
 	push r14
+	sub rsp, 8 ; ALIGNED VIEJA, NO ME IMPORTA NADA
 	
 	
 	movsx r12, dword [rbp+24]
-	mov rdx, r12
+	mov rdx, r12	
 
 	movsx r13, dword [rbp+16]
 	sar r13, 2					; r13 <- tamx/4
@@ -97,6 +98,7 @@ cropflip_sse:
 			jmp .loopSkywalkerY
 			
 .fin:	
+	add rsp, 8
 	pop r14
 	pop r13
 	pop r12
