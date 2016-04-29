@@ -84,6 +84,9 @@ class Benchmark:
 
         print("Running ",testCount, " tests (~"+str(TIME_PER_TEST*testCount*1.5)+"s)")
 
+        if not os.path.exists(IMG_OUT_PATH):
+            os.makedirs(IMG_OUT_PATH)
+
         for testName, test in tests.items():
             results = []
             print("----",testName,"----")
