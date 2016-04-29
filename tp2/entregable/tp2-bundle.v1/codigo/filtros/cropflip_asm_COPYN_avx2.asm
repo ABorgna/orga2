@@ -42,7 +42,8 @@ cropflip_asm_COPYN_avx2:
 	movsxd r13, r8d 		
 	movsxd rbx, dword [rbp+16]		
 	movsxd rax, dword [rbp+40]
-			
+	movsx r10, dword [rbp+32]
+	
 	mov r14, r12
 	dec r14
 	add r14, rax
