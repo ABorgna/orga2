@@ -52,6 +52,8 @@ class Grapher:
         # groups: [impl]
         sets = []
         groups = []
+        maxTime = 0.
+
         for host,t in tests.items():
             if filterName+"_implementaciones" not in t["tests"]:
                 continue
@@ -61,10 +63,10 @@ class Grapher:
 
             for result in t["tests"][filterName+"_implementaciones"]["results"]:
                 datapoints[result["implementation"]] = result["time"]
+                maxTime = max(maxTime, result["time"])
+
                 if result["implementation"] not in groups:
                     groups.append(result["implementation"])
-
-            datapoints = { i: t*1000 for i,t in datapoints.items()}
 
             model = t["model"]
             if model in sets:
@@ -74,6 +76,14 @@ class Grapher:
                 model = model+" ("+str(n)+")"
 
             sets.append((model,datapoints))
+
+        unit = "s"
+        if maxTime < 0.5e-3:
+            unit = "us"
+            sets = [ (m, {i: t*1e6 for i,t in r.items()}) for m,r in sets]
+        elif maxTime < 0.5:
+            unit = "ms"
+            sets = [ (m, {i: t*1e3 for i,t in r.items()}) for m,r in sets]
 
         # Plot the data
         self.plotGroupedBarplots(sets, groups)
@@ -85,7 +95,7 @@ class Grapher:
         plt.title('Tiempo de ejecucion de'+filterName+'sobre lena.bmp 512x512', fontsize=16)
         plt.xticks(index + bar_width, groups, fontsize=14)
         plt.yticks(fontsize=14)
-        plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%gms'))
+        plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%g'+unit))
         plt.legend(loc='best')
 
         plt.savefig(path+filterName+"_time.png")
