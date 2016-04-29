@@ -23,6 +23,13 @@ DATA_OUT_PATH = "data/"
 TIME_PER_TEST = 1.0
 
 TESTS = {
+    "cropflip_implementaciones": {
+        "filter": "cropflip",
+        "imgs": ["img/lena.bmp"],
+        "implementations": ["c","sse","sse_par","avx2"],
+        "sizes": [(512,512)],
+        "params": ["128 128 128 128"]
+    },
     "sepia_implementaciones": {
         "filter": "sepia",
         "imgs": ["img/lena.bmp"],
@@ -188,9 +195,11 @@ class Benchmark:
 
         # Use time
         arguments = ["/usr/bin/env", "time", "-p", TP2_BIN, filterName,
-                     "-t", minIterations, "-o", IMG_OUT_PATH,
-                     "-i", implementation, img, "--"] + list(args)
-        arguments = [str(s) for s in arguments]
+                        "-t", minIterations,
+                        "-o", IMG_OUT_PATH,
+                        "-i", implementation,
+                        img, "--"] + [e for a in args for e in a.split()]
+        arguments = [str(a) for a in arguments]
 
         first = True
         userTime = 0
@@ -198,9 +207,9 @@ class Benchmark:
         while first or (userTime < minTime and not singleRun):
             if not first:
                 if userTime < 0.01:
-                    iterations *= 100
+                    iterations *= 10
                 else:
-                    calcIts = int(minIterations * minTime / userTime)
+                    calcIts = int(1.1 * iterations * minTime / userTime)
                     if iterations < calcIts:
                         iterations = calcIts
                     else:
