@@ -86,9 +86,9 @@ class Grapher:
             sets = [ (m, {i: t*1e3 for i,t in r.items()}) for m,r in sets]
 
         # Plot the data
-        self.plotGroupedBarplots(sets, groups)
+        self.plotGroupedBarplots(sets, groups, ascendingOrder=False)
 
-        plt.xlabel('Extensión', fontsize=14)
+        plt.xlabel('Implementación', fontsize=14)
         plt.ylabel('Tiempo', fontsize=14)
         plt.title('Tiempo de ejecucion de '+filterName+' sobre lena.bmp 512x512',
                    fontsize=16)
@@ -133,7 +133,7 @@ class Grapher:
         # Plot the data
         self.plotGroupedBarplots(sets, groups)
 
-        plt.xlabel('Extensión', fontsize=14)
+        plt.xlabel('Implementación', fontsize=14)
         plt.ylabel('Speedup', fontsize=14)
         plt.title('Speedup en tiempo relativo a la implementación en C de '+
                   filterName+' sobre lena.bmp 512x512', fontsize=14)
@@ -169,13 +169,18 @@ class Grapher:
 
         return (fig, ax)
 
-    def plotGroupedBarplots(self, sets, groups):
+    def plotGroupedBarplots(self, sets, groups, ascendingOrder=True):
         # sets: [(label, {group: value})]
         # groups: [impl]
         self.setupPyplot()
 
         # Order the data in a nice ascending order
-        groups = sorted(groups, key = lambda g : -len([1 for s in sets if g in s[1]]))
+        order = lambda ss : max(ss) if ascendingOrder else -max(ss)
+        groups = sorted(groups, key = lambda g :
+                (-len([1 for s in sets if g in s[1]]),
+                 order([d[g] for l,d in sets if g in d]))
+        )
+
         sets = sorted(sets, key = lambda s : len(s[1]) * 1000 + s[1][groups[0]])
 
         index = np.arange(len(groups))
