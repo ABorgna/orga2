@@ -11,6 +11,7 @@
 
 DECLARE_SEPIA_EXT(c);
 DECLARE_SEPIA_EXT(asm);
+DECLARE_SEPIA_EXT(avx2);
 
 void ayuda_sepia();
 
@@ -30,6 +31,8 @@ void aplicar_sepia(configuracion_t *config)
         sepia = sepia_c;
     } else if(strcmp(config->tipo_filtro,"asm") == 0) {
         sepia = sepia_asm;
+    } else if(strcmp(config->tipo_filtro,"avx2") == 0) {
+        sepia = sepia_avx2;
     } else {
         ayuda_sepia();
         return;
