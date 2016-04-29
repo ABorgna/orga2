@@ -10,9 +10,7 @@ HELP = """Usage: ./benchmark.py test [test ...]
 
 Where test is one of:
         all
-        ldr_implementaciones
-        ldr_precision
-"""
+"""     # TESTS
 
 TIME = "/usr/bin/env time"
 TP2_BIN = "../build/tp2"
@@ -25,6 +23,13 @@ DATA_OUT_PATH = "data/"
 TIME_PER_TEST = 1.0
 
 TESTS = {
+    "sepia_implementaciones": {
+        "filter": "sepia",
+        "imgs": ["img/lena.bmp"],
+        "implementations": ["c","sse","avx2"],
+        "sizes": [(512,512)],
+        "params": [""]
+    },
     "ldr_implementaciones": {
         "filter": "ldr",
         "imgs": ["img/lena.bmp"],
@@ -43,6 +48,9 @@ TESTS = {
         "referenceImplementation": "c"  # Optional, will generate "maxDiff" if not None
     }
 }
+
+for t in TESTS:
+    HELP += "        "+t+"\n"
 
 class Benchmark:
 

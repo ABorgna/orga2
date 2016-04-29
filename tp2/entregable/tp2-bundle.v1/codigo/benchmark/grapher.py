@@ -38,9 +38,148 @@ class Grapher:
         if not os.path.exists(GRAPHS_PATH):
             os.makedirs(GRAPHS_PATH)
 
+        self.graphSepiaTime(tests, GRAPHS_PATH)
+        self.graphSepiaTimeSpeedup(tests, GRAPHS_PATH)
+        self.graphLdrTime(tests, GRAPHS_PATH)
         self.graphLdrTimeSpeedup(tests, GRAPHS_PATH)
 
     # Graphs
+
+    def graphSepiaTime(self, tests, path):
+        # sets: [(cpuModel, {impl: speedup})]
+        # groups: [impl]
+        sets = []
+        groups = []
+        for host,t in tests.items():
+            if "sepia_implementaciones" not in t["tests"]:
+                continue
+
+            datapoints = {}
+            base = None
+
+            for result in t["tests"]["sepia_implementaciones"]["results"]:
+                datapoints[result["implementation"]] = result["time"]
+                if result["implementation"] not in groups:
+                    groups.append(result["implementation"])
+
+            datapoints = { i: t*1000 for i,t in datapoints.items()}
+
+            model = t["model"]
+            if model in sets:
+                n = 2
+                while model+" ("+str(n)+")" in sets:
+                    n += 1
+                model = model+" ("+str(n)+")"
+
+            sets.append((model,datapoints))
+
+        # Plot the data
+        self.plotGroupedBarplots(sets, groups)
+        index = np.arange(len(groups))
+        bar_width = 0.8 / len(sets)
+
+        plt.xlabel('Extensión', fontsize=14)
+        plt.ylabel('Speedup', fontsize=14)
+        plt.title('Tiempo de ejecucion de sepia sobre lena.bmp 512x512', fontsize=16)
+        plt.xticks(index + bar_width, groups, fontsize=14)
+        plt.yticks(fontsize=14)
+        plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%gms'))
+        plt.legend(loc='best')
+
+        plt.savefig(path+"sepia_time.png");
+
+    def graphSepiaTimeSpeedup(self, tests, path):
+        # sets: [(cpuModel, {impl: speedup})]
+        # groups: [impl]
+        sets = []
+        groups = []
+        for host,t in tests.items():
+            if "sepia_implementaciones" not in t["tests"]:
+                continue
+
+            datapoints = {}
+            base = None
+
+            for result in t["tests"]["sepia_implementaciones"]["results"]:
+                if result["implementation"] == "c":
+                    base = result["time"]
+                else:
+                    datapoints[result["implementation"]] = result["time"]
+
+                    if result["implementation"] not in groups:
+                        groups.append(result["implementation"])
+
+            # Normalize the data
+            datapoints = { i: base/t for i,t in datapoints.items()}
+
+            model = t["model"]
+            if model in sets:
+                n = 2
+                while model+" ("+str(n)+")" in sets:
+                    n += 1
+                model = model+" ("+str(n)+")"
+
+            sets.append((model,datapoints))
+
+        # Plot the data
+
+        self.plotGroupedBarplots(sets, groups)
+        index = np.arange(len(groups))
+        bar_width = 0.8 / len(sets)
+
+        plt.xlabel('Extensión', fontsize=14)
+        plt.ylabel('Speedup', fontsize=14)
+        plt.title('Speedup en tiempo relativo a la implementación en C de sepia sobre lena.bmp 512x512', fontsize=16)
+        plt.xticks(index + bar_width, groups, fontsize=14)
+        plt.yticks(fontsize=14)
+        plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%gx'))
+        plt.legend(loc='best')
+        plt.ylim(ymin=1.)
+
+        plt.savefig(path+"sepia_time_speedup.png");
+
+    def graphLdrTime(self, tests, path):
+        # sets: [(cpuModel, {impl: speedup})]
+        # groups: [impl]
+        sets = []
+        groups = []
+        for host,t in tests.items():
+            if "ldr_implementaciones" not in t["tests"]:
+                continue
+
+            datapoints = {}
+            base = None
+
+            for result in t["tests"]["ldr_implementaciones"]["results"]:
+                datapoints[result["implementation"]] = result["time"]
+                if result["implementation"] not in groups:
+                    groups.append(result["implementation"])
+
+            datapoints = { i: t*1000 for i,t in datapoints.items()}
+
+            model = t["model"]
+            if model in sets:
+                n = 2
+                while model+" ("+str(n)+")" in sets:
+                    n += 1
+                model = model+" ("+str(n)+")"
+
+            sets.append((model,datapoints))
+
+        # Plot the data
+        self.plotGroupedBarplots(sets, groups)
+        index = np.arange(len(groups))
+        bar_width = 0.8 / len(sets)
+
+        plt.xlabel('Extensión', fontsize=14)
+        plt.ylabel('Speedup', fontsize=14)
+        plt.title('Tiempo de ejecucion de ldr sobre lena.bmp 512x512', fontsize=16)
+        plt.xticks(index + bar_width, groups, fontsize=14)
+        plt.yticks(fontsize=14)
+        plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%gms'))
+        plt.legend(loc='best')
+
+        plt.savefig(path+"ldr_time.png");
 
     def graphLdrTimeSpeedup(self, tests, path):
         # sets: [(cpuModel, {impl: speedup})]
@@ -83,10 +222,10 @@ class Grapher:
 
         plt.xlabel('Extensión', fontsize=14)
         plt.ylabel('Speedup', fontsize=14)
-        plt.title('Speedup en tiempo relativo a la implementación en C sobre lena.bmp 512x512', fontsize=16)
+        plt.title('Speedup en tiempo relativo a la implementación en C de ldr sobre lena.bmp 512x512', fontsize=16)
         plt.xticks(index + bar_width, groups, fontsize=14)
         plt.yticks(fontsize=14)
-        plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%dx'))
+        plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%gx'))
         plt.legend(loc='best')
         plt.ylim(ymin=1.)
 
@@ -133,7 +272,7 @@ class Grapher:
             model, data = s
             ys = [data[g] for g in groups if g in data] + ([0]*(len(groups) - len(data)))
 
-            plt.bar(index + bar_width * (i+0.5) - bar_width * (len(sets)-1) / 2.,
+            plt.bar(index + bar_width * (i+0.5) - bar_width * (len(sets)) / 2.,
                              ys,
                              bar_width,
                              color = self.getColor(i),
