@@ -87,14 +87,11 @@ class Grapher:
 
         # Plot the data
         self.plotGroupedBarplots(sets, groups)
-        index = np.arange(len(groups))
-        bar_width = 0.8 / len(sets)
 
         plt.xlabel('Extensión', fontsize=14)
         plt.ylabel('Tiempo', fontsize=14)
-        plt.title('Tiempo de ejecucion de'+filterName+'sobre lena.bmp 512x512', fontsize=16)
-        plt.xticks(index + bar_width, groups, fontsize=14)
-        plt.yticks(fontsize=14)
+        plt.title('Tiempo de ejecucion de '+filterName+' sobre lena.bmp 512x512',
+                   fontsize=16)
         plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%g'+unit))
         plt.legend(loc='best')
 
@@ -134,17 +131,12 @@ class Grapher:
             sets.append((model,datapoints))
 
         # Plot the data
-
         self.plotGroupedBarplots(sets, groups)
-        index = np.arange(len(groups))
-        bar_width = 0.8 / len(sets)
 
         plt.xlabel('Extensión', fontsize=14)
         plt.ylabel('Speedup', fontsize=14)
         plt.title('Speedup en tiempo relativo a la implementación en C de '+
                   filterName+' sobre lena.bmp 512x512', fontsize=14)
-        plt.xticks(index + bar_width, groups, fontsize=14)
-        plt.yticks(fontsize=14)
         plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%gx'))
         plt.legend(loc='best')
         plt.ylim(ymin=0.)
@@ -191,7 +183,7 @@ class Grapher:
 
         for i,s in enumerate(sets):
             model, data = s
-            ys = [data[g] for g in groups if g in data] + ([0]*(len(groups) - len(data)))
+            ys = [data[g] if g in data else 0 for g in groups]
 
             plt.bar(index + bar_width * (i+0.5) - bar_width * (len(sets)) / 2.,
                              ys,
@@ -199,6 +191,8 @@ class Grapher:
                              color = self.getColor(i),
                              label = model)
 
+        plt.yticks(fontsize=14)
+        plt.xticks(index + bar_width, groups, fontsize=14)
 
 
 if __name__ == "__main__":
