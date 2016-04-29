@@ -265,7 +265,7 @@ class Benchmark:
         }
 
     def getMaxPixelDiff(self, baseImg, targetImg):
-        return max(self.getPixelDiffs(baseImg, targetImg), key=int)
+        return max(self.getPixelDiffs(baseImg, targetImg), key=int, default=0)
 
     def getPixelDiffs(self, baseImg, targetImg):
         arguments = [BMPDIFF, "-s", baseImg, targetImg, "0"]
