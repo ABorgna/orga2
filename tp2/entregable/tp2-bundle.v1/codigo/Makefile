@@ -41,5 +41,6 @@ $(BUILD_DIR)/%.o: %.c
 
 clean:
 	rm -fr $(BUILD_DIR)/*
-
+	rm -fr benchmark/gen/*
+	rm -fr benchmark/out/*
 
