@@ -1,8 +1,36 @@
 \section{LDR (Low Dynamic Range)}
 
 \subsection{Descripción}
- \cite{hackersdelight}
+
+El filtro LDR modifica las zonas mas brillantes de la imágen, realzando o disminuyendo su brillo según el parametro alpha sea positivo o negativo.
+
+Formalmente,
+$$
+    O^k_{i,j} = I^k_{i,j} + \alpha \frac{sumargb_{i,j}}{max} I^k_{i,j}
+    \qquad \forall k \in \{r,g,b\},\; i,j \in \mathbb{N} \;\text{tq}\; 2 \le i < ancho - 2 \:\land\: 2 \le j < alto - 2
+$$
+
+donde
+
+$$
+    sumargb_{i,j} = \sum_{-2 \le u,v \le 2} I^k_{i+u, j+v}
+$$
+
+y los $O^k_{i,j}$ no definidos mantienen su valor inicial.
+
 \subsection{Implementaciones}
+
+\subsubsection{C}
+
+\subsubsection{Asm - SSE}
+
+\subsubsection{Asm - SSE con calculos de enteros}
+
+\cite{hackersdelight}
+
+\subsubsection{Asm - AVX}
+
+\subsubsection{Asm - AVX2}
 
 \subsection{Experimentos}
 
