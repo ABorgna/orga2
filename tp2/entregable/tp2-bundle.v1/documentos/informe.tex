@@ -66,8 +66,8 @@
 
 \fancyhf{}
 
-\fancyhead[LO]{Sección \rightmark} % \thesection\ 
-\fancyfoot[LO]{\small{Nombre Apellido, Nombre Apellido, Nombre Apellido}}
+\fancyhead[LO]{Sección \rightmark} % \thesection\
+\fancyfoot[LO]{\small{Agustín Borgna, Alan Corleto, Franco Lancioni}}
 \fancyfoot[RO]{\thepage}
 \renewcommand{\headrulewidth}{0.5pt}
 \renewcommand{\footrulewidth}{0.5pt}
@@ -94,8 +94,9 @@
 \submateria{Segundo Cuatrimestre de 2014}
 \titulo{Trabajo Práctico II}
 \subtitulo{subtitulo del trabajo}
-\integrante{Nombre}{XXX/XX}{mail}
-\integrante{Nombre}{XXX/XX}{mail}
+\integrante{Borgna, Agustín}{079/15}{aborgna@dc.uba.ar}
+\integrante{Corleto, Alan}{XXX/XX}{mail}
+\integrante{Lancioni, Franco}{XXX/XX}{mail}
 
 \maketitle
 \newpage
@@ -115,45 +116,15 @@ En el presente trabajo se describe la problemática de ...
 %\normalsize
 \newpage
 
-\section{Objetivos generales}
+\input{secciones/objetivos}
+\input{secciones/contexto}
+\input{secciones/cropflip}
+\input{secciones/ldr}
+\input{secciones/sepia}
+\input{secciones/conclusiones}
 
-El objetivo de este Trabajo Práctico es ...
-
-
-\section{Contexto}
-
-\begin{figure}
-  \begin{center}
-	\includegraphics[scale=0.66]{imagenes/logouba.jpg}
-	\caption{Descripcion de la figura}
-	\label{nombreparareferenciar}
-  \end{center}
-\end{figure}
-
-
-\paragraph{\textbf{Titulo del parrafo} } Bla bla bla bla.
-Esto se muestra en la figura~\ref{nombreparareferenciar}.
-
-
-
-\begin{codesnippet}
-\begin{verbatim}
-
-struct Pepe {
-
-    ...
-
-};
-
-\end{verbatim}
-\end{codesnippet}
-
-
-\section{Enunciado y solucion} 
-\input{enunciado}
-
-\section{Conclusiones y trabajo futuro}
-
+\bibliography{bibliography}{}
+\bibliographystyle{plain}
 
 \end{document}
 
