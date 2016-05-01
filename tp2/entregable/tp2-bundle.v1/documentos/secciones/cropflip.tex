@@ -1,8 +1,62 @@
 \section{Cropflip}
 
 \subsection{Descripción}
+La imagen destino del filtro consiste en invertir verticalmente (flip) un recorte (crop) de la imagen fuente a partir de offsets dados como parámetro. El ancho y alto en píxeles de la imagen destino también se pasa como parámetros.
+La descripción matemática está dada por la fórmula:
+
+$O_{i,\ j}^{k}=I_{tamy+offsety-i-1, \ \ offsetx+j}^{k}$
+
+Donde el 'crop' de la imagen input corresponde con los píxeles del tipo:
+
+$I_{offsety+i, \ \ offsetx+j}^{k}$
+
+Con: 
+
+ $ 0 \leq i < tamy \\ 0 \leq j < tamx$
+
 
 \subsection{Implementaciones}
+Al no involucrar operaciones aritméticas entre componentes de la imagen, las implementaciones solamente difieren en el modo en que se copian y asignan píxele a la imagen output.
+\subsubsection{Implementaciones C y SSE}
+La implementación C simplemente se trata de recorrer la imagen con una sola variable aplicando pixel a pixel la transformación dada por la fórmula matemática previamente mencionada. Mientras que la implementación corresponiente a SSE recorre la imagen fuente desde la fila superior del recuadro del crop hacia abajo de a 4 píxeles por iteración como indica el siguiente pseudo-código: 
+
+temp = src + offsetx*4 +srcRowSize*(offsety+tamy-1)       {Apunta al primer píxel de la esquina superior izq. del crop}\\ 
+for i = tamy to 0: 
+  for j = tamx/4 to 0: 
+    xmm0 = [temp]
+    [dst] = xmm0
+    dst = dst  + 16
+    temp =  temp + 16
+  temp = temp - (dstRowSize + srcRowSize)       {Decrece el ancho de la imagen destino y el de la fuente para apuntar primer pixel de la fila de abajo a la que procesó}      
+  end for
+end for
+
+\subsubsection{Implementaciones SIMD paralelo en 128 y 256 bits}
+Se diferencian de la implementación anterior de SSE en el uso de la mayor cantidad posible de registros XMM (YMM de 256 bits en el caso de las implementaciones de AVX2) para las operaciones de transferencia de bloques de pixeles de la imagen fuente a la destinto. 
+Dado que las lecturas y escrituras en memoria de cada registro son independientes entre sí, la ejecución fuera de orden del procesador hace que la transferencia por bloque sea más rápida que la implementación individual (que recorre la imagen con un único registro XMM). Por cuestiones de vecindad espacial de los píxeles en la memoria, los accesos a memoria de cada registro tienen chances particularmente altas de hitrate en caché, no demorando así las lecturas del resto de los registros.
+
+\subsubsubsection{Copiado paralelo de vectores}
+
+La asignación de píxeles se hace llamando a las funciones externas 'copyN_sse' y 'copyN_avx2'\footnote{../entregable/tp2-bundle.v1/codigo/lib} que copian tiras de píxeles de una imagen a otra por bloques de 64/4/1 ó 128/8/1 píxeles (sse y avx2 respectivamente) según sea posible. A modo de ejemplo (los otros casos son análogos), para copiar bloques de 64px (256B) desde la posición indicada por rsi a la indicada por rdi se cargan los valores correspondientes de la siguiente manera:
+
+
+xmm0 $\leftarrow$ [rsi]
+xmm1 $\leftarrow$ [rsi+16]
+...
+xmm14 $\leftarrow$ [rsi+224]
+xmm15 $\leftarrow$ [rsi+240]
+
+[rdi] $\leftarrow$ xmm0
+[rdi+16] $\leftarrow$ xmm1
+...
+[rdi+224] $\leftarrow$ xmm14
+[rdi+240] $\leftarrow$ xmm15   
+
+
+A diferencia de los otros dos filtros, donde el procesamiento de imágenes involucra operaciones aritméticas paralelas, la implementación AVX2 de Cropflip no presenta un 'speedup' tan significativo respecto de las implementaciones de SSE con registros de 128 bits
+
+
+
 
 \subsection{Experimentos}
 
