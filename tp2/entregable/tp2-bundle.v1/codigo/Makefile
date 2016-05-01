@@ -14,7 +14,7 @@ FILTROS = cropflip sepia ldr
 
 FILTROS_OBJ = $(addsuffix .o, $(FILTROS)) \
 			  $(addsuffix _asm.o, $(FILTROS)) \
-			  $(addsuffix _c.o, $(FILTROS)) ldr_avx.o ldr_avx2.o cropflip_asm_COPYN.o cropflip_asm_COPYN_avx2.o sepia_avx2.o
+			  $(addsuffix _c.o, $(FILTROS)) ldr_sse_integer.o ldr_avx.o ldr_avx2.o cropflip_asm_COPYN.o cropflip_asm_COPYN_avx2.o sepia_avx2.o
 LIBS_OBJS   = libbmp.o imagenes.o copyN.o
 MAIN_OBJS   = tp2.o cli.o
 MAIN_OBJS_CON_PATH = $(addprefix $(BUILD_DIR)/, $(MAIN_OBJS))
