@@ -1,0 +1,166 @@
+% ----- Informacion sobre el package para el sistema -----------------------
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{dibujitos}[2016/05/01 v0.1 Macros para dibujar registros xmm]
+
+\typeout{Cargando package 'dibujitos'}
+
+% ----- Comandos para escribir los nombres de registros --------------------
+
+\newcommand{\xmm}[1]{\texttt{XMM#1}\ }
+\newcommand{\ymm}[1]{\texttt{YMM#1}\ }
+\newcommand{\rax}{\texttt{RAX}\ }
+\newcommand{\rbx}{\texttt{RBX}\ }
+\newcommand{\rcx}{\texttt{RCX}\ }
+\newcommand{\rdx}{\texttt{RDX}\ }
+\newcommand{\rbp}{\texttt{RBP}\ }
+\newcommand{\rsp}{\texttt{RSP}\ }
+\newcommand{\mem}{\texttt{MEM}\ }
+\newcommand{\reg}[1]{\texttt{R#1}\ }
+\newcommand{\asm}[1]{\texttt{\uppercase{#1}}\ }
+
+% ----- Comandos para escribir registros XMM -------------------------------
+
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+\newcommand{\xmmByte}[8]{
+    \def\tempa{#1}
+    \def\tempb{#2}
+    \def\tempc{#3}
+    \def\tempd{#4}
+    \def\tempe{#5}
+    \def\tempf{#6}
+    \def\tempg{#7}
+    \def\temph{#8}
+    \xmmByteAux
+}
+\newcommand{\xmmByteAux}[8]{
+    \vspace{0.3cm}
+    \begin{tabular}{|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|
+                     C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|}\hline
+    \tempa & \tempb & \tempc & \tempd & \tempe & \tempf & \tempg & \temph &
+    #1 & #2 & #3 & #4 & #5 & #6 & #7 & #8 \\ \hline
+    \end{tabular}
+    \vspace{0.3cm}
+}
+
+\newcommand{\xmmWord}[8]{
+    \vspace{0.3cm}
+    \begin{tabular}{|C{1.3cm}|C{1.3cm}|C{1.3cm}|C{1.3cm}|C{1.3cm}|C{1.3cm}|C{1.3cm}|C{1.3cm}|}\hline
+    #1 & #2 & #3 & #4 & #5 & #6 & #7 & #8 \\ \hline
+    \end{tabular}
+    \vspace{0.3cm}
+}
+
+\newcommand{\xmmDoubleWord}[4]{
+    \vspace{0.3cm}
+    \begin{tabular}{|C{2cm}|C{2cm}|C{2cm}|C{2cm}|}\hline
+    #1 & #2 & #3 & #4 \\ \hline
+    \end{tabular}
+    \vspace{0.3cm}
+}
+
+\newcommand{\xmmQuadWord}[2]{
+    \vspace{0.3cm}
+    \begin{tabular}{|C{4cm}|C{4cm}|}\hline
+    #1 & #2 \\ \hline
+    \end{tabular}
+    \vspace{0.3cm}
+}
+
+\let\xmmFloat\xmmDoubleWord
+\let\xmmDouble\xmmQuadWord
+
+\newcommand{\ymmByte}[8]{
+    \def\tempa{#1}
+    \def\tempb{#2}
+    \def\tempc{#3}
+    \def\tempd{#4}
+    \def\tempe{#5}
+    \def\tempf{#6}
+    \def\tempg{#7}
+    \def\temph{#8}
+    \ymmByteAuxA
+}
+\newcommand{\ymmByteAuxA}[8]{
+    \def\tempi{#1}
+    \def\tempj{#2}
+    \def\tempk{#3}
+    \def\templ{#4}
+    \def\tempm{#5}
+    \def\tempn{#6}
+    \def\tempo{#7}
+    \def\tempp{#8}
+    \ymmByteAuxB
+}
+\newcommand{\ymmByteAuxB}[8]{
+    \def\tempq{#1}
+    \def\tempr{#2}
+    \def\temps{#3}
+    \def\tempt{#4}
+    \def\tempu{#5}
+    \def\tempv{#6}
+    \def\tempw{#7}
+    \def\tempx{#8}
+    \!
+    \!
+    \!
+    \!
+    \ymmByteAuxC
+}
+\newcommand{\ymmByteAuxC}[8]{
+    \vspace{0.3cm}
+    \begin{tabular}{|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|
+                     C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|C{0.8cm}|}\hline
+    \tempa & \tempb & \tempc & \tempd & \tempe & \tempf & \tempg & \temph &
+    \tempi & \tempj & \tempk & \templ & \tempm & \tempn & \tempo & \tempp \\ \hline
+    \tempq & \tempr & \temps & \tempt & \tempu & \tempv & \tempw & \tempx &
+    #1 & #2 & #3 & #4 & #5 & #6 & #7 & #8 \\ \hline
+    \end{tabular}
+    \vspace{0.3cm}
+}
+
+\newcommand{\ymmWord}[8]{
+    \def\tempa{#1}
+    \def\tempb{#2}
+    \def\tempc{#3}
+    \def\tempd{#4}
+    \def\tempe{#5}
+    \def\tempf{#6}
+    \def\tempg{#7}
+    \def\temph{#8}
+    \ymmWordAux
+}
+\newcommand{\ymmWordAux}[8]{
+    \vspace{0.3cm}
+    \begin{tabular}{|C{1.3cm}|C{1.3cm}|C{1.3cm}|C{1.3cm}|C{1.3cm}|C{1.3cm}|C{1.3cm}|C{1.3cm}|}\hline
+    \tempa & \tempb & \tempc & \tempd & \tempe & \tempf & \tempg & \temph \\ \hline
+    #1 & #2 & #3 & #4 & #5 & #6 & #7 & #8 \\ \hline
+    \end{tabular}
+    \vspace{0.3cm}
+}
+
+\newcommand{\ymmDoubleWord}[8]{
+    \vspace{0.3cm}
+    \begin{tabular}{|C{2cm}|C{2cm}|C{2cm}|C{2cm}|}\hline
+    #1 & #2 & #3 & #4 \\ \hline
+    #5 & #6 & #7 & #8 \\ \hline
+    \end{tabular}
+    \vspace{0.3cm}
+}
+
+\newcommand{\ymmQuadWord}[4]{
+    \vspace{0.3cm}
+    \begin{tabular}{|C{4cm}|C{4cm}|}\hline
+    #1 & #2 \\ \hline
+    #3 & #4 \\ \hline
+    \end{tabular}
+    \vspace{0.3cm}
+}
+
+\let\ymmFloat\ymmDoubleWord
+\let\ymmDouble\ymmQuadWord
+
