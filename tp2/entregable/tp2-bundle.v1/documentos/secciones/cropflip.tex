@@ -4,16 +4,14 @@
 La imagen destino del filtro consiste en invertir verticalmente (flip) un recorte (crop) de la imagen fuente a partir de offsets dados como parámetro. El ancho y alto en píxeles de la imagen destino también se pasa como parámetros.
 La descripción matemática está dada por la fórmula:
 
-$O_{i,\ j}^{k}=I_{tamy+offsety-i-1, \ \ offsetx+j}^{k}$
+$$ O_{i,\ j}^{k}=I_{tamy+offsety-i-1, \ \ offsetx+j}^{k} $$
 
 Donde el 'crop' de la imagen input corresponde con los píxeles del tipo:
 
-$I_{offsety+i, \ \ offsetx+j}^{k}$
-
-Con: 
-
- $ 0 \leq i < tamy \\ 0 \leq j < tamx$
-
+$$
+I_{offsety+i, \ \ offsetx+j}^{k} 
+\qquad \text{con} \quad 0 \leq i < tamy \\ 0 \leq j < tamx 
+$$
 
 \subsection{Implementaciones}
 Al no involucrar operaciones aritméticas entre componentes de la imagen, las implementaciones solamente difieren en el modo en que se copian y asignan píxele a la imagen output.
