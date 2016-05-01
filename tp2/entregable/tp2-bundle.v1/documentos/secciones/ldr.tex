@@ -2,11 +2,11 @@
 
 \subsection{Descripción}
 
-El filtro LDR modifica las zonas mas brillantes de la imágen, realzando o disminuyendo su brillo según el parametro alpha sea positivo o negativo.
+El filtro LDR modifica las zonas mas brillantes de la imagen, realzando o disminuyendo su brillo según el parametro alpha sea positivo o negativo.
 
 Formalmente,
 $$
-    O^k_{i,j} = I^k_{i,j} + \alpha \frac{sumargb_{i,j}}{max} I^k_{i,j}
+    O^k_{i,j} = ldr^k_{i,j} = I^k_{i,j} + \alpha \frac{sumargb_{i,j}}{max} I^k_{i,j}
     \qquad \forall k \in \{r,g,b\},\; i,j \in \mathbb{N} \;\text{tq}\; 2 \le i < w - 2 \:\land\: 2 \le j < h - 2
 $$
 donde
@@ -27,7 +27,7 @@ Inicialmente se nos ocurrieron tres algoritmos para realizar el filtro:
 
     Este método tiene una implementación trivial, pero un rendimiento pésimo debido a que debe acceder 26 veces a memoria para procesar cada pixel y realiza cálculos repetidos de las sumas de cada pixel.
 
-\item Recorrer cada pixel de la imágen calculando la suma de sus canales $r,g,b$, y guardar el resultado en una matriz auxiliar.
+\item Recorrer cada pixel de la imagen calculando la suma de sus canales $r,g,b$, y guardar el resultado en una matriz auxiliar.
 
     Luego recorrer nuevamente los pixeles no-borde y realizar la función usando los valores precalculados.
 
@@ -41,24 +41,109 @@ Inicialmente se nos ocurrieron tres algoritmos para realizar el filtro:
 \end{enumerate}
 
 De estos algoritmos decidimos implementar la primer opción en C, ya que es el metodo trivial contra el que queremos comparar.
+
 Para nuestras implementaciones en assembler utilizamos el tercer método, ya que consideramos que era el que ofrecía mas potencial para paralelizar con instrucciones SSE.
 
 \subsection{Implementaciones}
 
 \subsubsection{C}
 
-El código de C es bastante simple, recorre cada pixel de la imágen y:
+El código de C es bastante simple, recorre cada pixel de la imagen y:
 
 \begin{itemize}
     \item Si es un borde, lo copiamos directamente.
 
-    \item Si no es un borde, recorremos los 25 vecinos y obtenemos sumargb.
+    \item Si no es un borde, recorremos los 25 vecinos acumulando la suma de sus componentes, y así obtenemos sumargb.
         Luego calculamos el resto de la fórmula y guardamos el valor final.
 \end{itemize}
 
 \subsubsection{Asm - SSE}
 
-Como las imágenes que procesamos nunca tienen padding en la linea (ya que los píxeles ocupan 32b cada uno), podemos considerarla aplanada como una secuencia lineal de filas concatenadas.
+Para implementar el algoritmo $(3)$ recorremos la imagen procesando de a 4 píxeles, manteniendo la suma de las 4 ultimas columnas y calculando 4 nuevas en cada loop.
+
+
+\begin{table}[h]
+\centering
+\asm{memoria}
+\begin{tabular}{l|c|c|c|c|c|c|c|c|l}
+ & \multicolumn{1}{l|}{}      & \multicolumn{1}{l|}{}       & \multicolumn{1}{l|}{}       & \multicolumn{1}{l|}{}
+ & \multicolumn{1}{l|}{}      & \multicolumn{1}{l|}{}       & \multicolumn{1}{l|}{}       & \multicolumn{1}{l|}{}       &  \\ \hline
+
+ & \cellcolor[HTML]{76E6A3}$I_{i-2,j+2}$ & \cellcolor[HTML]{98D0AE}$I_{i-1,j+2}$ & \cellcolor[HTML]{76E6A3}$I_{i  ,j+2}$ & \cellcolor[HTML]{98D0AE}$I_{i+1,j+2}$
+ & \cellcolor[HTML]{FFBB78}$I_{i+2,j+2}$ & \cellcolor[HTML]{FF9D3E}$I_{i+3,j+2}$ & \cellcolor[HTML]{FFBB78}$I_{i+4,j+2}$ & \cellcolor[HTML]{FF9D3E}$I_{i+5,j+2}$ &  \\ \hline
+
+ & \cellcolor[HTML]{76E6A3}$I_{i-2,j+1}$ & \cellcolor[HTML]{98D0AE}$I_{i-1,j+1}$ & \cellcolor[HTML]{76E6A3}$I_{i  ,j+1}$ & \cellcolor[HTML]{98D0AE}$I_{i+1,j+1}$
+ & \cellcolor[HTML]{FFBB78}$I_{i+2,j+1}$ & \cellcolor[HTML]{FF9D3E}$I_{i+3,j+1}$ & \cellcolor[HTML]{FFBB78}$I_{i+4,j+1}$ & \cellcolor[HTML]{FF9D3E}$I_{i+5,j+1}$ &  \\ \hline
+
+ & \cellcolor[HTML]{76E6A3}$I_{i-2,j  }$ & \cellcolor[HTML]{98D0AE}$I_{i-1,j  }$ & \cellcolor[HTML]{B1B1B1}$I_{i  ,j  }$ & \cellcolor[HTML]{B1B1B1}$I_{i+1,j  }$
+ & \cellcolor[HTML]{B1B1B1}$I_{i+2,j  }$ & \cellcolor[HTML]{B1B1B1}$I_{i+3,j  }$ & \cellcolor[HTML]{FFBB78}$I_{i+4,j  }$ & \cellcolor[HTML]{FF9D3E}$I_{i+5,j  }$ &  \\ \hline
+
+ & \cellcolor[HTML]{76E6A3}$I_{i-2,j-1}$ & \cellcolor[HTML]{98D0AE}$I_{i-1,j-1}$ & \cellcolor[HTML]{76E6A3}$I_{i  ,j-1}$ & \cellcolor[HTML]{98D0AE}$I_{i+1,j-1}$
+ & \cellcolor[HTML]{FFBB78}$I_{i+2,j-1}$ & \cellcolor[HTML]{FF9D3E}$I_{i+3,j-1}$ & \cellcolor[HTML]{FFBB78}$I_{i+4,j-1}$ & \cellcolor[HTML]{FF9D3E}$I_{i+5,j-1}$ &  \\ \hline
+
+ & \cellcolor[HTML]{76E6A3}$I_{i-2,j-2}$ & \cellcolor[HTML]{98D0AE}$I_{i-1,j-2}$ & \cellcolor[HTML]{76E6A3}$I_{i  ,j-2}$ & \cellcolor[HTML]{98D0AE}$I_{i+1,j-2}$
+ & \cellcolor[HTML]{FFBB78}$I_{i+2,j-2}$ & \cellcolor[HTML]{FF9D3E}$I_{i+3,j-2}$ & \cellcolor[HTML]{FFBB78}$I_{i+4,j-2}$ & \cellcolor[HTML]{FF9D3E}$I_{i+5,j-2}$ &  \\ \hline
+
+ & \multicolumn{1}{l|}{}      & \multicolumn{1}{l|}{}       & \multicolumn{1}{l|}{}       & \multicolumn{1}{l|}{}
+ & \multicolumn{1}{l|}{}      & \multicolumn{1}{l|}{}       & \multicolumn{1}{l|}{}       & \multicolumn{1}{l|}{}       &
+\end{tabular}
+\caption{Ilustracion de la memoria en el ciclo de ldr. En gris los pixeles que queremos procesar, en verde las columnas de las cuales ya tenemos la suma guardada y en naranja las columnas que debemos calcular.}
+\end{table}
+
+Obviaremos escribir las variables $i$ y $j$ en las siguientes ilustraciones para mantener la claridad. \\
+
+El proceso del loop comienza con la suma de las columnas anteriores en \xmm{0}, guardadas como word ya que su valor máximo es $5 * 3 * 255 < 2^{16}$: \\
+
+\xmm{0} \xmmWord{0}{0}{0}{0}{$sumC_1$}{$sumC_0$}{$sumC_{-1}$}{$sumC_{-2}$}
+
+Como cada pixel ocupa $32$ bytes podemos cargar los cuatro píxeles que vamos a necesitar de cada fila en 5 registros. \\
+Luego descomprimimos cada componente a tamaño word (usando 5 registros mas) y realizamos las sumas de los componentes para obtener la suma de cada pixel, cuidandonos de borrar el alpha. \\
+
+\xmm{N} \xmmWord{$sum_{5,v}$}{$sum_{4,v}$}{$sum_{3,v}$}{$sum_{2,v}$}{0}{0}{0}{0} para $-2 \le v \le 2$ y $N = v+3$.
+
+A continuacion sumamos todos los pixeles de la columna entre sí y combinamos el resultado con \xmm{0}, obteniendo el vector de sumas. \\
+
+\xmm{0} \xmmWord{$sumC_5$}{$sumC_4$}{$sumC_3$}{$sumC_2$}{$sumC_1$}{$sumC_0$}{$sumC_{-1}$}{$sumC_{-2}$}
+
+Luego procedemos a calcular $sumargb$. Para ello copiamos el contenido de \xmm{0} a \xmm{5} y luego vamos shifteando \xmm{0} de a una palabra por vez mientras sumamos su valor a \xmm{5} hasta que en \xmm{0} queden solo las 4 sumas que acabamos de calcular y en la parte baja de \xmm{5} se encuentre la suma de las 5 columnas vecinas (esto es, ya tenemos $sumargb$). \\
+Observar que en \xmm{0} ya quedaron los valores de las columnas listas para el siguiente loop. \\
+
+\xmm{0} \xmmWord{0}{0}{0}{0}{$sumC_5$}{$sumC_4$}{$sumC_3$}{$sumC_2$}
+
+\xmm{5} \xmmWord{X}{X}{X}{X}{$sumrgb_3$}{$sumrgb_2$}{$sumrgb_1$}{$sumrgb_0$}
+
+Ahora convertimos cada $sumargb$ a punto flotante, la multiplicamos por el valor de $\alpha$ que habíamos almacenade en \mm{2} y movemos replicamos cada una en un registro diferente. \\
+
+\xmm{N} \xmmFloat{$sumargb_u * \alpha$}{$sumargb_u * \alpha$}{$sumargb_u * \alpha$}{$sumargb_u * \alpha$}
+para $0 \le u \le 3$ y $N = u+5$
+
+Mientras tanto cargamos los valores originales de los pixeles a procesar y los convertimos a punto flotante, ocupando cada pixel un registro entero. \\
+
+\xmm{M} \xmmFloat{$A_u$}{$R_u$}{$G_u$}{$B_u$}
+para $0 \le u \le 3$ y $M = u+9$
+
+Multiplicamos las $sumargb$ anteriores por los canales de los píxeles y limpiamos la correspondiente al canal alpha con una máscara que nos armamos en el momento. \\
+
+\xmm{N} \xmmFloat{0}{$R_u * sumargb_u * \alpha$}{$G_u * sumargb_u * \alpha$}{$B_u * sumargb_u * \alpha$}
+para $0 \le u \le 3$ y $N = u+5$
+
+Finalmente multiplicamos estos registros por el recíproco de $MAX$ que teníamos previamente guardado y los sumamos a los registros con los valores de los píxeles. \\
+
+\xmm{M} \xmmFloat{$A_u$}{$ldr^r_u$}{$ldr^g_u$}{$ldr^b_u$}
+para $0 \le u \le 3$ y $M = u+9$
+
+Solo resta aplicar $max$ y $min$ para saturar los valores calculados, reconvertirlos a byte y guardarlos en la imagen de salida.
+
+.\\
+.\\
+.\\
+.\\
+
+Como la imagen que procesamos nunca tienen padding en la linea (ya que los píxeles ocupan 32b cada uno) podemos considerarla aplanada como una secuencia lineal de filas concatenadas. \\
+De esta manera evitamos el uso de condicionales dentro del loop que tomen los bordes de las filas como casos especiales. \\
+Procesar de este modo genera que en los bordes laterales se grabe basura, por lo que luego del loop debemos copiar los píxeles originales.
+Del mismo modo copiamos las dos filas superiores e inferiores que no fueron procesadas.
+
 
 \subsubsection{Asm - SSE con calculos de enteros}
 
