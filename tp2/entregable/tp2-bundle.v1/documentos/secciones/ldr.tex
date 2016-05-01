@@ -7,28 +7,64 @@ El filtro LDR modifica las zonas mas brillantes de la imágen, realzando o dismi
 Formalmente,
 $$
     O^k_{i,j} = I^k_{i,j} + \alpha \frac{sumargb_{i,j}}{max} I^k_{i,j}
-    \qquad \forall k \in \{r,g,b\},\; i,j \in \mathbb{N} \;\text{tq}\; 2 \le i < ancho - 2 \:\land\: 2 \le j < alto - 2
+    \qquad \forall k \in \{r,g,b\},\; i,j \in \mathbb{N} \;\text{tq}\; 2 \le i < w - 2 \:\land\: 2 \le j < h - 2
 $$
-
 donde
-
-$$
-    sumargb_{i,j} = \sum_{-2 \le u,v \le 2} I^k_{i+u, j+v}
-$$
-
+\
+$$ sumargb_{i,j} = \sum_{-2 \le u,v \le 2,\; k \in \{r,g,b\}} I^k_{i+u, j+v} $$
+$$ max = 5 * 5 * 255 * 3 * 255 $$
+\
 y los $O^k_{i,j}$ no definidos mantienen su valor inicial.
+$\\$
+
+Como para procesar cada pixel necesitamos el valor de sus vecinos no podremos aplicar el filtro en los bordes de la imagen, por lo que quedan sin modificar.
+
+Inicialmente se nos ocurrieron tres algoritmos para realizar el filtro:
+
+\begin{enumerate}
+
+\item Iterar sobre cada pixel. Si está en el borde copiarlo directamente, sino calcular su sumargb leyendo los 25 vecinos y guardar los valores correspondientes al pixel.
+
+    Este método tiene una implementación trivial, pero un rendimiento pésimo debido a que debe acceder 26 veces a memoria para procesar cada pixel y realiza cálculos repetidos de las sumas de cada pixel.
+
+\item Recorrer cada pixel de la imágen calculando la suma de sus canales $r,g,b$, y guardar el resultado en una matriz auxiliar.
+
+    Luego recorrer nuevamente los pixeles no-borde y realizar la función usando los valores precalculados.
+
+    Con este método evitamos repetir los cálculos de la suma de los canales de cada pixel, pero implica usar $\mathcal{O}(ancho * altura)$ memoria adicional (como la suma de tres bytes siempre entra en un word y no necesitamos copiar el alpha, la matriz tendrá la mitad del tamaño de la imagen). Además agrega el overhead de los accesos a memoria y ocupa espacio extra en la caché.
+
+\item Recorrer cada pixel excepto los de las filas inferiores y superiores calculando $$\sum_{-2 \le v \le 2,\; k \in \{r,g,b\}} I^k_{i, j+v}$$ esto es, la suma de su columna $\pm 2$.
+    Mantener siempre los últimos cuatro resultados en memoria y al calcular el nuevo valor realizar la suma entre ellos y usarlos para procesar el pixel $(i-2,j)$, si no es un borde.
+
+    De esta forma logramos evitar algunos cálculos repetidos pero mantenemos el uso de memoria extra constante.
+
+\end{enumerate}
+
+De estos algoritmos decidimos implementar la primer opción en C, ya que es el metodo trivial contra el que queremos comparar.
+Para nuestras implementaciones en assembler utilizamos el tercer método, ya que consideramos que era el que ofrecía mas potencial para paralelizar con instrucciones SSE.
 
 \subsection{Implementaciones}
 
 \subsubsection{C}
 
+El código de C es bastante simple, recorre cada pixel de la imágen y:
+
+\begin{itemize}
+    \item Si es un borde, lo copiamos directamente.
+
+    \item Si no es un borde, recorremos los 25 vecinos y obtenemos sumargb.
+        Luego calculamos el resto de la fórmula y guardamos el valor final.
+\end{itemize}
+
 \subsubsection{Asm - SSE}
+
+Como las imágenes que procesamos nunca tienen padding en la linea (ya que los píxeles ocupan 32b cada uno), podemos considerarla aplanada como una secuencia lineal de filas concatenadas.
 
 \subsubsection{Asm - SSE con calculos de enteros}
 
 \cite{hackersdelight}
 
-\subsubsection{Asm - AVX}
+\subsubsection{Asm - AVX/FMA}
 
 \subsubsection{Asm - AVX2}
 
