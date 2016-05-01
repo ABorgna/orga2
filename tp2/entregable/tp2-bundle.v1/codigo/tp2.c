@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include "tp2.h"
 #include "helper/tiempo.h"
@@ -68,16 +69,21 @@ filtro_t* detectar_filtro(configuracion_t *config)
 }
 
 
-void imprimir_tiempos_ejecucion(unsigned long long int start, unsigned long long int end, unsigned long long minCycles, int cant_iteraciones) {
-    unsigned long long int cant_ciclos = end-start;
+void imprimir_tiempos_ejecucion(
+        unsigned long long int cycles, unsigned long long minCycles,
+             unsigned long long maxCycles,
+        struct timeval tvTotal, struct timeval tvMin, struct timeval tvMax,
+        int cant_iteraciones) {
 
     printf("Tiempo de ejecución:\n");
-    printf("  Comienzo                          : %llu\n", start);
-    printf("  Fin                               : %llu\n", end);
     printf("  # iteraciones                     : %d\n", cant_iteraciones);
-    printf("  # de ciclos insumidos totales     : %llu\n", cant_ciclos);
-    printf("  # de ciclos insumidos por llamada : %.3f\n", (float)cant_ciclos/(float)cant_iteraciones);
+    printf("  # de ciclos insumidos totales     : %llu\n", cycles);
+    printf("  # de ciclos insumidos por llamada : %.3f\n", (float)cycles/(float)cant_iteraciones);
     printf("  # minimo de ciclos insumidos      : %llu\n", minCycles);
+    printf("  # maximo de ciclos insumidos      : %llu\n", maxCycles);
+    printf("  tiempo total                      : %ld.%06ld\n", tvTotal.tv_sec, tvTotal.tv_usec);
+    printf("  tiempo minimo                     : %ld.%06ld\n", tvMin.tv_sec, tvMin.tv_usec);
+    printf("  tiempo maximo                     : %ld.%06ld\n", tvMax.tv_sec, tvMax.tv_usec);
 }
 
 void correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador)
@@ -97,38 +103,45 @@ void correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador)
     else
     {
         imagenes_abrir(config);
-        unsigned long long start, end, partialStart, partialEnd, partialMin=-1;
-        const unsigned short timingSlice = 32;
+        unsigned long long cyclesTotal = 0, cyclesStart, cyclesEnd,
+                           cyclesMin = -1, cyclesMax = 0, cyclesPartial;
+        struct timeval tvStart, tvEnd, tvMin, tvMax, tvPartial, tvTotal;
 
-        MEDIR_TIEMPO_START(start)
+        timerclear(&tvTotal);
+        timerclear(&tvMax);
+        timerclear(&tvMin);
+        tvMin.tv_sec = (__time_t) LONG_MAX;
 
-        for (int i = config->cant_iteraciones / timingSlice; i-->0; ){
-                unsigned long long partialTime;
+        for (int i = 0; i < config->cant_iteraciones; i++){
 
-                MEDIR_TIEMPO_START(partialStart)
-                for(int j = timingSlice; j-->0; ){
-                    aplicador(config);
-                }
-                MEDIR_TIEMPO_STOP(partialEnd)
+            gettimeofday(&tvStart,NULL);
+            MEDIR_TIEMPO_START(cyclesStart)
+            aplicador(config);
+            MEDIR_TIEMPO_STOP(cyclesEnd)
+            gettimeofday(&tvEnd,NULL);
 
-                partialTime = partialEnd - partialStart;
-                partialMin = partialTime < partialMin ? partialTime : partialMin;
-        }
-        for (int i = config->cant_iteraciones % timingSlice; i-->0; ) {
-                aplicador(config);
-        }
+            timersub(&tvEnd, &tvStart, &tvPartial);
 
-        MEDIR_TIEMPO_STOP(end)
+            timeradd(&tvTotal, &tvPartial, &tvTotal);
+            if(timercmp(&tvPartial, &tvMin, <)) {
+                tvMin = tvPartial;
+            }
+            if(timercmp(&tvPartial, &tvMax, >)) {
+                tvMax = tvPartial;
+            }
 
-        if(config->cant_iteraciones < timingSlice) {
-            partialMin = (end-start)/config->cant_iteraciones;
-        } else {
-            partialMin /= timingSlice;
+            cyclesPartial = cyclesEnd - cyclesStart;
+
+            cyclesTotal += cyclesPartial;
+            cyclesMin = cyclesPartial < cyclesMin ? cyclesPartial : cyclesMin;
+            cyclesMax = cyclesPartial > cyclesMax ? cyclesPartial : cyclesMax;
         }
 
         imagenes_guardar(config);
         imagenes_liberar(config);
-        imprimir_tiempos_ejecucion(start, end, partialMin, config->cant_iteraciones);
+        imprimir_tiempos_ejecucion(cyclesTotal, cyclesMin, cyclesMax,
+                tvTotal, tvMin, tvMax,
+                config->cant_iteraciones);
     }
 
     free(tipo_filtro_UPPER);

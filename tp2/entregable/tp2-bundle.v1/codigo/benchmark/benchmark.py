@@ -63,14 +63,19 @@ class Benchmark:
 
     # Regexes matching the output of the script
 
-    realTimeRe = re.compile(r"^real ([0-9.]+)",re.M)
-    userTimeRe = re.compile(r"^user ([0-9.]+)",re.M)
-    sysTimeRe = re.compile(r"^sys ([0-9.]+)",re.M)
     completedRe = re.compile(r"^\s*Tiempo de ejecución",re.M)
     iterationsRe = re.compile(r"^\s*# iteraciones\s+: ([0-9]+)",re.M)
+
     cyclesRe = re.compile(r"^\s*# de ciclos insumidos por llamada\s+: ([0-9.]+)",re.M)
     minCyclesRe = re.compile(r"^\s*# minimo de ciclos insumidos \s+: ([0-9.]+)",re.M)
+    maxCyclesRe = re.compile(r"^\s*# maximo de ciclos insumidos \s+: ([0-9.]+)",re.M)
+
+    timeRe = re.compile(r"^\s*tiempo total \s+: ([0-9.]+)",re.M)
+    minTimeRe = re.compile(r"^\s*tiempo minimo \s+: ([0-9.]+)",re.M)
+    maxTimeRe = re.compile(r"^\s*tiempo maximo \s+: ([0-9.]+)",re.M)
+
     invalidInstructionRe = re.compile(r"^Command terminated by signal 4",re.M)
+
     cpuinfoModelRe = re.compile(r"^model name\s*:\s(.*)$",re.M)
 
 
@@ -205,14 +210,14 @@ class Benchmark:
         arguments = [str(a) for a in arguments]
 
         first = True
-        userTime = 0
+        totalTime = 0
         iterations = 1 if singleRun else minIterations
-        while first or (userTime < minTime and not singleRun):
+        while first or (totalTime < minTime and not singleRun):
             if not first:
-                if userTime < 0.01:
+                if totalTime < 0.01:
                     iterations *= 10
                 else:
-                    calcIts = int(1.1 * iterations * minTime / userTime)
+                    calcIts = int(1.1 * iterations * minTime / totalTime)
                     if iterations < calcIts:
                         iterations = calcIts
                     else:
@@ -236,20 +241,22 @@ class Benchmark:
                 print("Output: ",e.output)
                 raise
 
-            userTime = float(self.userTimeRe.search(out).group(1))
-
             # Return if the process failed
             if not self.completedRe.search(out):
                 return None
 
+            totalTime = float(self.timeRe.search(out).group(1))
+
         # Parse the output data
         iterations = int(float(self.iterationsRe.search(out).group(1)))
-        cycles = int(float(self.cyclesRe.search(out).group(1)))
-        minCycles = int(float(self.cyclesRe.search(out).group(1)))
-        time = userTime/iterations
+        totalCycles = int(float(self.cyclesRe.search(out).group(1)))
+        minCycles = int(float(self.minCyclesRe.search(out).group(1)))
+        maxCycles = int(float(self.maxCyclesRe.search(out).group(1)))
+        minTime = float(self.minTimeRe.search(out).group(1))
+        maxTime = float(self.maxTimeRe.search(out).group(1))
 
         # Calculate the maximum pixel diff
-        maxDiff = -1
+        maxDiff = None
         if referenceImplementation is not None:
             outImage = IMG_OUT_PATH+os.path.basename(img)+"." \
                 +filterName+"."+implementation.upper()+".bmp"
@@ -259,11 +266,18 @@ class Benchmark:
             maxDiff = self.getMaxPixelDiff(referenceImage,outImage)
 
         return {
-            "totalTime": userTime,
-            "time": time,
             "iterations": iterations,
-            "cycles": cycles,
+
+            "totalTime": totalTime,
+            "minTime": minTime,
+            "maxTime": maxTime,
+            "avgTime": totalTime / iterations,
+
+            "totalCycles": totalCycles,
             "minCycles": minCycles,
+            "maxCycles": minCycles,
+            "avgCycles": int(totalCycles / iterations),
+
             "maxDiff": maxDiff
         }
 

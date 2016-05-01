@@ -48,11 +48,11 @@ class Grapher:
     # Graphs
 
     def plotTime(self, tests, filterName, path):
-        # sets: [(cpuModel, {impl: speedup})]
+        # sets: [(cpuModel, {impl: (minTime, error+, error-)})]
         # groups: [impl]
         sets = []
         groups = []
-        maxTime = 0.
+        maxMinTime = 0.
 
         for host,t in tests.items():
             if filterName+"_implementaciones" not in t["tests"]:
@@ -62,8 +62,13 @@ class Grapher:
             base = None
 
             for result in t["tests"][filterName+"_implementaciones"]["results"]:
-                datapoints[result["implementation"]] = result["time"]
-                maxTime = max(maxTime, result["time"])
+                datapoints[result["implementation"]] = (
+                        result["minTime"],
+                        result["maxTime"] - result["minTime"],
+                        0
+                )
+
+                maxMinTime = max(maxMinTime, result["minTime"])
 
                 if result["implementation"] not in groups:
                     groups.append(result["implementation"])
@@ -78,12 +83,12 @@ class Grapher:
             sets.append((model,datapoints))
 
         unit = "s"
-        if maxTime < 0.5e-3:
+        if maxMinTime < 0.5e-3:
             unit = "us"
-            sets = [ (m, {i: t*1e6 for i,t in r.items()}) for m,r in sets]
-        elif maxTime < 0.5:
+            sets = [ (m, {i: (t*1e6,ep*1e6,0) for i,(t,ep,em) in r.items()}) for m,r in sets]
+        elif maxMinTime < 0.5:
             unit = "ms"
-            sets = [ (m, {i: t*1e3 for i,t in r.items()}) for m,r in sets]
+            sets = [ (m, {i: (t*1e3,ep*1e3,0) for i,(t,ep,em) in r.items()}) for m,r in sets]
 
         # Plot the data
         self.plotGroupedBarplots(sets, groups, ascendingOrder=False)
@@ -98,7 +103,7 @@ class Grapher:
         plt.savefig(path+filterName+"_time.png")
 
     def plotSpeedup(self, tests, filterName, path):
-        # sets: [(cpuModel, {impl: speedup})]
+        # sets: [(cpuModel, {impl: (speedup, error+, error-)})]
         # groups: [impl]
         sets = []
         groups = []
@@ -111,15 +116,19 @@ class Grapher:
 
             for result in t["tests"][filterName+"_implementaciones"]["results"]:
                 if result["implementation"] == "c":
-                    base = result["time"]
+                    base = result["minTime"]
                 else:
-                    datapoints[result["implementation"]] = result["time"]
+                    datapoints[result["implementation"]] = (
+                            result["minTime"],
+                            result["maxTime"],
+                            0
+                    )
 
                     if result["implementation"] not in groups:
                         groups.append(result["implementation"])
 
             # Normalize the data
-            datapoints = { i: base/t for i,t in datapoints.items()}
+            datapoints = { i: (base/t,base/m - base/t,0) for i,(t,m,em) in datapoints.items()}
 
             model = t["model"]
             if model in sets:
@@ -170,7 +179,7 @@ class Grapher:
         return (fig, ax)
 
     def plotGroupedBarplots(self, sets, groups, ascendingOrder=True):
-        # sets: [(label, {group: value})]
+        # sets: [(label, {group: (value, error+, error-)})]
         # groups: [impl]
         self.setupPyplot()
 
@@ -178,23 +187,27 @@ class Grapher:
         order = lambda ss : max(ss) if ascendingOrder else -max(ss)
         groups = sorted(groups, key = lambda g :
                 (-len([1 for s in sets if g in s[1]]),
-                 order([d[g] for l,d in sets if g in d]))
+                 order([d[g][0] for l,d in sets if g in d]))
         )
 
-        sets = sorted(sets, key = lambda s : len(s[1]) * 1000 + s[1][groups[0]])
+        sets = sorted(sets, key = lambda s : len(s[1]) * 1000 + s[1][groups[0]][0])
 
         index = np.arange(len(groups))
         bar_width = 0.8 / len(sets)
 
         for i,s in enumerate(sets):
             model, data = s
-            ys = [data[g] if g in data else 0 for g in groups]
+            ys = [data[g][0] if g in data else 0 for g in groups]
+            yerr = ([data[g][2] if g in data else 0 for g in groups],
+                    [data[g][1] if g in data else 0 for g in groups])
 
             plt.bar(index + bar_width * (i+0.5) - bar_width * (len(sets)) / 2.,
                              ys,
                              bar_width,
                              color = self.getColor(i),
-                             label = model)
+                             label = model,
+                             ecolor = (0,0,0),
+                             yerr = yerr)
 
         plt.yticks(fontsize=14)
         plt.xticks(index + bar_width, groups, fontsize=14)

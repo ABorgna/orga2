@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #define FILTRO_C   0
 #define FILTRO_ASM 1
@@ -84,11 +85,41 @@ typedef struct filtro_t {
 extern filtro_t filtros[];
 filtro_t* detectar_filtro(configuracion_t *config);
 void      correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador);
-void      imprimir_tiempos_ejecucion(unsigned long long int start, unsigned long long int end, unsigned long long int minCycles, int cant_iteraciones);
+void      imprimir_tiempos_ejecucion(
+        unsigned long long int cycles, unsigned long long int minCycles,
+            unsigned long long int maxCycles,
+        struct timeval tvTotal, struct timeval tvMin, struct timeval tvMax,
+        int cant_iteraciones);
 
 // ~~~ declaraciones de cli.h ~~~
 void      procesar_opciones(int argc, char **argv, configuracion_t *config);
 void      imprimir_ayuda ( char *nombre_programa);
 
+// ~~~ operaciones con timeval ~~~
+# define timerisset(tvp)    ((tvp)->tv_sec || (tvp)->tv_usec)
+# define timerclear(tvp)    ((tvp)->tv_sec = (tvp)->tv_usec = 0)
+# define timercmp(a, b, CMP)                               \
+  (((a)->tv_sec == (b)->tv_sec) ?                          \
+   ((a)->tv_usec CMP (b)->tv_usec) :                       \
+   ((a)->tv_sec CMP (b)->tv_sec))
+# define timeradd(a, b, result)                            \
+  do {                                                     \
+    (result)->tv_sec = (a)->tv_sec + (b)->tv_sec;          \
+    (result)->tv_usec = (a)->tv_usec + (b)->tv_usec;       \
+    if ((result)->tv_usec >= 1000000)                      \
+      {                                                    \
+    ++(result)->tv_sec;                                    \
+    (result)->tv_usec -= 1000000;                          \
+      }                                                    \
+  } while (0)
+# define timersub(a, b, result)                            \
+  do {                                                     \
+    (result)->tv_sec = (a)->tv_sec - (b)->tv_sec;          \
+    (result)->tv_usec = (a)->tv_usec - (b)->tv_usec;       \
+    if ((result)->tv_usec < 0) {                           \
+      --(result)->tv_sec;                                  \
+      (result)->tv_usec += 1000000;                        \
+    }                                                      \
+  } while (0)
 
-#endif   /* !__TP2__H__ */
+#endif   /* !__TP2__H__i*/
