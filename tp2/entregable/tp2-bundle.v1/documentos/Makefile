@@ -3,7 +3,7 @@ targets = informe.pdf
 includes = secciones/objetivos.tex secciones/contexto.tex \
 	   secciones/cropflip.tex secciones/ldr.tex secciones/sepia.tex \
 	   secciones/conclusiones.tex bibliography.bib
-libs = caratula.sty
+libs = caratula.sty dibujitos.sty
 
 all: $(targets)
 

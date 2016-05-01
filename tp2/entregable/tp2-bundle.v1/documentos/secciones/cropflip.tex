@@ -35,7 +35,7 @@ end for
 Se diferencian de la implementación anterior de SSE en el uso de la mayor cantidad posible de registros XMM (YMM de 256 bits en el caso de las implementaciones de AVX2) para las operaciones de transferencia de bloques de pixeles de la imagen fuente a la destinto. 
 Dado que las lecturas y escrituras en memoria de cada registro son independientes entre sí, la ejecución fuera de orden del procesador hace que la transferencia por bloque sea más rápida que la implementación individual (que recorre la imagen con un único registro XMM). Por cuestiones de vecindad espacial de los píxeles en la memoria, los accesos a memoria de cada registro tienen chances particularmente altas de hitrate en caché, no demorando así las lecturas del resto de los registros.
 
-\subsubsubsection{Copiado paralelo de vectores}
+\subsubsection{Copiado paralelo de vectores}
 
 La asignación de píxeles se hace llamando a las funciones externas 'copyN_sse' y 'copyN_avx2'\footnote{../entregable/tp2-bundle.v1/codigo/lib} que copian tiras de píxeles de una imagen a otra por bloques de 64/4/1 ó 128/8/1 píxeles (sse y avx2 respectivamente) según sea posible. A modo de ejemplo (los otros casos son análogos), para copiar bloques de 64px (256B) desde la posición indicada por rsi a la indicada por rdi se cargan los valores correspondientes de la siguiente manera:
 
