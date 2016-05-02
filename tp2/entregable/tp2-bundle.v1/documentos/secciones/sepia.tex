@@ -48,7 +48,7 @@ Para volver a $char (8 bits)$ se resuelve distinto en cada caso.
 	\item En el caso de $suma_r$, se pregunta primero si el resultado final dio mayor o igual a 255. Si eso es cierto, lo satura a 255. Caso contrario, lo deja como está. En esencia se está ejecutando un $min(I^r_{i,j},255)$.
 \end{itemize}
 
-La cantidad de operaciones de punto flotante por píxel en esta implementación es de $\frac{3op}{p}$.
+La cantidad de operaciones de punto flotante por píxel en esta implementación es de $\frac{3op}{px}$.
 
 \subsubsection{Asm - SSE}
 
@@ -121,15 +121,46 @@ Por último, se unen los datos de xmm0 y xmm1 y se almacena en la imagen destino
 
 \xmm{0} \xmmByte{$O^a_{3}$}{$O^r_{3}$}{$O^g_{3}$}{$O^b_{3}$}{$O^a_{2}$}{$O^r_{2}$}{$O^g_{2}$}{$O^b_{2}$}{$O^a_{1}$}{$O^r_{1}$}{$O^g_{1}$}{$O^b_{1}$}{$O^a_{0}$}{$O^r_{0}$}{$O^g_{0}$}{$O^b_{0}$}
 
-La cantidad de operaciones de punto flotante por píxel en esta implementación es de $\frac{4op}{4p} = \frac{1op}{p}$, La cual es menor comparado a la cantidad de operaciones por píxel de la implementación en C (la cual es $\frac{3op}{p}$).
+La cantidad de operaciones de punto flotante por píxel en esta implementación es de $\frac{4op}{4px} = \frac{1op}{px}$, La cual es menor comparado a la cantidad de operaciones por píxel de la implementación en C (la cual es $\frac{3op}{px}$).
 
 Con la finalidad de aumentar el rendimiento de esta implementación, se decidió utilizar más registros para procesar más cantidad de memoria en un mismo loop, de modo tal que la ejecución fuera de orden fuera más efectiva y se realice la menor cantidad de saltos condicionales posible. Como se pudo ver en el desarrollo del algoritmo, solo cinco registros fueron utilizados para realizar todo el proceso (xmm0..xmm4), por lo cual, en vez de procesar de a 4 píxeles, el ciclo ahora procesa de a 12, utilizando 15 de los 16 registros xmm, dejando espacio libre para el registro extra que contiene los factores por los que hay que multiplicar. También es necesario utilizar un registro lleno de ceros para desempaquetar los datos, lo cual haría necesario contar con 17 registros o acceder a memoria, pero como ese registro de ceros solo es necesario durante una sola parte del algoritmo (en la cual aún no están en uso todos los registros) se puede utilizar algún registro que aún no se haya procesado.
 La problemática que surge a partir de procesar de a 12 píxeles, es que no se sabe si se puede estar procesando píxeles de más, ya que solo se tiene como hipótesis que el ancho de la imagen multiplicado por su altura es un número que es múltiplo de 8, y por ende no siempre tendremos una imagen cuyo tamaño total sea múltiplo de 12. Para solucionar esto, se procesa de a 12 píxeles todas las veces que se pueda, y cuando ya no se pueda más, se procesa de a 4 como originalmente se hacía, hasta terminar de procesar toda la imagen. Notar que no puede llegar a ocurrir que el algoritmo haya tenido que procesar de a 4 píxeles más de 2 veces.
 
 \subsubsection{Asm - AVX2}
 
-En AVX2 podemos utilizar los registros extendidos ymm de 256 bits, por lo cual podemos procesar el doble de píxeles que en la implementación SSE. También contamos con instrucciones no destructivas que nos ahorran un par de pasos a la hora de implementar.
-La conversión del algoritmo es directa con respecto a SSE. La estrategia es la misma, con la salvedad de que hay que tener cuidado con algunas instrucciones que no funcionan exactamente igual a su instrucción análoga de SSE. Tales son los casos de VPHADD, VPUNPCKLBW y VPUNPCKHBW.
+En AVX2 podemos utilizar los registros extendidos ymm de 256 bits, por lo cual podemos procesar el doble de píxeles que en la implementación SSE. También contamos con instrucciones no destructivas que nos ahorran un par de pasos a la hora de implementar. Por ejemplo, podemos pasar de
+
+\begin{lstlisting}
+MOVDQA XMM1, XMM0
+PSLLD XMM1, 8
+PSRLD XMM1, 8
+\end{lstlisting}
+
+a
+
+\begin{lstlisting}
+VPSLLD XMM1, XMM0, 8
+VPSRLD XMM1, XMM1, 8
+\end{lstlisting}
+
+
+La conversión del algoritmo es directa con respecto a SSE. La estrategia es la misma, con la salvedad de que hay que tener cuidado con algunas instrucciones que no funcionan exactamente igual a su instrucción análoga de SSE.
+
+Por ejemplo, a la hora de convertir los registros a word ejecutando VPUNPCKLBW y VPUNPCKHBW, estos quedarían de la siguiente manera
+
+\begin{lstlisting}
+VPUNPCKLBW XMM3, XMM1, XMM7
+VPUNPCKHBW XMM1, XMM1, XMM7
+\end{lstlisting}
+
+\ymm{1} \ymmWord{$0$}{$R_{5}$}{$G_{5}$}{$B_{5}$}{$0$}{$R_{4}$}{$G_{4}$}{$B_{4}$}{$0$}{$R_{1}$}{$G_{1}$}{$B_{1}$}{$0$}{$R_{0}$}{$G_{0}$}{$B_{0}$}
+
+\ymm{3} \ymmWord{$0$}{$R_{7}$}{$G_{7}$}{$B_{7}$}{$0$}{$R_{6}$}{$G_{6}$}{$B_{6}$}{$0$}{$R_{3}$}{$G_{3}$}{$B_{3}$}{$0$}{$R_{2}$}{$G_{2}$}{$B_{2}$}
+
+Por lo general, en las instrucciones de AVX2 se mantiene la misma estructura que se vio en el reciente ejemplo: Primero se procesa la parte baja de los dos registros fuente, y luego se procesa la parte alta de cada uno, en vez de procesar cada uno por completo a la vez.
+
+Esta implementación ejecuta la misma cantidad de operaciones en punto flotante que SSE, pero procesa el doble de píxeles. Por lo tanto, por cada loop obtenemos un rendimiento de $\frac{4op}{8px} = \frac{1op}{2px}$.
+
 
 \subsection{Experimentos}
 
