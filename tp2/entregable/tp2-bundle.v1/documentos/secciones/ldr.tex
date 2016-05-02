@@ -134,20 +134,72 @@ para $0 \le u \le 3$ y $M = u+9$
 
 Solo resta aplicar $max$ y $min$ para saturar los valores calculados, reconvertirlos a byte y guardarlos en la imagen de salida.
 
-.\\
-.\\
-.\\
-.\\
+\vspace{10 mm}
 
-Como la imagen que procesamos nunca tienen padding en la linea (ya que los píxeles ocupan 32b cada uno) podemos considerarla aplanada como una secuencia lineal de filas concatenadas. \\
-De esta manera evitamos el uso de condicionales dentro del loop que tomen los bordes de las filas como casos especiales. \\
+Como la imagen que procesamos nunca tienen padding en la linea (ya que los píxeles ocupan 32b cada uno) podemos considerarla aplanada como una secuencia lineal de filas concatenadas y procesar desde el comienzo de la tercer linea hasta el final de la antepenúltima checkeos de casos especiales.
+De esta manera evitamos el uso de condicionales dentro del loop y el riesgo de mispredicciones de salto. \\
 Procesar de este modo genera que en los bordes laterales se grabe basura, por lo que luego del loop debemos copiar los píxeles originales.
-Del mismo modo copiamos las dos filas superiores e inferiores que no fueron procesadas.
 
+Para copiar las dos primeras y últimas filas usamos función $copyN\_sse$, compartida con el filtro cropflip y detallada mas arriba (\ref{explicacionCopyN}).
 
 \subsubsection{Asm - SSE con calculos de enteros}
 
-\cite{hackersdelight}
+Cuando vimos que al hacer las operaciones en punto flotante los resultados no eran perfectamente iguales debido a errores de precision, decidimos codear una implementación realizando todos los cálculos con enteros.
+
+La mayoría de los cambios son directos, usando por ejemplo \asm{pmulld} en vez de \asm{mulps}. Como el valor máximo que al que pueden llegar es $25 * 3 * 255 * 255 * 255 > 2^{16}$ seguimos necesitando $32b$ para almacenar los valores, esta vez como double words en vez de punto flotante de precision simple.
+
+El primer problema que nos encontramos fue que no existe una instruccion de division de enteros en SIMD. Recurrimos a un método de division de enteros con signo usando multiplicaciones y shifts presentado por H.S. Warren en \cite[Chapter~10]{hackersdelight}. \\
+Siguiendo el método descripto llegamos a la fórmula:
+
+$$ \frac{x}{max} = x * magic >> s \qquad \forall -2^{31} \le x < 2^{31} $$
+$$ magic = 0x6e15c447 $$
+$$ s = 53 $$
+
+El siguiente problema una vez resuelto fue que al estar trabajando con números enteros el resultado de una multiplicación de valores de $32b$ ocupa $64b$ y por mas que solo necesitamos la parte alta de la multiplicación (ya que la parte baja se desecha con el shift de 53 lugares), la ISA no provee una instruccion que calcule solo lo que nos importa (cuando si tiene \asm{pmuldw} para realizar la misma operación con words).
+
+Para solucionarlo tuvimos que duplicar cada registro con valores, shifteando la copia para quedarse con la parte alte en la parte baja, y usar la instrucción \asm{pmuldq} que realiza la multiplicación completa sobre dos double words y las guarda como quad words.
+Luego realizamos los shifts y combinamos los resultados de nuevo en un registro por pixel.
+
+\begin{lstlisting}
+MOVDQA XMM$_M$, XMM$_N$
+PSRLQ XMM$_M$, 32
+\end{lstlisting}
+
+\xmm{N} \xmmDoubleWord{0}{$R_u * sumargb_u * \alpha$}{$G_u * sumargb_u * \alpha$}{$B_u * sumargb_u * \alpha$}
+
+\xmm{M} \xmmDoubleWord{0}{0}{0}{$R_u * sumargb_u * \alpha$} \\
+para $0 \le u \le 3$, $N = u+5$ y $M = u+9$.
+
+\begin{lstlisting}
+PMULDQ XMM$_N$, {registro con $magic$ replicado 4 veces}
+PMULDQ XMM$_M$, {registro con $magic$ replicado 4 veces}
+\end{lstlisting}
+
+\xmm{N} \xmmQuadWord{$R_u * sumargb_u * \alpha * magic$}{$B_u * sumargb_u * \alpha * magic$}
+
+\xmm{M} \xmmQuadWord{$G_u * sumargb_u * \alpha * magic$}{0} \\
+para $0 \le u \le 3$, $N = u+5$ y $M = u+9$.
+
+\begin{lstlisting}
+PSRLQ XMM$_N$, 53
+PSRLQ XMM$_M$, 21
+PAND XMM$_M$, {registro con 0s en la double word mas baja y 1s en lo demas}
+\end{lstlisting}
+
+\xmm{N} \xmmDoubleWord{0}{$\delta \; ldr^r_u$}{0}{$\delta \; ldr^b_u$}
+
+\xmm{M} \xmmDoubleWord{0}{0}{$\delta \; ldr^g_u$}{0} \\
+para $0 \le u \le 3$, $N = u+5$ y $M = u+9$. Donde $\delta \; ldr^k_u$ es lo que hay que sumarle al valor original del pixel en $ldr^k_u$.
+
+\begin{lstlisting}
+POR XMM$_N$, XMM$_M$
+PADDD XMM$_M$, {registro con los valores originales del pixel}
+\end{lstlisting}
+
+\xmm{N} \xmmDoubleWord{$A_u$}{$ldr^r_u$}{$ldr^g_u$}{$ldr^b_u$}
+para $0 \le u \le 3$ y $N = u+9$
+
+Y las operaciones restantes se convierten a punto fijo trivialmente.
 
 \subsubsection{Asm - AVX/FMA}
 

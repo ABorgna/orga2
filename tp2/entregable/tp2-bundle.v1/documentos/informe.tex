@@ -30,8 +30,6 @@
 %\usepackage{charter}
 %\usepackage{wrapfig}
 \usepackage{listingsutf8}
-\lstset{language=Python}
-\lstset{inputencoding=utf8/latin1}
 
 % \setcounter{secnumdepth}{2}
 \usepackage{underscore}
@@ -55,6 +53,23 @@
 		\begin{center}%
 		\vspace{-0.4cm}\colorbox{litegrey}{\TheSbox}\end{center}\vspace{0.3cm}}
 
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+
+\lstset{ %
+  backgroundcolor=\color{litegrey},
+  basicstyle=\footnotesize,
+  breakatwhitespace=true,
+  breaklines=true,
+  captionpos=b,                    % sets the caption-position to bottom
+  mathescape=true,
+  keepspaces=true,
+  language=Python,
+  showspaces=false,
+  tabsize=2,                       % sets default tabsize to 2 spaces
+  inputencoding=utf8/latin1
+}
 
 
 % ********************************************************* %
