@@ -30,6 +30,21 @@ filtro_t filtros[] = {
 
 // ~~~ fin de seteo de filtros. Para agregar otro debe agregarse ~~~
 //    ~~~ una linea en cada una de las tres partes anteriores ~~~
+int comparLongLong(const void *a, const void *b){
+   const unsigned long long *x = a, *y = b;
+   if(*x > *y)
+     return 1;
+   else
+     return(*x < *y) ? -1: 0;
+ }
+
+int comparLong(const void *a, const void *b){
+   const unsigned long *x = a, *y = b;
+   if(*x > *y)
+     return 1;
+   else
+     return(*x < *y) ? -1: 0;
+ }
 
 int main( int argc, char** argv ) {
 
@@ -92,6 +107,8 @@ void correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador)
     strcpy(tipo_filtro_UPPER,config->tipo_filtro);
     for(char *p = tipo_filtro_UPPER; *p; p++) *p = toupper(*p);
 
+
+
     snprintf(config->archivo_salida, sizeof  (config->archivo_salida), "%s/%s.%s.%s%s.bmp",
              config->carpeta_salida, basename(config->archivo_entrada),
              config->nombre_filtro,  tipo_filtro_UPPER, config->extra_archivo_salida );
@@ -102,6 +119,9 @@ void correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador)
     }
     else
     {
+
+				unsigned long long * arrayLongLongs = malloc((config->cant_iteraciones)*sizeof(unsigned long long));
+				unsigned long * arrayLongs = malloc((config->cant_iteraciones)*sizeof(unsigned long));
         imagenes_abrir(config);
         unsigned long long cyclesTotal = 0, cyclesStart, cyclesEnd,
                            cyclesMin = -1, cyclesMax = 0, cyclesPartial;
@@ -113,6 +133,7 @@ void correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador)
         tvMin.tv_sec = (__time_t) LONG_MAX;
 
         for (int i = 0; i < config->cant_iteraciones; i++){
+
 
             gettimeofday(&tvStart,NULL);
             MEDIR_TIEMPO_START(cyclesStart)
@@ -135,8 +156,14 @@ void correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador)
             cyclesTotal += cyclesPartial;
             cyclesMin = cyclesPartial < cyclesMin ? cyclesPartial : cyclesMin;
             cyclesMax = cyclesPartial > cyclesMax ? cyclesPartial : cyclesMax;
+						arrayLongLongs[i] = cyclesPartial;
+						arrayLongs[i] =  tvPartial.tv_usec;
         }
 
+				qsort(arrayLongs, config->cant_iteraciones, sizeof(unsigned long), comparLong);
+				qsort(arrayLongLongs, config->cant_iteraciones, sizeof(unsigned long long), comparLongLong);
+				unsigned long medianaLong = arrayLongs[config->cant_iteraciones / 2];
+				unsigned long long medianaLongLong = arrayLongLongs[config->cant_iteraciones / 2];
         imagenes_guardar(config);
         imagenes_liberar(config);
         imprimir_tiempos_ejecucion(cyclesTotal, cyclesMin, cyclesMax,
