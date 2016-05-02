@@ -11,6 +11,9 @@ align 8
 LDR_MAX_INV: dd 2.050493399974369e-7, 2.050493399974369e-7
 ; Floating point max
 PIXEL_MAX_F: dd 255.0, 255.0
+; mxcsr settings, round to zero
+; DEFAULT_VALUE | RZ_MASK = 0x1F80H | 0x7000
+MXCSR_RZ: dd 0x7F80
 
 section .text
 ;void ldr_asm    (
@@ -33,6 +36,13 @@ ldr_sse:
     push r14
     push r13
     push r12
+
+    ; Save the MXCSR register
+    sub rsp, 8
+    stmxcsr [rsp]
+
+    ; Set SSE rounding to zero
+    ldmxcsr [MXCSR_RZ]
 
     ; line offsets
     ; r12: -2
@@ -361,6 +371,10 @@ ldr_sse:
         add rsi, r14
         add rdi, r14
     loop .copyBorders
+
+    ; Restore the MXCSR register
+    ldmxcsr [rsp]
+    add rsp, 8
 
     pop r12
     pop r13

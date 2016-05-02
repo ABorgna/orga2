@@ -21,6 +21,9 @@ LDR_MAX_MAGIC: dd 0x6e15c447, 0x6e15c447
 align 32
 MASK_REV_UPPER_FIRSTS_W: dq 0x0706050403020100, 0x0F0E0D0C0B0A0908, \
                             0x0100030205040706, 0xFFFFFFFFFFFFFFFF
+; mxcsr settings, round to zero
+; DEFAULT_VALUE | RZ_MASK = 0x1F80H | 0x7000
+MXCSR_RZ: dd 0x7F80
 
 section .text
 
@@ -42,6 +45,13 @@ ldr_avx2:
     push r14
     push r13
     push r12
+
+    ; Save the MXCSR register
+    sub rsp, 8
+    stmxcsr [rsp]
+
+    ; Set SSE rounding to zero
+    ldmxcsr [MXCSR_RZ]
 
     ; line offsets
     ; r12: -2
@@ -433,6 +443,10 @@ ldr_avx2:
         add rsi, r14
         add rdi, r14
     loop .copyBorders
+
+    ; Restore the MXCSR register
+    ldmxcsr [rsp]
+    add rsp, 8
 
     pop r12
     pop r13

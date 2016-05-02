@@ -4,6 +4,9 @@ DEFAULT REL
 section .rodata
 align 32
 vectorFactores:        dd 0.2, 0.3, 0.5, 0.0, 0.2, 0.3, 0.5, 0.0 
+; mxcsr settings, round to zero
+; DEFAULT_VALUE | RZ_MASK = 0x1F80H | 0x7000
+MXCSR_RZ: dd 0x7F80
 
 section .text
 
@@ -21,6 +24,13 @@ global sepia_avx2
 sepia_avx2:
     push rbp
     mov rbp, rsp
+
+    ; Save the MXCSR register
+    sub rsp, 8
+    stmxcsr [rsp]
+
+    ; Set SSE rounding to zero
+    ldmxcsr [MXCSR_RZ]
 
     imul ecx, edx                                ; ecx == #filas * #columnas
 
@@ -358,6 +368,10 @@ sepia_avx2:
     ;Finishing
 
     .fin:
+
+        ; Restore the MXCSR register
+        ldmxcsr [rsp]
+        add rsp, 8
 
         pop rbp
         ret

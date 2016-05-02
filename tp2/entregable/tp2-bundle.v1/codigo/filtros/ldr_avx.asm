@@ -16,6 +16,9 @@ PIXEL_MAX_F: dd 255.0, 255.0
 PIXEL_MAX: dd 255, 255
 ; x / max = x * MAGIC >> 53
 LDR_MAX_MAGIC: dd 0x6e15c447, 0x6e15c447
+; mxcsr settings, round to zero
+; DEFAULT_VALUE | RZ_MASK = 0x1F80H | 0x7000
+MXCSR_RZ: dd 0x7F80
 
 section .text
 ;void ldr_asm    (
@@ -36,6 +39,13 @@ ldr_avx:
     push r14
     push r13
     push r12
+
+    ; Save the MXCSR register
+    sub rsp, 8
+    stmxcsr [rsp]
+
+    ; Set SSE rounding to zero
+    ldmxcsr [MXCSR_RZ]
 
     ; line offsets
     ; r12: -2
@@ -344,6 +354,10 @@ ldr_avx:
         add rsi, r14
         add rdi, r14
     loop .copyBorders
+
+    ; Restore the MXCSR register
+    ldmxcsr [rsp]
+    add rsp, 8
 
     pop r12
     pop r13
