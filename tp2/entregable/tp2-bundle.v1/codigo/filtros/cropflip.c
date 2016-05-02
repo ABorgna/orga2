@@ -47,13 +47,13 @@ void aplicar_cropflip(configuracion_t *config)
 
     if(strcmp(config->tipo_filtro,"c") == 0) {
         cropflip = cropflip_c;
-    } else if(strcmp(config->tipo_filtro,"c_o0") == 0) {
+    } else if(strcmp(config->tipo_filtro,"c_O0") == 0) {
         cropflip = cropflip_c_o0;
-    }else if(strcmp(config->tipo_filtro,"c_o1") == 0) {
+    }else if(strcmp(config->tipo_filtro,"c_O1") == 0) {
         cropflip = cropflip_c_o1;
-    }else if(strcmp(config->tipo_filtro,"c_o2") == 0) {
+    }else if(strcmp(config->tipo_filtro,"c_O2") == 0) {
         cropflip = cropflip_c_o2;
-    }else if(strcmp(config->tipo_filtro,"c_o3") == 0) {
+    }else if(strcmp(config->tipo_filtro,"c_O3") == 0) {
         cropflip = cropflip_c_o3;
     } else if(strcmp(config->tipo_filtro,"asm") == 0) {
         cropflip = cropflip_asm;
@@ -61,7 +61,7 @@ void aplicar_cropflip(configuracion_t *config)
         cropflip = cropflip_sse;
     } else if(strcmp(config->tipo_filtro,"sse_par") == 0) {
         cropflip = cropflip_asm_COPYN;
-    } else if(strcmp(config->tipo_filtro,"avx2") == 0) {
+    } else if(strcmp(config->tipo_filtro,"avx") == 0) {
         cropflip = cropflip_asm_COPYN_avx2;
     } else {
         return;
@@ -82,7 +82,7 @@ void ayuda_cropflip()
              "                         offsetx pixels a partir de los cuales copiar del source\n"
              "                         offsety pixels a partir de los cuales copiar del source\n");
     printf ( "           Implementaciones : \n"
-             "                         c, c_o0, c_o1, c_o2, c_o3, asm, sse, sse_par, avx2\n");
+             "                         c, c_O0, c_O1, c_O2, c_O3, asm, sse, sse_par, avx\n");
     printf ( "           Ejemplo de uso   : \n"
              "                         cropflip -i c facil.bmp 32 32 40 50\n" );
 }

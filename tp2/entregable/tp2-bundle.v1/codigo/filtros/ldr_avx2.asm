@@ -18,7 +18,7 @@ PIXEL_MAX: dd 255, 255
 LDR_MAX_MAGIC: dd 0x6e15c447, 0x6e15c447
 ; Reverse the first words of the upper part of a ymm register
 ; and clear the rest
-align 16
+align 32
 MASK_REV_UPPER_FIRSTS_W: dq 0x0706050403020100, 0x0F0E0D0C0B0A0908, \
                             0x0100030205040706, 0xFFFFFFFFFFFFFFFF
 

@@ -34,7 +34,7 @@ void aplicar_ldr(configuracion_t *config)
 
     if(strcmp(config->tipo_filtro,"c") == 0) {
         ldr = ldr_c;
-    } else if(strcmp(config->tipo_filtro,"c_o0") == 0) {
+    } else if(strcmp(config->tipo_filtro,"c_O0") == 0) {
         ldr = ldr_c_o0;
     } else if(strcmp(config->tipo_filtro,"asm") == 0) {
         ldr = ldr_asm;
@@ -64,7 +64,7 @@ void ayuda_ldr()
              "                         alpha - valor entre -255 y 255. En caso\n"
              "                         de querer pasar un valor negativo anteponer --\n");
     printf ( "           Implementaciones : \n"
-             "                         c, c_o0, asm, sse, sse_integer, avx, avx2\n");
+             "                         c, c_O0, asm, sse, sse_integer, avx, avx2\n");
     printf ( "           Ejemplo de uso   : \n"
              "                         ldr -i c facil.bmp 120\n"
              "                         ldr -i c facil.bmp -- -200\n");

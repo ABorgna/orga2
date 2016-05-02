@@ -26,21 +26,21 @@ TESTS = {
     "cropflip_implementaciones": {
         "filter": "cropflip",
         "imgs": ["img/lena.bmp"],
-        "implementations": ["c_o0","c_o1", "c_o2", "c_o3", "sse","sse_par","avx2"],
+        "implementations": ["c","c_O0","c_O1", "c_O2", "c_O3", "sse","sse_par","avx"],
         "sizes": [(512,512)],
         "params": ["128 128 128 128"]
     },
     "sepia_implementaciones": {
         "filter": "sepia",
         "imgs": ["img/lena.bmp"],
-        "implementations": ["c","c_o0","sse","avx2"],
+        "implementations": ["c","c_O0","sse","avx2"],
         "sizes": [(512,512)],
         "params": [""]
     },
     "ldr_implementaciones": {
         "filter": "ldr",
         "imgs": ["img/lena.bmp"],
-        "implementations": ["c","c_o0","sse","avx","avx2"],
+        "implementations": ["c","c_O0","sse","avx","avx2"],
         "sizes": [(512,512)],
         "params": ["100"]
     },
@@ -202,7 +202,7 @@ class Benchmark:
             referenceImplementation=None):
 
         # Use time
-        arguments = ["/usr/bin/env", "time", "-p", TP2_BIN, filterName,
+        arguments = [TP2_BIN, filterName,
                         "-t", minIterations,
                         "-o", IMG_OUT_PATH,
                         "-i", implementation,
@@ -214,6 +214,12 @@ class Benchmark:
         iterations = 1 if singleRun else minIterations
         while first or (totalTime < minTime and not singleRun):
             if not first:
+                if iterations > 1000000 and 
+                    (not totalTime or iterations / totalTime < 10000):
+                    print("Over a million iterations and no time spent.",
+                          "Aborting.")
+                    return None
+
                 if totalTime < 0.01:
                     iterations *= 10
                 else:
@@ -223,12 +229,13 @@ class Benchmark:
                     else:
                         iterations *= 10
 
-                arguments[6] = str(iterations)
+                arguments[3] = str(iterations)
             else:
                 first = False
 
             try:
-                out = subprocess.check_output(arguments, stderr=subprocess.STDOUT,
+                out = subprocess.check_output(arguments,
+                                              stderr=subprocess.STDOUT,
                                               universal_newlines=True)
             except subprocess.CalledProcessError as e:
                 if self.invalidInstructionRe.search(e.output):
@@ -239,7 +246,8 @@ class Benchmark:
 
                 print("Error!")
                 print("Output: ",e.output)
-                raise
+                print("err: ",e.stderr)
+                return None
 
             # Return if the process failed
             if not self.completedRe.search(out):

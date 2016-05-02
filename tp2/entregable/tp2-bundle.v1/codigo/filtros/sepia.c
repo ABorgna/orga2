@@ -30,7 +30,7 @@ void aplicar_sepia(configuracion_t *config)
     sepia_fn_t *sepia;
     if(strcmp(config->tipo_filtro,"c") == 0) {
         sepia = sepia_c;
-    } else if(strcmp(config->tipo_filtro,"c_o0") == 0) {
+    } else if(strcmp(config->tipo_filtro,"c_O0") == 0) {
         sepia = sepia_c_o0;
     } else if(strcmp(config->tipo_filtro,"asm") == 0) {
         sepia = sepia_asm;
@@ -55,7 +55,7 @@ void ayuda_sepia()
     printf ( "           Parámetros       : \n"
              "                         ninguno\n");
     printf ( "           Implementaciones : \n"
-             "                         c, c_o0, asm, sse, avx2\n");
+             "                         c, c_O0, asm, sse, avx2\n");
     printf ( "           Ejemplo de uso   : \n"
              "                         sepia -i c bgr.bmp\n");
 }
