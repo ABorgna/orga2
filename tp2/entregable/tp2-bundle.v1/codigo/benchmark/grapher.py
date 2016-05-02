@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
+import matplotlib.colors as mplc
 import glob
 import json
 import matplotlib.ticker as mticker
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+import random
 import re
 import subprocess
 import sys
@@ -38,12 +40,19 @@ class Grapher:
         if not os.path.exists(GRAPHS_PATH):
             os.makedirs(GRAPHS_PATH)
 
-        plots = [self.plotTime, self.plotSpeedup, self.plotCycles,
+        # Test comparing implementations
+        implementationPlots = [self.plotTime, self.plotSpeedup, self.plotCycles,
                 self.plotCacheMisses, self.plotBranchMisses]
 
         testNames = ["cropflip", "cropflip-c","sepia","sepia-c","ldr","ldr-c"]
 
-        [plot(tests,t,GRAPHS_PATH) for plot in plots for t in testNames]
+        [plot(tests,t,GRAPHS_PATH) for plot in implementationPlots for t in testNames]
+
+        # Heatmap tests
+        heatmapPlots = [self.plotCacheHeatmap]
+        testImpls = [("ldr","sse")]
+
+        [plot(tests,t,i,GRAPHS_PATH) for plot in heatmapPlots for t,i in testImpls]
 
     # Graphs
 
@@ -282,6 +291,43 @@ class Grapher:
 
         plt.close("all")
 
+    def plotCacheHeatmap(self, tests, filterName, implementation, path):
+        # sets: [(cpuModel, {impl: (speedup, error+, error-)})]
+        # groups: [impl]
+        sets = []
+        groups = []
+        for host,t in tests.items():
+            if filterName+"-sizes" not in t["tests"]:
+                continue
+            test = t["tests"][filterName+"-sizes"]
+
+            sizes = test["sizes"]
+            widths = list(set([w for w,h in sizes]))
+            heights = list(set([h for w,h in sizes]))
+            widths.sort()
+            heights.sort()
+
+            data = np.zeros((len(heights),len(widths)))
+
+            for result in test["results"]:
+                if result["implementation"] != implementation:
+                    continue
+
+                size = result["size"]
+                x = widths.index(size[0])
+                y = heights.index(size[1])
+                data[y][x] = result["cacheMisses"] / result["cacheReferences"]
+
+            # Plot the data
+            fig, ax = self.plotHeatmap(data, widths, heights)
+
+            plt.xlabel('Ancho en píxeles', fontsize=14)
+            plt.ylabel('Alto en píxeles', fontsize=14)
+
+            plt.savefig(path+filterName+"-time-map-"+host+".png");
+
+            plt.close("all")
+
 
     # Utils
 
@@ -301,20 +347,20 @@ class Grapher:
 
         return self.modelColors[model]
 
-    def setupPyplot(self):
+    def setupPyplot(self, size=(12,9)):
         plt.style.use('ggplot')
 
         fig, ax = plt.subplots()
 
         # You typically want your plot to be ~1.33x wider than tall.
-        plt.figure(figsize=(8, 4))
+        fig.set_size_inches(size)
 
         return (fig, ax)
 
     def plotGroupedBarplots(self, sets, groups, ascendingOrder=True):
         # sets: [(label, {group: (value, error+, error-)})]
         # groups: [impl]
-        fig, ax = self.setupPyplot()
+        fig, ax = self.setupPyplot((12,4))
 
         # Order the data in a nice ascending order
         order = lambda ss : max(ss) if ascendingOrder else -max(ss)
@@ -347,6 +393,19 @@ class Grapher:
 
         return fig, ax
 
+    def plotHeatmap(self, data, xlabels, ylabels):
+        fig, ax = self.setupPyplot((8,8))
+
+        heatmap = ax.pcolor(data, cmap=plt.cm.Blues, norm=mplc.LogNorm())
+
+        # put the major ticks at the middle of each cell
+        ax.set_xticks(np.arange(data.shape[0])+0.5, minor=False)
+        ax.set_yticks(np.arange(data.shape[1])+0.5, minor=False)
+
+        ax.set_xticklabels(xlabels, minor=False)
+        ax.set_yticklabels(ylabels, minor=False)
+
+        return fig, ax
 
 if __name__ == "__main__":
     g = Grapher()

@@ -66,6 +66,13 @@ TESTS = {
         "sizes": [(512,512)],
         "params": ["100"]
     },
+    "ldr-sizes": {
+        "filter": "ldr",
+        "imgs": ["img/lena.bmp"],
+        "implementations": ["sse"],
+        "sizes": [(2**w,2**h) for w in range(7, 13) for h in range(7,13)],
+        "params": ["100"]
+    },
     "ldr-precision": {
         "filter": "ldr",
         "imgs": ["img/lena.bmp","img/12d9xx.jpg","img/18ifgk.jpg","img/15979a.jpg",
