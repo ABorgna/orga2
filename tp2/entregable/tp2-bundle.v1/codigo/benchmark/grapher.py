@@ -92,7 +92,7 @@ class Grapher:
         plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%g'))
         plt.legend(loc='best')
 
-        plt.savefig(path+filterName+"_cycles.png")
+        plt.savefig(path+filterName+"-cycles.png")
 
     def plotTime(self, tests, filterName, path):
         # sets: [(cpuModel, {impl: (minTime, error+, error-)})]
@@ -147,7 +147,7 @@ class Grapher:
         plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%g'+unit))
         plt.legend(loc='best')
 
-        plt.savefig(path+filterName+"_time.png")
+        plt.savefig(path+filterName+"-time.png")
 
     def plotSpeedup(self, tests, filterName, path):
         # sets: [(cpuModel, {impl: (speedup, error+, error-)})]
@@ -199,7 +199,7 @@ class Grapher:
         plt.legend(loc='best')
         plt.ylim(ymin=0.)
 
-        plt.savefig(path+filterName+"_time_speedup.png");
+        plt.savefig(path+filterName+"-time-speedup.png");
 
 
     # Utils
