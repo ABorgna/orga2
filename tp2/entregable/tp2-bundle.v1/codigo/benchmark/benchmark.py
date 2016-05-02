@@ -106,11 +106,11 @@ class Benchmark:
     p10TimeRe = re.compile(r"^\s*tiempo p10\s+: ([0-9.]+)",re.M)
     p90TimeRe = re.compile(r"^\s*tiempo p90\s+: ([0-9.]+)",re.M)
 
-    perfCacheRefRe = re.compile(r"^\s*([0-9,]+)\s+cache-references",re.M)
-    perfCacheMissRe = re.compile(r"^\s*([0-9,]+)\s+cache-misses",re.M)
-    perfBranchesRe = re.compile(r"^\s*([0-9,]+)\s+branches",re.M)
-    perfBranchMissRe = re.compile(r"^\s*([0-9,]+)\s+branch-misses",re.M)
-    perfFaultsRe = re.compile(r"^\s*([0-9,]+)\s+faults",re.M)
+    perfCacheRefRe = re.compile(r"^\s*([0-9,.]+)\s+cache-references",re.M)
+    perfCacheMissRe = re.compile(r"^\s*([0-9,.]+)\s+cache-misses",re.M)
+    perfBranchesRe = re.compile(r"^\s*([0-9,.]+)\s+branches",re.M)
+    perfBranchMissRe = re.compile(r"^\s*([0-9,.]+)\s+branch-misses",re.M)
+    perfFaultsRe = re.compile(r"^\s*([0-9,.]+)\s+faults",re.M)
 
     invalidInstructionRe = re.compile(r"^Command terminated by signal 4",re.M)
 
@@ -238,7 +238,6 @@ class Benchmark:
     def runTest(self, img, filterName, implementation, *args,
             minTime = 2.0, minIterations=100, singleRun=False,
             referenceImplementation=None):
-        os.environ["LANG"] = "en_US.UTF-8"
 
         hasPerf = True if shutil.which(PERF) is not None else False
         perfOptions = "cache-references,cache-misses,branches,branch-misses,faults"
@@ -287,7 +286,7 @@ class Benchmark:
                 out = subprocess.check_output(arguments,
                                               stderr=subprocess.STDOUT,
                                               universal_newlines=True,
-                                              env=os.environ)
+                                              env=self.getEnglishEnvironment())
             except subprocess.CalledProcessError as e:
                 if self.invalidInstructionRe.search(e.output):
                     if not implementation in self.unsuportedImplementations:
@@ -299,8 +298,6 @@ class Benchmark:
                 print("Output: ",e.output)
                 print("err: ",e.stderr)
                 return None
-
-            print(out)
 
             # Return if the process failed
             if not self.completedRe.search(out):
@@ -347,15 +344,20 @@ class Benchmark:
 
             "maxDiff": maxDiff,
 
-            "cacheReferences": int(self.perfCacheRefRe.search(out).group(1).replace(",","")) \
+            "cacheReferences": int(self.perfCacheRefRe.search(out).group(1)
+                               .replace(",","").replace(".","")) \
                     if hasPerf else None,
-            "cacheMisses": int(self.perfCacheMissRe.search(out).group(1).replace(",","")) \
+            "cacheMisses": int(self.perfCacheMissRe.search(out).group(1)
+                               .replace(",","").replace(".","")) \
                     if hasPerf else None,
-            "branches": int(self.perfBranchesRe.search(out).group(1).replace(",","")) \
+            "branches": int(self.perfBranchesRe.search(out).group(1)
+                               .replace(",","").replace(".","")) \
                     if hasPerf else None,
-            "branchMisses": int(self.perfBranchMissRe.search(out).group(1).replace(",","")) \
+            "branchMisses": int(self.perfBranchMissRe.search(out).group(1)
+                               .replace(",","").replace(".","")) \
                     if hasPerf else None,
-            "faults": int(self.perfFaultsRe.search(out).group(1).replace(",","")) \
+            "faults": int(self.perfFaultsRe.search(out).group(1)
+                               .replace(",","").replace(".","")) \
                     if hasPerf else None,
         }
 
@@ -394,6 +396,27 @@ class Benchmark:
                     outputData["tests"][t] = d
 
         return outputData
+
+    def getEnglishEnvironment(self):
+        env = os.environ.copy()
+
+        env["LANG"] = "en_US.UTF-8"
+        env["LANGUAGE"] = ""
+        env["LC_CTYPE"] = "en_US.UTF-8"
+        env["LC_NUMERIC"] = "en_US.UTF-8"
+        env["LC_TIME"] = "en_US.UTF-8"
+        env["LC_COLLATE"] = "en_US.UTF-8"
+        env["LC_MONETARY"] = "en_US.UTF-8"
+        env["LC_MESSAGES"] = "en_US.UTF-8"
+        env["LC_PAPER"] = "en_US.UTF-8"
+        env["LC_NAME"] = "en_US.UTF-8"
+        env["LC_ADDRESS"] = "en_US.UTF-8"
+        env["LC_TELEPHONE"] = "en_US.UTF-8"
+        env["LC_MEASUREMENT"] = "en_US.UTF-8"
+        env["LC_IDENTIFICATION"] = "en_US.UTF-8"
+        env["LC_ALL"] = ""
+
+        return env
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
