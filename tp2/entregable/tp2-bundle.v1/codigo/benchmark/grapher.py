@@ -41,12 +41,22 @@ class Grapher:
         self.plotTime(tests, "cropflip", GRAPHS_PATH)
         self.plotSpeedup(tests, "cropflip", GRAPHS_PATH)
         self.plotCycles(tests, "cropflip", GRAPHS_PATH)
+
         self.plotTime(tests, "sepia", GRAPHS_PATH)
         self.plotSpeedup(tests, "sepia", GRAPHS_PATH)
         self.plotCycles(tests, "sepia", GRAPHS_PATH)
+
+        self.plotTime(tests, "sepia-c", GRAPHS_PATH)
+        self.plotSpeedup(tests, "sepia-c", GRAPHS_PATH)
+        self.plotCycles(tests, "sepia-c", GRAPHS_PATH)
+
         self.plotTime(tests, "ldr", GRAPHS_PATH)
         self.plotSpeedup(tests, "ldr", GRAPHS_PATH)
         self.plotCycles(tests, "ldr", GRAPHS_PATH)
+
+        self.plotTime(tests, "ldr-c", GRAPHS_PATH)
+        self.plotSpeedup(tests, "ldr-c", GRAPHS_PATH)
+        self.plotCycles(tests, "ldr-c", GRAPHS_PATH)
 
     # Graphs
 
@@ -57,13 +67,13 @@ class Grapher:
         groups = []
 
         for host,t in tests.items():
-            if filterName+"_implementaciones" not in t["tests"]:
+            if filterName+"-implementaciones" not in t["tests"]:
                 continue
 
             datapoints = {}
             base = None
 
-            for result in t["tests"][filterName+"_implementaciones"]["results"]:
+            for result in t["tests"][filterName+"-implementaciones"]["results"]:
                 datapoints[result["implementation"]] = (
                         result["q2Cycles"],
                         result["p90Cycles"] - result["q2Cycles"],
@@ -83,16 +93,16 @@ class Grapher:
             sets.append((model,datapoints))
 
         # Plot the data
-        self.plotGroupedBarplots(sets, groups, ascendingOrder=False)
+        fig, ax = self.plotGroupedBarplots(sets, groups, ascendingOrder=False)
 
         plt.xlabel('Implementación', fontsize=14)
         plt.ylabel('Ciclos de clock', fontsize=14)
-        plt.title('Ciclos de clock por ejecucion de '+filterName+' sobre lena.bmp 512x512',
-                   fontsize=16)
         plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%g'))
         plt.legend(loc='best')
 
         plt.savefig(path+filterName+"-cycles.png")
+
+        plt.close(fig)
 
     def plotTime(self, tests, filterName, path):
         # sets: [(cpuModel, {impl: (minTime, error+, error-)})]
@@ -102,13 +112,13 @@ class Grapher:
         maxMedianTime = 0.
 
         for host,t in tests.items():
-            if filterName+"_implementaciones" not in t["tests"]:
+            if filterName+"-implementaciones" not in t["tests"]:
                 continue
 
             datapoints = {}
             base = None
 
-            for result in t["tests"][filterName+"_implementaciones"]["results"]:
+            for result in t["tests"][filterName+"-implementaciones"]["results"]:
                 datapoints[result["implementation"]] = (
                         result["q2Time"],
                         result["p90Time"] - result["q2Time"],
@@ -138,16 +148,16 @@ class Grapher:
             sets = [ (m, {i: (t*1e3,ep*1e3,em*1e3) for i,(t,ep,em) in r.items()}) for m,r in sets]
 
         # Plot the data
-        self.plotGroupedBarplots(sets, groups, ascendingOrder=False)
+        fig, ax = self.plotGroupedBarplots(sets, groups, ascendingOrder=False)
 
         plt.xlabel('Implementación', fontsize=14)
         plt.ylabel('Tiempo', fontsize=14)
-        plt.title('Tiempo de ejecucion de '+filterName+' sobre lena.bmp 512x512',
-                   fontsize=16)
         plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%g'+unit))
         plt.legend(loc='best')
 
         plt.savefig(path+filterName+"-time.png")
+
+        plt.close(fig)
 
     def plotSpeedup(self, tests, filterName, path):
         # sets: [(cpuModel, {impl: (speedup, error+, error-)})]
@@ -155,14 +165,14 @@ class Grapher:
         sets = []
         groups = []
         for host,t in tests.items():
-            if filterName+"_implementaciones" not in t["tests"]:
+            if filterName+"-implementaciones" not in t["tests"]:
                 continue
 
             datapoints = {}
             base = None
 
-            for result in t["tests"][filterName+"_implementaciones"]["results"]:
-                if result["implementation"] == "c":
+            for result in t["tests"][filterName+"-implementaciones"]["results"]:
+                if result["implementation"] == "c" or result["implementation"] == "c_O3":
                     base = result["q2Time"]
                 else:
                     datapoints[result["implementation"]] = (
@@ -189,17 +199,17 @@ class Grapher:
             sets.append((model,datapoints))
 
         # Plot the data
-        self.plotGroupedBarplots(sets, groups)
+        fig, ax = self.plotGroupedBarplots(sets, groups)
 
         plt.xlabel('Implementación', fontsize=14)
         plt.ylabel('Speedup', fontsize=14)
-        plt.title('Speedup en tiempo relativo a la implementación en C de '+
-                  filterName+' sobre lena.bmp 512x512', fontsize=14)
         plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%gx'))
         plt.legend(loc='best')
         plt.ylim(ymin=0.)
 
         plt.savefig(path+filterName+"-time-speedup.png");
+
+        plt.close(fig)
 
 
     # Utils
@@ -226,14 +236,14 @@ class Grapher:
         fig, ax = plt.subplots()
 
         # You typically want your plot to be ~1.33x wider than tall.
-        plt.figure(figsize=(12, 9))
+        plt.figure(figsize=(8, 6))
 
         return (fig, ax)
 
     def plotGroupedBarplots(self, sets, groups, ascendingOrder=True):
         # sets: [(label, {group: (value, error+, error-)})]
         # groups: [impl]
-        self.setupPyplot()
+        fig, ax = self.setupPyplot()
 
         # Order the data in a nice ascending order
         order = lambda ss : max(ss) if ascendingOrder else -max(ss)
@@ -263,6 +273,8 @@ class Grapher:
 
         plt.yticks(fontsize=14)
         plt.xticks(index + bar_width, groups, fontsize=14)
+
+        return fig, ax
 
 
 if __name__ == "__main__":

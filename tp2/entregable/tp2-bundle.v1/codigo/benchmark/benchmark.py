@@ -23,28 +23,42 @@ DATA_OUT_PATH = "data/"
 TIME_PER_TEST = 1.0
 
 TESTS = {
-    "cropflip_implementaciones": {
+    "cropflip-implementaciones": {
         "filter": "cropflip",
         "imgs": ["img/lena.bmp"],
-        "implementations": ["c","c_O0","c_O1", "c_O2", "c_O3", "sse","sse_par","avx"],
+        "implementations": ["c_O0","c_O1", "c_O2", "c_O3", "sse","sse_par","avx"],
         "sizes": [(512,512)],
         "params": ["128 128 128 128"]
     },
-    "sepia_implementaciones": {
+    "sepia-implementaciones": {
         "filter": "sepia",
         "imgs": ["img/lena.bmp"],
-        "implementations": ["c","c_O0","sse","avx2"],
+        "implementations": ["c","sse","avx2"],
         "sizes": [(512,512)],
         "params": [""]
     },
-    "ldr_implementaciones": {
+    "sepia-c-implementaciones": {
+        "filter": "sepia",
+        "imgs": ["img/lena.bmp"],
+        "implementations": ["c_O0","c_O1", "c_O2", "c_O3"],
+        "sizes": [(512,512)],
+        "params": [""]
+    },
+    "ldr-implementaciones": {
         "filter": "ldr",
         "imgs": ["img/lena.bmp"],
-        "implementations": ["c","c_O0","sse","avx","avx2"],
+        "implementations": ["c","sse","avx","avx2"],
         "sizes": [(512,512)],
         "params": ["100"]
     },
-    "ldr_precision": {
+    "ldr-c-implementaciones": {
+        "filter": "ldr",
+        "imgs": ["img/lena.bmp"],
+        "implementations": ["c_O0","c_O1", "c_O2", "c_O3"],
+        "sizes": [(512,512)],
+        "params": ["100"]
+    },
+    "ldr-precision": {
         "filter": "ldr",
         "imgs": ["img/lena.bmp","img/12d9xx.jpg","img/18ifgk.jpg","img/15979a.jpg",
                  "img/colores32.bmp","img/fine.png"],

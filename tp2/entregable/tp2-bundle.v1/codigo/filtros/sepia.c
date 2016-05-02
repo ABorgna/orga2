@@ -11,6 +11,8 @@
 
 DECLARE_SEPIA_EXT(c);
 DECLARE_SEPIA_EXT(c_o0);
+DECLARE_SEPIA_EXT(c_o1);
+DECLARE_SEPIA_EXT(c_o2);
 DECLARE_SEPIA_EXT(asm);
 DECLARE_SEPIA_EXT(avx2);
 
@@ -30,6 +32,12 @@ void aplicar_sepia(configuracion_t *config)
     sepia_fn_t *sepia;
     if(strcmp(config->tipo_filtro,"c") == 0) {
         sepia = sepia_c;
+    } else if(strcmp(config->tipo_filtro,"c_O3") == 0) {
+        sepia = sepia_c;
+    } else if(strcmp(config->tipo_filtro,"c_O2") == 0) {
+        sepia = sepia_c_o2;
+    } else if(strcmp(config->tipo_filtro,"c_O1") == 0) {
+        sepia = sepia_c_o1;
     } else if(strcmp(config->tipo_filtro,"c_O0") == 0) {
         sepia = sepia_c_o0;
     } else if(strcmp(config->tipo_filtro,"asm") == 0) {
@@ -55,7 +63,8 @@ void ayuda_sepia()
     printf ( "           Parámetros       : \n"
              "                         ninguno\n");
     printf ( "           Implementaciones : \n"
-             "                         c, c_O0, asm, sse, avx2\n");
+             "                         c, c_O0, c_O1, c_O2, c_O3,"
+             "                         asm, sse, avx2\n");
     printf ( "           Ejemplo de uso   : \n"
              "                         sepia -i c bgr.bmp\n");
 }
