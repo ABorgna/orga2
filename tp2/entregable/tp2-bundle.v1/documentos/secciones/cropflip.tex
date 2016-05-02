@@ -94,6 +94,7 @@ $$ \frac{32 \ bytes}{4 \ \frac{bytes}{px}} = 8 \ px $$
 Por lo cual, suponiendo $ tamx \equiv 0 \ (mod \ 8) $ (como es el caso de una imagen de salida de 512x512), tendríamos $\frac{1}{32} = 0,03125 =  3,125\%$ del total de accesos a memoria de la implementación en C.
 
 \subsubsection{Copiado paralelo de vectores}
+\label{explicacionCopyN}
 
 La asignación de píxeles se hace llamando a las funciones externas 'copyN_sse' y 'copyN_avx2'\footnote{../entregable/tp2-bundle.v1/codigo/lib} que copian tiras de píxeles de una imagen a otra por bloques de 64/4/1 ó 128/8/1 píxeles (sse y avx2 respectivamente) según sea posible. A modo de ejemplo (los otros casos son análogos), para copiar bloques de 64px (256B) desde la posición indicada por rsi a la indicada por rdi se cargan los valores correspondientes de la siguiente manera:
 \newline
