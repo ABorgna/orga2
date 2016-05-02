@@ -38,25 +38,12 @@ class Grapher:
         if not os.path.exists(GRAPHS_PATH):
             os.makedirs(GRAPHS_PATH)
 
-        self.plotTime(tests, "cropflip", GRAPHS_PATH)
-        self.plotSpeedup(tests, "cropflip", GRAPHS_PATH)
-        self.plotCycles(tests, "cropflip", GRAPHS_PATH)
+        plots = [self.plotTime, self.plotSpeedup, self.plotCycles,
+                self.plotCacheMisses, self.plotBranchMisses]
 
-        self.plotTime(tests, "sepia", GRAPHS_PATH)
-        self.plotSpeedup(tests, "sepia", GRAPHS_PATH)
-        self.plotCycles(tests, "sepia", GRAPHS_PATH)
+        testNames = ["cropflip","sepia","sepia-c","ldr","ldr-c"]
 
-        self.plotTime(tests, "sepia-c", GRAPHS_PATH)
-        self.plotSpeedup(tests, "sepia-c", GRAPHS_PATH)
-        self.plotCycles(tests, "sepia-c", GRAPHS_PATH)
-
-        self.plotTime(tests, "ldr", GRAPHS_PATH)
-        self.plotSpeedup(tests, "ldr", GRAPHS_PATH)
-        self.plotCycles(tests, "ldr", GRAPHS_PATH)
-
-        self.plotTime(tests, "ldr-c", GRAPHS_PATH)
-        self.plotSpeedup(tests, "ldr-c", GRAPHS_PATH)
-        self.plotCycles(tests, "ldr-c", GRAPHS_PATH)
+        [plot(tests,t,GRAPHS_PATH) for plot in plots for t in testNames]
 
     # Graphs
 
@@ -102,7 +89,91 @@ class Grapher:
 
         plt.savefig(path+filterName+"-cycles.png")
 
-        plt.close(fig)
+        plt.close("all")
+
+    def plotCacheMisses(self, tests, filterName, path):
+        # sets: [(cpuModel, {impl: (minCycles, error+, error-)})]
+        # groups: [impl]
+        sets = []
+        groups = []
+
+        for host,t in tests.items():
+            if filterName+"-implementaciones" not in t["tests"]:
+                continue
+
+            datapoints = {}
+
+            for result in t["tests"][filterName+"-implementaciones"]["results"]:
+                datapoints[result["implementation"]] = (
+                        100 * result["cacheMisses"] / result["cacheReferences"],
+                        0, 0
+                )
+
+                if result["implementation"] not in groups:
+                    groups.append(result["implementation"])
+
+            model = t["model"]
+            if model in sets:
+                n = 2
+                while model+" ("+str(n)+")" in sets:
+                    n += 1
+                model = model+" ("+str(n)+")"
+
+            sets.append((model,datapoints))
+
+        # Plot the data
+        fig, ax = self.plotGroupedBarplots(sets, groups, ascendingOrder=False)
+
+        plt.xlabel('Implementación', fontsize=14)
+        plt.ylabel('Porcentaje de misses a la cache', fontsize=14)
+        plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%g%%'))
+        plt.legend(loc='best')
+
+        plt.savefig(path+filterName+"-cache-misses.png")
+
+        plt.close("all")
+
+    def plotBranchMisses(self, tests, filterName, path):
+        # sets: [(cpuModel, {impl: (minCycles, error+, error-)})]
+        # groups: [impl]
+        sets = []
+        groups = []
+
+        for host,t in tests.items():
+            if filterName+"-implementaciones" not in t["tests"]:
+                continue
+
+            datapoints = {}
+
+            for result in t["tests"][filterName+"-implementaciones"]["results"]:
+                datapoints[result["implementation"]] = (
+                        100 * result["branchMisses"] / result["branches"],
+                        0, 0
+                )
+
+                if result["implementation"] not in groups:
+                    groups.append(result["implementation"])
+
+            model = t["model"]
+            if model in sets:
+                n = 2
+                while model+" ("+str(n)+")" in sets:
+                    n += 1
+                model = model+" ("+str(n)+")"
+
+            sets.append((model,datapoints))
+
+        # Plot the data
+        fig, ax = self.plotGroupedBarplots(sets, groups, ascendingOrder=False)
+
+        plt.xlabel('Implementación', fontsize=14)
+        plt.ylabel('Porcentaje de branch misspredictions', fontsize=14)
+        plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter(r'%g%%'))
+        plt.legend(loc='best')
+
+        plt.savefig(path+filterName+"-branch-misses.png")
+
+        plt.close("all")
 
     def plotTime(self, tests, filterName, path):
         # sets: [(cpuModel, {impl: (minTime, error+, error-)})]
@@ -157,7 +228,7 @@ class Grapher:
 
         plt.savefig(path+filterName+"-time.png")
 
-        plt.close(fig)
+        plt.close("all")
 
     def plotSpeedup(self, tests, filterName, path):
         # sets: [(cpuModel, {impl: (speedup, error+, error-)})]
@@ -209,7 +280,7 @@ class Grapher:
 
         plt.savefig(path+filterName+"-time-speedup.png");
 
-        plt.close(fig)
+        plt.close("all")
 
 
     # Utils

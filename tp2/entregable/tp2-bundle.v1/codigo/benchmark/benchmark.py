@@ -3,6 +3,7 @@
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 
@@ -12,9 +13,9 @@ Where test is one of:
         all
 """     # TESTS
 
-TIME = "/usr/bin/env time"
 TP2_BIN = "../build/tp2"
 BMPDIFF = "../build/bmpdiff"
+PERF = "perf"
 
 GEN_PATH = "gen/"
 IMG_OUT_PATH = "out/"
@@ -97,6 +98,12 @@ class Benchmark:
     q3TimeRe  = re.compile(r"^\s*tiempo q3\s+: ([0-9.]+)",re.M)
     p10TimeRe = re.compile(r"^\s*tiempo p10\s+: ([0-9.]+)",re.M)
     p90TimeRe = re.compile(r"^\s*tiempo p90\s+: ([0-9.]+)",re.M)
+
+    perfCacheRefRe = re.compile(r"^\s*([0-9,]+)\s+cache-references",re.M)
+    perfCacheMissRe = re.compile(r"^\s*([0-9,]+)\s+cache-misses",re.M)
+    perfBranchesRe = re.compile(r"^\s*([0-9,]+)\s+branches",re.M)
+    perfBranchMissRe = re.compile(r"^\s*([0-9,]+)\s+branch-misses",re.M)
+    perfFaultsRe = re.compile(r"^\s*([0-9,]+)\s+faults",re.M)
 
     invalidInstructionRe = re.compile(r"^Command terminated by signal 4",re.M)
 
@@ -225,12 +232,23 @@ class Benchmark:
             minTime = 2.0, minIterations=100, singleRun=False,
             referenceImplementation=None):
 
-        # Use time
-        arguments = [TP2_BIN, filterName,
-                        "-t", minIterations,
-                        "-o", IMG_OUT_PATH,
-                        "-i", implementation,
-                        img, "--"] + [e for a in args for e in a.split()]
+        hasPerf = True if shutil.which(PERF) is not None else False
+        perfOptions = "cache-references,cache-misses,branches,branch-misses,faults"
+
+        if hasPerf:
+            arguments = [PERF, "stat", "-e", perfOptions, TP2_BIN, filterName,
+                            "-t", minIterations,
+                            "-o", IMG_OUT_PATH,
+                            "-i", implementation,
+                            img, "--"] + [e for a in args for e in a.split()]
+            iterationsIndex = 7
+        else:
+            arguments = [TP2_BIN, filterName,
+                            "-t", minIterations,
+                            "-o", IMG_OUT_PATH,
+                            "-i", implementation,
+                            img, "--"] + [e for a in args for e in a.split()]
+            iterationsIndex = 3
         arguments = [str(a) for a in arguments]
 
         first = True
@@ -253,7 +271,7 @@ class Benchmark:
                     else:
                         iterations *= 10
 
-                arguments[3] = str(iterations)
+                arguments[iterationsIndex] = str(iterations)
             else:
                 first = False
 
@@ -316,7 +334,18 @@ class Benchmark:
             "p90Time": float(self.p90TimeRe.search(out).group(1)),
             "avgTime": totalTime / iterations,
 
-            "maxDiff": maxDiff
+            "maxDiff": maxDiff,
+
+            "cacheReferences": int(self.perfCacheRefRe.search(out).group(1).replace(",","")) \
+                    if hasPerf else None,
+            "cacheMisses": int(self.perfCacheMissRe.search(out).group(1).replace(",","")) \
+                    if hasPerf else None,
+            "branches": int(self.perfBranchesRe.search(out).group(1).replace(",","")) \
+                    if hasPerf else None,
+            "branchMisses": int(self.perfBranchMissRe.search(out).group(1).replace(",","")) \
+                    if hasPerf else None,
+            "faults": int(self.perfFaultsRe.search(out).group(1).replace(",","")) \
+                    if hasPerf else None,
         }
 
     def getMaxPixelDiff(self, baseImg, targetImg):
