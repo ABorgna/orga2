@@ -52,7 +52,7 @@ class Grapher:
         # groups: [impl]
         sets = []
         groups = []
-        maxMinTime = 0.
+        maxMedianTime = 0.
 
         for host,t in tests.items():
             if filterName+"_implementaciones" not in t["tests"]:
@@ -63,12 +63,12 @@ class Grapher:
 
             for result in t["tests"][filterName+"_implementaciones"]["results"]:
                 datapoints[result["implementation"]] = (
-                        result["avgTime"],
-                        result["maxTime"] - result["avgTime"],
-                        result["avgTime"] - result["minTime"]
+                        result["q2Time"],
+                        result["p90Time"] - result["q2Time"],
+                        result["q2Time"] - result["p10Time"]
                 )
 
-                maxMinTime = max(maxMinTime, result["minTime"])
+                maxMedianTime = max(maxMedianTime, result["q2Time"])
 
                 if result["implementation"] not in groups:
                     groups.append(result["implementation"])
@@ -83,10 +83,10 @@ class Grapher:
             sets.append((model,datapoints))
 
         unit = "s"
-        if maxMinTime < 0.5e-3:
+        if maxMedianTime < 0.5e-3:
             unit = "us"
             sets = [ (m, {i: (t*1e6,ep*1e6,em*1e6) for i,(t,ep,em) in r.items()}) for m,r in sets]
-        elif maxMinTime < 0.5:
+        elif maxMedianTime < 0.5:
             unit = "ms"
             sets = [ (m, {i: (t*1e3,ep*1e3,em*1e3) for i,(t,ep,em) in r.items()}) for m,r in sets]
 
@@ -116,19 +116,21 @@ class Grapher:
 
             for result in t["tests"][filterName+"_implementaciones"]["results"]:
                 if result["implementation"] == "c":
-                    base = result["avgTime"]
+                    base = result["q2Time"]
                 else:
                     datapoints[result["implementation"]] = (
-                            result["avgTime"],
-                            result["maxTime"],
-                            result["minTime"],
+                            result["q2Time"],
+                            result["p90Time"],
+                            result["p10Time"],
                     )
 
                     if result["implementation"] not in groups:
                         groups.append(result["implementation"])
 
             # Normalize the data
-            datapoints = { i: (base/a,base/ma - base/a,base/a - base/mi) for i,(a,ma,mi) in datapoints.items()}
+            div = lambda x, y : x / y if y != 0 else 0
+            datapoints = { i: (div(base,a),div(base,ma) - div(base,a),div(base,a) - div(base,mi))
+                    for i,(a,ma,mi) in datapoints.items()}
 
             model = t["model"]
             if model in sets:

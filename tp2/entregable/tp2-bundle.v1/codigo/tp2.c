@@ -83,24 +83,6 @@ filtro_t* detectar_filtro(configuracion_t *config)
     return NULL; // avoid C warning
 }
 
-
-void imprimir_tiempos_ejecucion(
-        unsigned long long int cycles, unsigned long long minCycles,
-             unsigned long long maxCycles,
-        struct timeval tvTotal, struct timeval tvMin, struct timeval tvMax,
-        int cant_iteraciones) {
-
-    printf("Tiempo de ejecución:\n");
-    printf("  # iteraciones                     : %d\n", cant_iteraciones);
-    printf("  # de ciclos insumidos totales     : %llu\n", cycles);
-    printf("  # de ciclos insumidos por llamada : %.3f\n", (float)cycles/(float)cant_iteraciones);
-    printf("  # minimo de ciclos insumidos      : %llu\n", minCycles);
-    printf("  # maximo de ciclos insumidos      : %llu\n", maxCycles);
-    printf("  tiempo total                      : %ld.%06ld\n", tvTotal.tv_sec, tvTotal.tv_usec);
-    printf("  tiempo minimo                     : %ld.%06ld\n", tvMin.tv_sec, tvMin.tv_usec);
-    printf("  tiempo maximo                     : %ld.%06ld\n", tvMax.tv_sec, tvMax.tv_usec);
-}
-
 void correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador)
 {
     char *tipo_filtro_UPPER = (char*) malloc(strlen(config->tipo_filtro));
@@ -120,9 +102,13 @@ void correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador)
     else
     {
 
-				unsigned long long * arrayLongLongs = malloc((config->cant_iteraciones)*sizeof(unsigned long long));
-				unsigned long * arrayLongs = malloc((config->cant_iteraciones)*sizeof(unsigned long));
+        unsigned long long * cyclesArray =
+            malloc((config->cant_iteraciones) * sizeof(unsigned long long));
+        unsigned long * timeArray =
+            malloc((config->cant_iteraciones) * sizeof(unsigned long));
+
         imagenes_abrir(config);
+
         unsigned long long cyclesTotal = 0, cyclesStart, cyclesEnd,
                            cyclesMin = -1, cyclesMax = 0, cyclesPartial;
         struct timeval tvStart, tvEnd, tvMin, tvMax, tvPartial, tvTotal;
@@ -156,19 +142,40 @@ void correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador)
             cyclesTotal += cyclesPartial;
             cyclesMin = cyclesPartial < cyclesMin ? cyclesPartial : cyclesMin;
             cyclesMax = cyclesPartial > cyclesMax ? cyclesPartial : cyclesMax;
-						arrayLongLongs[i] = cyclesPartial;
-						arrayLongs[i] =  tvPartial.tv_usec;
+            cyclesArray[i] = cyclesPartial;
+            timeArray[i] =  tvPartial.tv_usec;
         }
 
-				qsort(arrayLongs, config->cant_iteraciones, sizeof(unsigned long), comparLong);
-				qsort(arrayLongLongs, config->cant_iteraciones, sizeof(unsigned long long), comparLongLong);
-				unsigned long medianaLong = arrayLongs[config->cant_iteraciones / 2];
-				unsigned long long medianaLongLong = arrayLongLongs[config->cant_iteraciones / 2];
+        qsort(timeArray, config->cant_iteraciones, sizeof(unsigned long), comparLong);
+        qsort(cyclesArray, config->cant_iteraciones, sizeof(unsigned long long), comparLongLong);
+
         imagenes_guardar(config);
         imagenes_liberar(config);
-        imprimir_tiempos_ejecucion(cyclesTotal, cyclesMin, cyclesMax,
-                tvTotal, tvMin, tvMax,
-                config->cant_iteraciones);
+
+        int its = config->cant_iteraciones;
+
+        printf("Tiempo de ejecución:\n");
+        printf("  # iteraciones                     : %d\n", config->cant_iteraciones);
+        printf("  # de ciclos insumidos totales     : %llu\n", cyclesTotal);
+        printf("  # de ciclos insumidos por llamada : %.3f\n", (float)cyclesTotal/(float)its);
+        printf("  # minimo de ciclos insumidos      : %llu\n", cyclesMin);
+        printf("  # maximo de ciclos insumidos      : %llu\n", cyclesMax);
+        printf("  # de ciclos q1                    : %llu\n", cyclesArray[its/4]);
+        printf("  # de ciclos q2                    : %llu\n", cyclesArray[its/2]);
+        printf("  # de ciclos q3                    : %llu\n", cyclesArray[its*3/4]);
+        printf("  # de ciclos p10                   : %llu\n", cyclesArray[its/10]);
+        printf("  # de ciclos p90                   : %llu\n", cyclesArray[its*9/10]);
+        printf("  tiempo total                      : %ld.%06ld\n", tvTotal.tv_sec, tvTotal.tv_usec);
+        printf("  tiempo minimo                     : %ld.%06ld\n", tvMin.tv_sec, tvMin.tv_usec);
+        printf("  tiempo maximo                     : %ld.%06ld\n", tvMax.tv_sec, tvMax.tv_usec);
+        printf("  tiempo q1                         : 0.%06lu\n", timeArray[its/4]);
+        printf("  tiempo q2                         : 0.%06lu\n", timeArray[its/2]);
+        printf("  tiempo q3                         : 0.%06lu\n", timeArray[its*3/4]);
+        printf("  tiempo p10                        : 0.%06lu\n", timeArray[its/10]);
+        printf("  tiempo p90                        : 0.%06lu\n", timeArray[its*9/10]);
+
+        free(timeArray);
+        free(cyclesArray);
     }
 
     free(tipo_filtro_UPPER);

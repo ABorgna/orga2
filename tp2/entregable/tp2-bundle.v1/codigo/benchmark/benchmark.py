@@ -67,12 +67,22 @@ class Benchmark:
     iterationsRe = re.compile(r"^\s*# iteraciones\s+: ([0-9]+)",re.M)
 
     cyclesRe = re.compile(r"^\s*# de ciclos insumidos por llamada\s+: ([0-9.]+)",re.M)
-    minCyclesRe = re.compile(r"^\s*# minimo de ciclos insumidos \s+: ([0-9.]+)",re.M)
-    maxCyclesRe = re.compile(r"^\s*# maximo de ciclos insumidos \s+: ([0-9.]+)",re.M)
+    minCyclesRe = re.compile(r"^\s*# minimo de ciclos insumidos\s+: ([0-9.]+)",re.M)
+    maxCyclesRe = re.compile(r"^\s*# maximo de ciclos insumidos\s+: ([0-9.]+)",re.M)
+    q1CyclesRe  = re.compile(r"^\s*# de ciclos q1\s+: ([0-9.]+)",re.M)
+    q2CyclesRe  = re.compile(r"^\s*# de ciclos q2\s+: ([0-9.]+)",re.M)
+    q3CyclesRe  = re.compile(r"^\s*# de ciclos q3\s+: ([0-9.]+)",re.M)
+    p10CyclesRe = re.compile(r"^\s*# de ciclos p10\s+: ([0-9.]+)",re.M)
+    p90CyclesRe = re.compile(r"^\s*# de ciclos p90\s+: ([0-9.]+)",re.M)
 
-    timeRe = re.compile(r"^\s*tiempo total \s+: ([0-9.]+)",re.M)
-    minTimeRe = re.compile(r"^\s*tiempo minimo \s+: ([0-9.]+)",re.M)
-    maxTimeRe = re.compile(r"^\s*tiempo maximo \s+: ([0-9.]+)",re.M)
+    timeRe = re.compile(r"^\s*tiempo total\s+: ([0-9.]+)",re.M)
+    minTimeRe = re.compile(r"^\s*tiempo minimo\s+: ([0-9.]+)",re.M)
+    maxTimeRe = re.compile(r"^\s*tiempo maximo\s+: ([0-9.]+)",re.M)
+    q1TimeRe  = re.compile(r"^\s*tiempo q1\s+: ([0-9.]+)",re.M)
+    q2TimeRe  = re.compile(r"^\s*tiempo q2\s+: ([0-9.]+)",re.M)
+    q3TimeRe  = re.compile(r"^\s*tiempo q3\s+: ([0-9.]+)",re.M)
+    p10TimeRe = re.compile(r"^\s*tiempo p10\s+: ([0-9.]+)",re.M)
+    p90TimeRe = re.compile(r"^\s*tiempo p90\s+: ([0-9.]+)",re.M)
 
     invalidInstructionRe = re.compile(r"^Command terminated by signal 4",re.M)
 
@@ -214,7 +224,7 @@ class Benchmark:
         iterations = 1 if singleRun else minIterations
         while first or (totalTime < minTime and not singleRun):
             if not first:
-                if iterations > 1000000 and 
+                if iterations > 1000000 and \
                     (not totalTime or iterations / totalTime < 10000):
                     print("Over a million iterations and no time spent.",
                           "Aborting.")
@@ -258,10 +268,6 @@ class Benchmark:
         # Parse the output data
         iterations = int(float(self.iterationsRe.search(out).group(1)))
         totalCycles = int(float(self.cyclesRe.search(out).group(1)))
-        minCycles = int(float(self.minCyclesRe.search(out).group(1)))
-        maxCycles = int(float(self.maxCyclesRe.search(out).group(1)))
-        minTime = float(self.minTimeRe.search(out).group(1))
-        maxTime = float(self.maxTimeRe.search(out).group(1))
 
         # Calculate the maximum pixel diff
         maxDiff = None
@@ -276,15 +282,25 @@ class Benchmark:
         return {
             "iterations": iterations,
 
-            "totalTime": totalTime,
-            "minTime": minTime,
-            "maxTime": maxTime,
-            "avgTime": totalTime / iterations,
-
             "totalCycles": totalCycles,
-            "minCycles": minCycles,
-            "maxCycles": minCycles,
+            "minCycles": int(float(self.minCyclesRe.search(out).group(1))),
+            "maxCycles": int(float(self.maxCyclesRe.search(out).group(1))),
+            "q1Cycles" : int(float(self.q1CyclesRe.search(out).group(1))),
+            "q2Cycles" : int(float(self.q2CyclesRe.search(out).group(1))),
+            "q3Cycles" : int(float(self.q3CyclesRe.search(out).group(1))),
+            "p10Cycles": int(float(self.p10CyclesRe.search(out).group(1))),
+            "p90Cycles": int(float(self.p90CyclesRe.search(out).group(1))),
             "avgCycles": int(totalCycles / iterations),
+
+            "totalTime": totalTime,
+            "minTime": float(self.minTimeRe.search(out).group(1)),
+            "maxTime": float(self.maxTimeRe.search(out).group(1)),
+            "q1Time" : float(self.q1TimeRe.search(out).group(1)),
+            "q2Time" : float(self.q2TimeRe.search(out).group(1)),
+            "q3Time" : float(self.q3TimeRe.search(out).group(1)),
+            "p10Time": float(self.p10TimeRe.search(out).group(1)),
+            "p90Time": float(self.p90TimeRe.search(out).group(1)),
+            "avgTime": totalTime / iterations,
 
             "maxDiff": maxDiff
         }

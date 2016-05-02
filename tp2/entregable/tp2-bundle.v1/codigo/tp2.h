@@ -85,11 +85,6 @@ typedef struct filtro_t {
 extern filtro_t filtros[];
 filtro_t* detectar_filtro(configuracion_t *config);
 void      correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador);
-void      imprimir_tiempos_ejecucion(
-        unsigned long long int cycles, unsigned long long int minCycles,
-            unsigned long long int maxCycles,
-        struct timeval tvTotal, struct timeval tvMin, struct timeval tvMax,
-        int cant_iteraciones);
 
 // ~~~ declaraciones de cli.h ~~~
 void      procesar_opciones(int argc, char **argv, configuracion_t *config);
