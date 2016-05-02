@@ -52,6 +52,13 @@ TESTS = {
         "sizes": [(512,512)],
         "params": [""]
     },
+    "sepia-sizes": {
+        "filter": "sepia",
+        "imgs": ["img/lena.bmp"],
+        "implementations": ["c","sse","avx2"],
+        "sizes": [(2**w,2**h) for w in range(7, 14) for h in range(7,14)],
+        "params": ["100"]
+    },
     "ldr-implementaciones": {
         "filter": "ldr",
         "imgs": ["img/lena.bmp"],
@@ -69,8 +76,8 @@ TESTS = {
     "ldr-sizes": {
         "filter": "ldr",
         "imgs": ["img/lena.bmp"],
-        "implementations": ["sse"],
-        "sizes": [(2**w,2**h) for w in range(7, 13) for h in range(7,13)],
+        "implementations": ["c","sse","avx2"],
+        "sizes": [(2**w,2**h) for w in range(7, 14) for h in range(7,14)],
         "params": ["100"]
     },
     "ldr-precision": {
@@ -85,8 +92,14 @@ TESTS = {
     }
 }
 
+TEST_GROUPS = {
+        "implementaciones": [t for t in TESTS if t.endswith("-implementaciones")]
+}
+
 for t in TESTS:
     HELP += "        "+t+"\n"
+for g in TEST_GROUPS:
+    HELP += "        "+g+"\n"
 
 class Benchmark:
 
@@ -440,6 +453,10 @@ if __name__ == "__main__":
             tests = TESTS
             break
 
+        elif t in TEST_GROUPS:
+            for tn in TEST_GROUPS[t]:
+                tests[tn] = TESTS[tn]
+
         elif t in TESTS:
             tests[t] = TESTS[t]
 
@@ -448,6 +465,10 @@ if __name__ == "__main__":
             print()
             print(HELP)
             sys.exit(2)
+
+    for t in tests:
+        if t.endswith("-sizes"):
+            print("Cuidado:",t,"genera un par de GB de imágenes")
 
     bench = Benchmark()
     bench.run(tests)

@@ -41,8 +41,8 @@ class Grapher:
             os.makedirs(GRAPHS_PATH)
 
         ########### Test comparing implementations
-        #implementationPlots = [self.plotTime, self.plotSpeedup, self.plotCycles,
-        #        self.plotCacheMisses, self.plotBranchMisses]
+        implementationPlots = [self.plotTime, self.plotSpeedup, self.plotCycles,
+                self.plotCacheMisses, self.plotBranchMisses]
 
         testNames = ["cropflip", "cropflip-c","sepia","sepia-c","ldr","ldr-c"]
 
@@ -50,17 +50,27 @@ class Grapher:
 
         ########### Heatmap tests
 
-        cacheMissFn = lambda result : 100* result["cacheMisses"] / result["cacheReferences"]
-        branchMissFn = lambda result : 100* result["branchMisses"] / result["branches"]
+        cacheMissFn = lambda result : 100 * result["cacheMisses"] / result["cacheReferences"]
+        branchMissFn = lambda result : 100 * result["branchMisses"] / result["branches"]
         timeFn = lambda result : result["q2Time"]
+        relativeTimeFn = lambda result : (result["size"][0] * result["size"][1]) / (1e6 * result["q2Time"])
 
-        # Filter, implementation, valueFunction, outputName, format, logarithmic?
-        testImpls = [("ldr","sse",cacheMissFn,"cache","%g%%",False),
-                     ("ldr","sse",branchMissFn,"branch","%g%%",False),
-                     ("ldr","sse",timeFn,"time","%gs",True),]
+        filtrosImpl = [("ldr","c"),("ldr","sse"),("ldr","avx2"),("sepia","c"),("sepia","sse"),("sepia","avx2")]
 
-        [self.plotGenericHeatmap(tests,t,i,fn,n,f,l,GRAPHS_PATH)
-                for t,i,fn,n,f,l in testImpls]
+        testImpls = []
+        for filtro, impl in filtrosImpl:
+            # Filter, implementation, valueFunction, outputName, label, format, logarithmic?
+            testImpls += [
+                (filtro,impl,cacheMissFn,"cache","Cache misses","%g%%",False),
+                (filtro,impl,branchMissFn,"branch","Branch misses","%g%%",False),
+                (filtro,impl,timeFn,"time","Tiempo de ejecución","%gs",True),
+                (filtro,impl,relativeTimeFn,"time-rel","Millones de pixeles por segundo","%g",False),
+            ]
+
+        [self.plotGenericHeatmap(tests,t,i,fn,n,label,f,log,GRAPHS_PATH)
+                for t,i,fn,n,label,f,log in testImpls]
+
+        # Presicion tests
 
     # Graphs
 
@@ -300,7 +310,7 @@ class Grapher:
         plt.close("all")
 
     def plotGenericHeatmap(self, tests, filterName, implementation,
-                           valueFn, name, labelFormat, logarithmic, path):
+                           valueFn, name, barLabel, labelFormat, logarithmic, path):
         # sets: [(cpuModel, {impl: (speedup, error+, error-)})]
         # groups: [impl]
         sets = []
@@ -328,14 +338,58 @@ class Grapher:
                 data[y][x] = valueFn(result)
 
             # Plot the data
-            fig, ax = self.plotHeatmap(data, widths, heights, labelFormat, logarithmic)
+            fig, ax = self.plotHeatmap(data, widths, heights, barLabel, labelFormat, logarithmic)
 
             plt.xlabel('Ancho en píxeles', fontsize=14)
             plt.ylabel('Alto en píxeles', fontsize=14)
 
-            plt.savefig(path+filterName+"-"+name+"-map-"+host+".png");
+            plt.savefig(path+filterName+"-"+name+"-map-"+implementation+"-"+host+".png");
 
             plt.close("all")
+
+    def plotPrecision(self, tests, filterName, path):
+        # sets: [(cpuModel, {impl: (minCycles, error+, error-)})]
+        # groups: [impl]
+        sets = []
+        groups = []
+
+        for host,t in tests.items():
+            if filterName+"-implementaciones" not in t["tests"]:
+                continue
+
+        datapoints = {}
+        base = None
+
+        for result in t["tests"][filterName+"-implementaciones"]["results"]:
+            datapoints[result["implementation"]] = (
+                    result["q2Cycles"],
+                    result["p90Cycles"] - result["q2Cycles"],
+                    result["q2Cycles"] - result["p10Cycles"]
+            )
+
+            if result["implementation"] not in groups:
+                groups.append(result["implementation"])
+
+        model = t["model"]
+        if model in sets:
+            n = 2
+            while model+" ("+str(n)+")" in sets:
+                n += 1
+            model = model+" ("+str(n)+")"
+
+        sets.append((model,datapoints))
+
+        # Plot the data
+        fig, ax = self.plotGroupedBarplots(sets, groups, ascendingOrder=False)
+
+        plt.xlabel('Implementación', fontsize=14)
+        plt.ylabel('Ciclos de clock', fontsize=14)
+        plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%g'))
+        plt.legend(loc='best')
+
+        plt.savefig(path+filterName+"-cycles.png")
+
+        plt.close("all")
 
 
     # Utils
@@ -402,7 +456,7 @@ class Grapher:
 
         return fig, ax
 
-    def plotHeatmap(self, data, xlabels, ylabels, barLabelFormat="%g", logarithmic = False):
+    def plotHeatmap(self, data, xlabels, ylabels, barLabel, barLabelFormat="%g", logarithmic = False):
         fig, ax = self.setupPyplot((8,6))
 
         if logarithmic:
@@ -410,7 +464,7 @@ class Grapher:
         else:
             heatmap = ax.pcolor(data, cmap=plt.cm.Blues)
 
-        cbar = plt.colorbar(heatmap, format=mticker.FormatStrFormatter(barLabelFormat))
+        cbar = plt.colorbar(heatmap, format=mticker.FormatStrFormatter(barLabelFormat),label=barLabel)
 
         # put the major ticks at the middle of each cell
         ax.set_xticks(np.arange(data.shape[0])+0.5, minor=False)
