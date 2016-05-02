@@ -1,0 +1,18 @@
+\section{Introduccion}
+
+\subsection{Objetivos generales}
+
+El objetivo de este trabajo práctico es experimentar con sets de instrucciones SIMD de Intel ASM x86 sobre una serie de implementaciones de filtros en imágenes de mapas de bits (RGBA) con el propósito de entender mejor el rol del paralelismo de datos en este tipo de implementaciones y qué tan remunerador es. 
+A partir de cada filtro, se plantearán implementaciones en C, SSE \footnote{Streaming SIMD Extensions} (set de instrucciones sobre registros de 128 bits), AVX \footnote{Advanced Vector Extensions} (también sobre 128 bits pero permitiendo operaciones en formato 'no-destructivo' \footnote{Preservan los operandos fuente}) y su expansión de 256 bits AVX2, Acompañadas todas de un análisis para poder contrastar y discutir su rendimiento.
+
+\subsection{Notación de filtros}
+
+Dado que la temática de la aplicación de este trabajo práctico es el procesamiento de imágenes, es preciso especificar con qué tipo de imágenes vamos a trabajar y cómo vamos a describir matemáticamente las funciones que apliquen los filtros.
+
+La imágenes sobre las que trabajamos son consideradas como matrices de píxeles. Cada píxel posee cuatro componentes: rojo (r), verde (g), azul (b) y transparencia (a). Cada una de estas componentes tiene un largo de 8 bits, por lo cual su rango de representación es $[0, 255]$.
+
+Se define $I^k_{i,j}$ como la componente $k \in \{r,g,b,a\}$ en la fila $i$ y la columna $j$ de la imagen, donde $i$ crece de abajo hacia arriba y $j$ crece de izquierda a derecha. Por ejemplo, el píxel de la esquina inferior izquierda correspondería a la fila 0 y a la columna 0.
+
+Se llama $O^k_{i,j}$ a la imagen de salida generada por el filtro especificado. Por ejemplo, el siguiente filtro asigna a todas las componentes de cada píxel el valor de la componente roja que se encuentra en su respectivo píxel.
+
+$$\forall k \in \{r,g,b,a\} \qquad O^k_{i,j} = I^r_{i,j}$$ 

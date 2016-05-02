@@ -1,6 +1,6 @@
 targets = informe.pdf
 
-includes = secciones/objetivos.tex secciones/contexto.tex \
+includes = secciones/introduccion.tex \
 	   secciones/cropflip.tex secciones/ldr.tex secciones/sepia.tex \
 	   secciones/conclusiones.tex bibliography.bib
 libs = caratula.sty dibujitos.sty
