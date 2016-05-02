@@ -40,19 +40,27 @@ class Grapher:
         if not os.path.exists(GRAPHS_PATH):
             os.makedirs(GRAPHS_PATH)
 
-        # Test comparing implementations
-        implementationPlots = [self.plotTime, self.plotSpeedup, self.plotCycles,
-                self.plotCacheMisses, self.plotBranchMisses]
+        ########### Test comparing implementations
+        #implementationPlots = [self.plotTime, self.plotSpeedup, self.plotCycles,
+        #        self.plotCacheMisses, self.plotBranchMisses]
 
         testNames = ["cropflip", "cropflip-c","sepia","sepia-c","ldr","ldr-c"]
 
         [plot(tests,t,GRAPHS_PATH) for plot in implementationPlots for t in testNames]
 
-        # Heatmap tests
-        heatmapPlots = [self.plotCacheHeatmap]
-        testImpls = [("ldr","sse")]
+        ########### Heatmap tests
 
-        [plot(tests,t,i,GRAPHS_PATH) for plot in heatmapPlots for t,i in testImpls]
+        cacheMissFn = lambda result : 100* result["cacheMisses"] / result["cacheReferences"]
+        branchMissFn = lambda result : 100* result["branchMisses"] / result["branches"]
+        timeFn = lambda result : result["q2Time"]
+
+        # Filter, implementation, valueFunction, outputName, format, logarithmic?
+        testImpls = [("ldr","sse",cacheMissFn,"cache","%g%%",False),
+                     ("ldr","sse",branchMissFn,"branch","%g%%",False),
+                     ("ldr","sse",timeFn,"time","%gs",True),]
+
+        [self.plotGenericHeatmap(tests,t,i,fn,n,f,l,GRAPHS_PATH)
+                for t,i,fn,n,f,l in testImpls]
 
     # Graphs
 
@@ -291,7 +299,8 @@ class Grapher:
 
         plt.close("all")
 
-    def plotCacheHeatmap(self, tests, filterName, implementation, path):
+    def plotGenericHeatmap(self, tests, filterName, implementation,
+                           valueFn, name, labelFormat, logarithmic, path):
         # sets: [(cpuModel, {impl: (speedup, error+, error-)})]
         # groups: [impl]
         sets = []
@@ -316,15 +325,15 @@ class Grapher:
                 size = result["size"]
                 x = widths.index(size[0])
                 y = heights.index(size[1])
-                data[y][x] = result["cacheMisses"] / result["cacheReferences"]
+                data[y][x] = valueFn(result)
 
             # Plot the data
-            fig, ax = self.plotHeatmap(data, widths, heights)
+            fig, ax = self.plotHeatmap(data, widths, heights, labelFormat, logarithmic)
 
             plt.xlabel('Ancho en píxeles', fontsize=14)
             plt.ylabel('Alto en píxeles', fontsize=14)
 
-            plt.savefig(path+filterName+"-time-map-"+host+".png");
+            plt.savefig(path+filterName+"-"+name+"-map-"+host+".png");
 
             plt.close("all")
 
@@ -393,10 +402,15 @@ class Grapher:
 
         return fig, ax
 
-    def plotHeatmap(self, data, xlabels, ylabels):
-        fig, ax = self.setupPyplot((8,8))
+    def plotHeatmap(self, data, xlabels, ylabels, barLabelFormat="%g", logarithmic = False):
+        fig, ax = self.setupPyplot((8,6))
 
-        heatmap = ax.pcolor(data, cmap=plt.cm.Blues, norm=mplc.LogNorm())
+        if logarithmic:
+            heatmap = ax.pcolor(data, cmap=plt.cm.Blues, norm=mplc.LogNorm())
+        else:
+            heatmap = ax.pcolor(data, cmap=plt.cm.Blues)
+
+        cbar = plt.colorbar(heatmap, format=mticker.FormatStrFormatter(barLabelFormat))
 
         # put the major ticks at the middle of each cell
         ax.set_xticks(np.arange(data.shape[0])+0.5, minor=False)
@@ -404,6 +418,7 @@ class Grapher:
 
         ax.set_xticklabels(xlabels, minor=False)
         ax.set_yticklabels(ylabels, minor=False)
+
 
         return fig, ax
 
