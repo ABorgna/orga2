@@ -41,7 +41,7 @@ class Grapher:
         plots = [self.plotTime, self.plotSpeedup, self.plotCycles,
                 self.plotCacheMisses, self.plotBranchMisses]
 
-        testNames = ["cropflip","sepia","sepia-c","ldr","ldr-c"]
+        testNames = ["cropflip", "cropflip-c","sepia","sepia-c","ldr","ldr-c"]
 
         [plot(tests,t,GRAPHS_PATH) for plot in plots for t in testNames]
 
@@ -307,7 +307,7 @@ class Grapher:
         fig, ax = plt.subplots()
 
         # You typically want your plot to be ~1.33x wider than tall.
-        plt.figure(figsize=(8, 6))
+        plt.figure(figsize=(8, 4))
 
         return (fig, ax)
 
@@ -340,7 +340,7 @@ class Grapher:
                              color = self.getColor(model),
                              label = model,
                              ecolor = (0,0,0),
-                             yerr = yerr)
+                             yerr = yerr if any(yerr[0]) or any(yerr[1]) else None)
 
         plt.yticks(fontsize=14)
         plt.xticks(index + bar_width, groups, fontsize=14)

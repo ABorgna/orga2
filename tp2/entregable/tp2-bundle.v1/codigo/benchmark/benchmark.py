@@ -27,7 +27,14 @@ TESTS = {
     "cropflip-implementaciones": {
         "filter": "cropflip",
         "imgs": ["img/lena.bmp"],
-        "implementations": ["c_O0","c_O1", "c_O2", "c_O3", "sse","sse_par","avx"],
+        "implementations": ["c_O3", "sse","sse_par","avx"],
+        "sizes": [(512,512)],
+        "params": ["128 128 128 128"]
+    },
+    "cropflip-c-implementaciones": {
+        "filter": "cropflip",
+        "imgs": ["img/lena.bmp"],
+        "implementations": ["c_O0","c_O1", "c_O2", "c_O3"],
         "sizes": [(512,512)],
         "params": ["128 128 128 128"]
     },
@@ -231,6 +238,7 @@ class Benchmark:
     def runTest(self, img, filterName, implementation, *args,
             minTime = 2.0, minIterations=100, singleRun=False,
             referenceImplementation=None):
+        os.environ["LANG"] = "en_US.UTF-8"
 
         hasPerf = True if shutil.which(PERF) is not None else False
         perfOptions = "cache-references,cache-misses,branches,branch-misses,faults"
@@ -278,7 +286,8 @@ class Benchmark:
             try:
                 out = subprocess.check_output(arguments,
                                               stderr=subprocess.STDOUT,
-                                              universal_newlines=True)
+                                              universal_newlines=True,
+                                              env=os.environ)
             except subprocess.CalledProcessError as e:
                 if self.invalidInstructionRe.search(e.output):
                     if not implementation in self.unsuportedImplementations:
@@ -290,6 +299,8 @@ class Benchmark:
                 print("Output: ",e.output)
                 print("err: ",e.stderr)
                 return None
+
+            print(out)
 
             # Return if the process failed
             if not self.completedRe.search(out):
