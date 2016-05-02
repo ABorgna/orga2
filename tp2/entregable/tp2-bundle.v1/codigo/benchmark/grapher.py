@@ -25,7 +25,7 @@ class Grapher:
     ]
 
     def __init__(self):
-        pass
+        self.modelColors = {}
 
     def run(self):
         tests = self.loadTests(DATA_PATH)
@@ -63,9 +63,9 @@ class Grapher:
 
             for result in t["tests"][filterName+"_implementaciones"]["results"]:
                 datapoints[result["implementation"]] = (
-                        result["minTime"],
-                        result["maxTime"] - result["minTime"],
-                        0
+                        result["avgTime"],
+                        result["maxTime"] - result["avgTime"],
+                        result["avgTime"] - result["minTime"]
                 )
 
                 maxMinTime = max(maxMinTime, result["minTime"])
@@ -85,10 +85,10 @@ class Grapher:
         unit = "s"
         if maxMinTime < 0.5e-3:
             unit = "us"
-            sets = [ (m, {i: (t*1e6,ep*1e6,0) for i,(t,ep,em) in r.items()}) for m,r in sets]
+            sets = [ (m, {i: (t*1e6,ep*1e6,em*1e6) for i,(t,ep,em) in r.items()}) for m,r in sets]
         elif maxMinTime < 0.5:
             unit = "ms"
-            sets = [ (m, {i: (t*1e3,ep*1e3,0) for i,(t,ep,em) in r.items()}) for m,r in sets]
+            sets = [ (m, {i: (t*1e3,ep*1e3,em*1e3) for i,(t,ep,em) in r.items()}) for m,r in sets]
 
         # Plot the data
         self.plotGroupedBarplots(sets, groups, ascendingOrder=False)
@@ -116,19 +116,19 @@ class Grapher:
 
             for result in t["tests"][filterName+"_implementaciones"]["results"]:
                 if result["implementation"] == "c":
-                    base = result["minTime"]
+                    base = result["avgTime"]
                 else:
                     datapoints[result["implementation"]] = (
-                            result["minTime"],
+                            result["avgTime"],
                             result["maxTime"],
-                            0
+                            result["minTime"],
                     )
 
                     if result["implementation"] not in groups:
                         groups.append(result["implementation"])
 
             # Normalize the data
-            datapoints = { i: (base/t,base/m - base/t,0) for i,(t,m,em) in datapoints.items()}
+            datapoints = { i: (base/a,base/ma - base/a,base/a - base/mi) for i,(a,ma,mi) in datapoints.items()}
 
             model = t["model"]
             if model in sets:
@@ -165,8 +165,11 @@ class Grapher:
 
         return tests
 
-    def getColor(self,i):
-        return self.COLORS[(i) % len(self.COLORS)]
+    def getColor(self,model):
+        if model not in self.modelColors:
+            self.modelColors[model] = self.COLORS[(len(self.modelColors)) % len(self.COLORS)]
+
+        return self.modelColors[model]
 
     def setupPyplot(self):
         plt.style.use('ggplot')
@@ -204,7 +207,7 @@ class Grapher:
             plt.bar(index + bar_width * (i+0.5) - bar_width * (len(sets)) / 2.,
                              ys,
                              bar_width,
-                             color = self.getColor(i),
+                             color = self.getColor(model),
                              label = model,
                              ecolor = (0,0,0),
                              yerr = yerr)
