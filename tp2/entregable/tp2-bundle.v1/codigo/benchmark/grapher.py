@@ -70,7 +70,8 @@ class Grapher:
         [self.plotGenericHeatmap(tests,t,i,fn,n,label,f,log,GRAPHS_PATH)
                 for t,i,fn,n,label,f,log in testImpls]
 
-        # Presicion tests
+        # Precision tests
+        self.plotPrecision(tests, "ldr", GRAPHS_PATH)
 
     # Graphs
 
@@ -348,46 +349,49 @@ class Grapher:
             plt.close("all")
 
     def plotPrecision(self, tests, filterName, path):
-        # sets: [(cpuModel, {impl: (minCycles, error+, error-)})]
+        # sets: [(implementation, {image: (maxDiff, 0, 0)})]
         # groups: [impl]
         sets = []
+        setDicc = {}
         groups = []
 
-        for host,t in tests.items():
-            if filterName+"-implementaciones" not in t["tests"]:
-                continue
+        test = None
+        host = None
 
-        datapoints = {}
-        base = None
+        for h,t in tests.items():
+            if filterName+"-precision" in t["tests"]:
+                test = t["tests"][filterName+"-precision"]
+                host = h
+                break
 
-        for result in t["tests"][filterName+"-implementaciones"]["results"]:
-            datapoints[result["implementation"]] = (
-                    result["q2Cycles"],
-                    result["p90Cycles"] - result["q2Cycles"],
-                    result["q2Cycles"] - result["p10Cycles"]
+        if test is None:
+            return
+
+        for result in test["results"]:
+            impl = result["implementation"]
+            img = result["img"]
+
+            if img not in groups:
+                groups.append(img)
+
+            if impl not in setDicc:
+                setDicc[impl] = {}
+
+            setDicc[impl][img] = (
+                    result["maxDiff"],0,0
             )
 
-            if result["implementation"] not in groups:
-                groups.append(result["implementation"])
-
-        model = t["model"]
-        if model in sets:
-            n = 2
-            while model+" ("+str(n)+")" in sets:
-                n += 1
-            model = model+" ("+str(n)+")"
-
-        sets.append((model,datapoints))
+        sets = setDicc.items()
 
         # Plot the data
         fig, ax = self.plotGroupedBarplots(sets, groups, ascendingOrder=False)
 
-        plt.xlabel('Implementación', fontsize=14)
-        plt.ylabel('Ciclos de clock', fontsize=14)
-        plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%g'))
+        plt.xlabel('Imagen', fontsize=14)
+        plt.ylabel('Diferencia máxima', fontsize=14)
+        plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%d'))
         plt.legend(loc='best')
 
-        plt.savefig(path+filterName+"-cycles.png")
+        plt.savefig(path+filterName+"-precision.png")
 
         plt.close("all")
 
