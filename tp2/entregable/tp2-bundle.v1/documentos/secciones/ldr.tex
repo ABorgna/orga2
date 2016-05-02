@@ -319,5 +319,18 @@ Las demas instrucciones se traducen directamente desde AVX.
 
 \subsubsection{Rendimiento relativo de las implementaciones}
 
-\includegraphics[width=15cm]{ldr-time}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.65\textwidth]{ldr-time-speedup}
+    \caption{Media del speedup relativo respecto a C compilado con O3 sobre lena.bmp 512x512. Percentiles 10 y 90 representados con barras de error.}
+    \label{fig:ldr-time-speedup}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.65\textwidth]{ldr-time}
+    \caption{Media del tiempo de ejecución sobre lena.bmp 512x512. Percentiles 10 y 90 representados con barras de error.}
+    \label{fig:ldr-time-speedup}
+\end{figure}
+
 

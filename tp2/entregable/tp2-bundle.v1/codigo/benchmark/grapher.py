@@ -340,7 +340,7 @@ class Grapher:
                              color = self.getColor(model),
                              label = model,
                              ecolor = (0,0,0),
-                             yerr = yerr)
+                             yerr = yerr if any(yerr[0]) or any(yerr[1]) else None)
 
         plt.yticks(fontsize=14)
         plt.xticks(index + bar_width, groups, fontsize=14)
