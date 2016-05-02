@@ -203,7 +203,117 @@ Y las operaciones restantes se convierten a punto fijo trivialmente.
 
 \subsubsection{Asm - AVX/FMA}
 
+En procesadores que soportan la extensión AVX podemos aprovechar las instrucciones no destructivas para reemplazar, por ejemplo,
+
+\begin{lstlisting}
+MOVDQA XMM10, XMM5
+PUNPCKLBW XMM5, XMM15
+PUNPCKHBW XMM10, XMM15
+\end{lstlisting}
+
+por
+
+\begin{lstlisting}
+PUNPCKHBW XMM10, XMM5, XMM15
+PUNPCKLBW XMM5, XMM5, XMM15
+\end{lstlisting}
+
+y ahorrarnos un par de ciclos.
+
+Además con la extensión FMA (fused multiply \& add) podemos combinar la multiplicación por el inverso de $max$ y la suma de los valores originales del pixel, reemplazando
+
+\begin{lstlisting}
+MULPS XMM5, XMM14
+ADDPS XMM5, XMM9
+\end{lstlisting}
+
+por
+
+\begin{lstlisting}
+VFMADD132PS XMM5, XMM9, XMM14
+\end{lstlisting}
+
 \subsubsection{Asm - AVX2}
+
+Con AVX2 podemos realizar todas las operaciones que realizabamos con AVX ahora sobre los registros ymm de $256b$, por lo que ahora conservamos ocho sumas de columnas al iniciar, calculamos ocho sumas nuevas y procesamos de a ocho pixeles por ciclo.
+
+La conversión del algoritmo es directa cuando trabajamos con cada valor independientemente, pero debemos tener cuidado en un par de casos, cuando usamos sumas horizontales o shifts.
+
+\vspace{5mm}
+
+Cuando calculamos la suma de cada pixel, si traducimos directamente las operaciones desde AVX terminamos teniendo
+
+\ymm{N} \ymmWord{$sum_{13,v}$}{$sum_{12,v}$}{$sum_{11,v}$}{$sum_{10,v}$}{0}{0}{0}{0}
+{$sum_{9,v}$}{$sum_{8,v}$}{$sum_{7,v}$}{$sum_{6,v}$}{0}{0}{0}{0}
+
+para $-2 \le v \le 2$ y $N = v+3$.
+
+Pero nosotros necesitamos tener todos los resultados en la parte alta, por lo que debemos hacer una permutacion:
+
+\begin{lstlisting}
+VPERMQ YMM$_N$, YMM$_N$, 0b11010000
+\end{lstlisting}
+
+\ymm{N} \ymmWord{$sum_{13,v}$}{$sum_{12,v}$}{$sum_{11,v}$}{$sum_{10,v}$}
+{$sum_{9,v}$}{$sum_{8,v}$}{$sum_{7,v}$}{$sum_{6,v}$}{0}{0}{0}{0}{0}{0}{0}{0}
+
+\vspace{5mm}
+
+Una vez que tenemos el vector con las 16 sumas de columnas combinadas en \ymm{0} y queremos calcular $sumargb$ para cada uno de los 8 pixeles no podemos usar el mismo algoritmo que en SSE ya que no hay shifts del registro de $256b$ completo, por lo que debemos proceder de otra forma.
+
+Primero, copiamos \ymm{0} a \ymm{1} y aplicando \asm{vpshufb} con una constante que cargamos de memoria borramos las primeras 4 words de la parte alta e invertimos el orden de las siguientes 4. Luego volmemos a copiar \ymm{1} a \ymm{5}. 
+
+\ymm{0} \ymmWord
+{$sumC_{13}$}{$sumC_{12}$}{$sumC_{11}$}{$sumC_{10}$}
+{$sumC_9$}{$sumC_8$}{$sumC_7$}{$sumC_6$}
+{$sumC_5$}{$sumC_4$}{$sumC_3$}{$sumC_2$}
+{$sumC_1$}{$sumC_0$}{$sumC_{-1}$}{$sumC_{-2}$}
+
+\ymm{k} \ymmWord{0}{0}{0}{0}
+{$sumC_6$}{$sumC_7$}{$sumC_8$}{$sumC_9$}
+{$sumC_5$}{$sumC_4$}{$sumC_3$}{$sumC_2$}
+{$sumC_1$}{$sumC_0$}{$sumC_{-1}$}{$sumC_{-2}$}
+con $k \in \{1,5\}$
+
+Ahora sí realizamos los shifts (de double quadword) y las sumas
+
+\begin{lstlisting}
+Repetir 4 veces:
+    VPSRLDQ YMM1, YMM1, 2
+    VPADDW YMM5, YMM5, YMM1
+\end{lstlisting}
+
+\ymm{5} \ymmWord{0}{0}{0}{0}
+{$sumrgb^a_4$}{$sumrgb^a_5$}{$sumrgb^a_6$}{$sumrgb^a_7$}
+{$sumrgb^b_7$}{$sumrgb^b_6$}{$sumrgb^b_5$}{$sumrgb^b_4$}
+{$sumrgb_3$}{$sumrgb_2$}{$sumrgb_1$}{$sumrgb_0$}
+
+donde $sumrgb^a_u + sumrgb^b_u = sumargb_u$.
+
+Ahora hacemos un shuffle con la misma constante que antes y permutamos.
+
+\begin{lstlisting}
+VPSHUFB YMM1, YMM5, {registro ymm con constante pre-cargada}
+VPERMQ YMM5, YMM5, 0b11011111
+\end{lstlisting}
+
+\ymm{1} \ymmWord{0}{0}{0}{0}
+{$sumrgb^a_7$}{$sumrgb^a_6$}{$sumrgb^a_5$}{$sumrgb^a_4$}
+{$sumrgb^b_7$}{$sumrgb^b_6$}{$sumrgb^b_5$}{$sumrgb^b_4$}
+{$sumrgb_3$}{$sumrgb_2$}{$sumrgb_1$}{$sumrgb_0$}
+
+\ymm{5} \ymmWord{0}{0}{0}{0}
+{$sumrgb^b_7$}{$sumrgb^b_6$}{$sumrgb^b_5$}{$sumrgb^b_4$}
+{0}{0}{0}{0}{0}{0}{0}{0}
+
+Y nos si hacemos la suma nos queda el registro listo para continuar.
+
+\ymm{5} \ymmWord{0}{0}{0}{0}
+{$sumrgb_7$}{$sumrgb_6$}{$sumrgb_5$}{$sumrgb_4$}
+{X}{X}{X}{X}
+{$sumrgb_3$}{$sumrgb_2$}{$sumrgb_1$}{$sumrgb_0$}
+
+Las demas instrucciones se traducen directamente desde AVX.
 
 \subsection{Experimentos}
 
