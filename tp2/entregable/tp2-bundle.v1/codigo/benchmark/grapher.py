@@ -41,7 +41,7 @@ class Grapher:
         plots = [self.plotTime, self.plotSpeedup, self.plotCycles,
                 self.plotCacheMisses, self.plotBranchMisses]
 
-        testNames = ["cropflip","sepia","sepia-c","ldr","ldr-c"]
+        testNames = ["cropflip", "cropflip-c","sepia","sepia-c","ldr","ldr-c"]
 
         [plot(tests,t,GRAPHS_PATH) for plot in plots for t in testNames]
 
