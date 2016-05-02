@@ -40,12 +40,59 @@ class Grapher:
 
         self.plotTime(tests, "cropflip", GRAPHS_PATH)
         self.plotSpeedup(tests, "cropflip", GRAPHS_PATH)
+        self.plotCycles(tests, "cropflip", GRAPHS_PATH)
         self.plotTime(tests, "sepia", GRAPHS_PATH)
         self.plotSpeedup(tests, "sepia", GRAPHS_PATH)
+        self.plotCycles(tests, "sepia", GRAPHS_PATH)
         self.plotTime(tests, "ldr", GRAPHS_PATH)
         self.plotSpeedup(tests, "ldr", GRAPHS_PATH)
+        self.plotCycles(tests, "ldr", GRAPHS_PATH)
 
     # Graphs
+
+    def plotCycles(self, tests, filterName, path):
+        # sets: [(cpuModel, {impl: (minCycles, error+, error-)})]
+        # groups: [impl]
+        sets = []
+        groups = []
+
+        for host,t in tests.items():
+            if filterName+"_implementaciones" not in t["tests"]:
+                continue
+
+            datapoints = {}
+            base = None
+
+            for result in t["tests"][filterName+"_implementaciones"]["results"]:
+                datapoints[result["implementation"]] = (
+                        result["q2Cycles"],
+                        result["p90Cycles"] - result["q2Cycles"],
+                        result["q2Cycles"] - result["p10Cycles"]
+                )
+
+                if result["implementation"] not in groups:
+                    groups.append(result["implementation"])
+
+            model = t["model"]
+            if model in sets:
+                n = 2
+                while model+" ("+str(n)+")" in sets:
+                    n += 1
+                model = model+" ("+str(n)+")"
+
+            sets.append((model,datapoints))
+
+        # Plot the data
+        self.plotGroupedBarplots(sets, groups, ascendingOrder=False)
+
+        plt.xlabel('Implementación', fontsize=14)
+        plt.ylabel('Ciclos de clock', fontsize=14)
+        plt.title('Ciclos de clock por ejecucion de '+filterName+' sobre lena.bmp 512x512',
+                   fontsize=16)
+        plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%g'))
+        plt.legend(loc='best')
+
+        plt.savefig(path+filterName+"_cycles.png")
 
     def plotTime(self, tests, filterName, path):
         # sets: [(cpuModel, {impl: (minTime, error+, error-)})]
