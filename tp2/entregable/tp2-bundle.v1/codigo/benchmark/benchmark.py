@@ -26,7 +26,7 @@ TESTS = {
     "cropflip_implementaciones": {
         "filter": "cropflip",
         "imgs": ["img/lena.bmp"],
-        "implementations": ["c","c_o0","sse","sse_par","avx2"],
+        "implementations": ["c_o0","c_o1", "c_o2", "c_o3", "sse","sse_par","avx2"],
         "sizes": [(512,512)],
         "params": ["128 128 128 128"]
     },
