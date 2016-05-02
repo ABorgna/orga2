@@ -307,7 +307,7 @@ class Grapher:
         fig, ax = plt.subplots()
 
         # You typically want your plot to be ~1.33x wider than tall.
-        plt.figure(figsize=(8, 6))
+        plt.figure(figsize=(8, 4))
 
         return (fig, ax)
 
