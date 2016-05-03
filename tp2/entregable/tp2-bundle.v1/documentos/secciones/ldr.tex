@@ -105,12 +105,19 @@ A continuacion sumamos todos los pixeles de la columna entre sí y combinamos el
 
 \xmm{0} \xmmWord{$sumC_5$}{$sumC_4$}{$sumC_3$}{$sumC_2$}{$sumC_1$}{$sumC_0$}{$sumC_{-1}$}{$sumC_{-2}$}
 
-Luego procedemos a calcular $sumargb$. Para ello copiamos el contenido de \xmm{0} a \xmm{5} y luego vamos shifteando \xmm{0} de a una palabra por vez mientras sumamos su valor a \xmm{5} hasta que en \xmm{0} queden solo las 4 sumas que acabamos de calcular y en la parte baja de \xmm{5} se encuentre la suma de las 5 columnas vecinas (esto es, ya tenemos $sumargb$). \\
-Observar que en \xmm{0} ya quedaron los valores de las columnas listas para el siguiente loop. \\
+Luego procedemos a calcular $sumargb$. Para ello copiamos el contenido de \xmm{0} a \xmm{5} y luego vamos shifteando \xmm{0} de a una palabra por vez mientras sumamos su valor a \xmm{5} hasta que en \xmm{0} queden solo las 4 sumas que acabamos de calcular y en la parte baja de \xmm{5} se encuentre la suma de las 5 columnas vecinas (esto es, ya tenemos $sumargb$).
+
+\begin{lstlisting}
+Repetir 4 veces:
+    PSRLDQ XMM1, 2
+    PADDW XMM5, XMM1
+\end{lstlisting}
 
 \xmm{0} \xmmWord{0}{0}{0}{0}{$sumC_5$}{$sumC_4$}{$sumC_3$}{$sumC_2$}
 
 \xmm{5} \xmmWord{X}{X}{X}{X}{$sumrgb_3$}{$sumrgb_2$}{$sumrgb_1$}{$sumrgb_0$}
+
+Observar que en \xmm{0} ya quedaron los valores de las columnas listas para el siguiente loop.
 
 Ahora convertimos cada $sumargb$ a punto flotante, la multiplicamos por el valor de $\alpha$ que habíamos almacenade en \mm{2} y movemos replicamos cada una en un registro diferente. \\
 
@@ -319,18 +326,83 @@ Las demas instrucciones se traducen directamente desde AVX.
 
 \subsubsection{Rendimiento relativo de las implementaciones}
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
-    \includegraphics[width=0.65\textwidth]{ldr-time-speedup}
-    \caption{Media del speedup relativo respecto a C compilado con O3 sobre lena.bmp 512x512. Percentiles 10 y 90 representados con barras de error.}
+    \includegraphics[width=\textwidth]{ldr-time-speedup}
+    \caption{Speedup relativo respecto a la implementación en C compilada con O3 del filtro ldr sobre lena.bmp 512x512.}
     \label{fig:ldr-time-speedup}
 \end{figure}
 
-\begin{figure}[h]
+Encontramos una diferencia de performance muy grande entre la implementación de C y las implementaciones en assembler. Esto se puede deber a que el compilador de C no logra vectorizar el loop, como podemos ver en el dump de gdb.
+
+\begin{lstlisting}
+0x404662 <ldr_c+273>    movzx  ecx,BYTE PTR [rbp-0x8]
+0x404666 <ldr_c+277>    add    eax,ecx
+0x404668 <ldr_c+279>    movzx  ecx,BYTE PTR [rbp-0x2]
+0x40466c <ldr_c+283>    add    eax,ecx
+0x40466e <ldr_c+285>    movzx  ecx,BYTE PTR [rbp-0x3]
+0x404672 <ldr_c+289>    add    eax,ecx
+0x404674 <ldr_c+291>    movzx  ecx,BYTE PTR [rbp-0x4]
+0x404678 <ldr_c+295>    add    eax,ecx
+0x40467a <ldr_c+297>    movzx  ecx,BYTE PTR [rbp+0x2]
+0x40467e <ldr_c+301>    add    eax,ecx
+0x404680 <ldr_c+303>    movzx  ecx,BYTE PTR [rbp+0x1]
+0x404684 <ldr_c+307>    add    eax,ecx
+0x404686 <ldr_c+309>    movzx  ecx,BYTE PTR [rbp+0x0]
+\end{lstlisting}
+
+También vemos que el uso de instrucciones no destructivas de la extensión AVX y la operación de FMA logran un ligero aumento de performance, reduciendo el tiempo de ejecución en aproximadamente 10\% en los procesadores que probamos.
+
+Por otro lado la implementación AVX2 corre un 50\% mas rápido que SSE, mostrando que los beneficios de procesar aún mas datos en paralelo sobrepasan el problema del aumento de la complejidad del código.
+
+\subsubsection{Diferencias entre cálculos con enteros y con punto flotante}
+
+\begin{figure}[H]
     \centering
-    \includegraphics[width=0.65\textwidth]{ldr-time}
-    \caption{Media del tiempo de ejecución sobre lena.bmp 512x512. Percentiles 10 y 90 representados con barras de error.}
-    \label{fig:ldr-time-speedup}
+    \begin{minipage}[t]{0.4\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{lena-ldr-c}
+    Implementación de C
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.4\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{lena-ldr-c}
+    Implementación SSE con punto flotante
+    \end{minipage}
+    \caption{Perdida de precisión en la implementación con cálculos de punto flotante. Ambas imágenes son ligeramente diferentes.}
+    \label{fig:ldr-perdida-precision}
 \end{figure}
 
+Aún con el registro \asm{MXCSR} configurado para redondear siempre hacia cero al convertir números de punto flotante a enteros encontramos diferencias en las imágenes de salida. En una batería de imágenes de prueba encontramos que nunca un canal de un pixel difería en mas de 1 de la imágen original, y esta diferencia se encontraba en menos del 0.02\% de los píxeles.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{ldr-precision-time-speedup}
+    \caption{Speedup relativo respecto a la implementación en C compilada con O3 del filtro ldr sobre lena.bmp 512x512.}
+    \label{fig:ldr-precision-time-speedup}
+\end{figure}
+
+Considerando que la diferencia es tan mínima y que la implementación exacta usando calculos enteros resultó ser un 25\% mas lenta que la de punto flotante decidimos que para un uso general, tratandose de un filtro de imágenes que serán captadas por un ojo humano, resulta mucho mas conveniente usar cálculos de punto flotante.
+
+\subsubsection{Throughput de píxeles en función del tamaño de imagen}
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{ldr-time-rel-map-sse-gflan-MS-7817}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{ldr-time-rel-map-avx2-gflan-MS-7817}
+    \end{minipage}
+    \caption{Millones de píxeles por segundo en implementación SSE y AVX2 en un procesador con 8MB de caché}
+    \label{fig:ldr-perdida-precision}
+\end{figure}
+
+Observamos que el rendimiento se mantiene casi constante para la mayoría de los tamaños de imagen aún cuando el tamaño de la imagen sobrepasa el de la caché. Esto se debe a que el controlador de caché identifica perfectamente el patrón de accesos del algoritmo, y la cantidad de operaciones que se realizan en el ciclo le dan tiempo suficiente para prefetchear los datos necesarios de memoria.
+
+Los valores se ven distorsionados cuando la imagen tiene poca altura ya que en ese caso la copia de las primeras y últimas dos filas, operacíon mucho mas rápida que los cálculos del filtro, representa un porcentaje mas alto de las operaciones. Como para la copia de los bordes se deben realizar accesos no secuenciales a memoria no vemos esta distorsión para imágenes con poco ancho.
 
