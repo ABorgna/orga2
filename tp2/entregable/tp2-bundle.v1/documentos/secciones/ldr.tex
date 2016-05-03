@@ -155,7 +155,7 @@ Cuando vimos que al hacer las operaciones en punto flotante los resultados no er
 
 La mayoría de los cambios son directos, usando por ejemplo \asm{pmulld} en vez de \asm{mulps}. Como el valor máximo que al que pueden llegar es $25 * 3 * 255 * 255 * 255 > 2^{16}$ seguimos necesitando $32b$ para almacenar los valores, esta vez como double words en vez de punto flotante de precision simple.
 
-El primer problema que nos encontramos fue que no existe una instruccion de division de enteros en SIMD. Recurrimos a un método de division de enteros con signo usando multiplicaciones y shifts presentado por H.S. Warren en \cite[Chapter~10]{hackersdelight}. \\
+El primer problema que nos encontramos fue que no existe una instruccion de division de enteros en SIMD. Recurrimos a un método de division de enteros con signo usando multiplicaciones y shifts presentado por H.S. Warren\textsuperscript{\cite[Chapter~10]{hackersdelight}}. \\
 Siguiendo el método descripto llegamos a la fórmula:
 
 $$ \frac{x}{max} = x * magic >> s \qquad \forall -2^{31} \le x < 2^{31} $$
