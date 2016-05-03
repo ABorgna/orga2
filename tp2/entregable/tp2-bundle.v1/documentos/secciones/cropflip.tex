@@ -81,13 +81,13 @@ De esta manera, las lecturas y escrituras en memoria representan $\frac{1}{16} =
 
 
 \subsubsection{Implementaciones SIMD paralelo en 128 y 256 bits}
-Se diferencian de la implementación anterior de SSE en el uso de la mayor cantidad posible de registros XMM (YMM de 256 bits en el caso de las implementaciones de AVX) para las operaciones de transferencia de bloques de pixeles de la imagen fuente a la destino. 
+Se diferencian de la implementación anterior de SSE en el uso de la mayor cantidad posible de registros \xmm{} (\ymm{} de 256 bits en el caso de las implementaciones de AVX) para las operaciones de transferencia de bloques de pixeles de la imagen fuente a la destino. 
 \\
 
-Dado que las lecturas y escrituras en memoria de cada registro son independientes entre sí, la ejecución fuera de orden del procesador hace que la transferencia por bloque sea más rápida que la implementación individual (que recorre la imagen con un único registro XMM). Por cuestiones de vecindad espacial de los píxeles en la memoria, los accesos a memoria de cada registro tienen chances particularmente altas de hit en caché, no demorando así las lecturas del resto de los registros.
+Dado que las lecturas y escrituras en memoria de cada registro son independientes entre sí, la ejecución fuera de orden del procesador hace que la transferencia por bloque sea más rápida que la implementación individual (que recorre la imagen con un único registro \xmm{}). Por cuestiones de vecindad espacial de los píxeles en la memoria, los accesos a memoria de cada registro tienen chances particularmente altas de hit en caché, no demorando así las lecturas del resto de los registros.
 \\
 
-Recordando que los registros de AVX tienen 32 bytes de capacidad y cada píxel en nuestro formato ocupa 4 bytes, cada registro YMM tendrá capacidad para:
+Recordando que los registros de AVX tienen 32 bytes de capacidad y cada píxel en nuestro formato ocupa 4 bytes, cada registro \ymm{} tendrá capacidad para:
 
 $$ \frac{32 \ bytes}{4 \ \frac{bytes}{px}} = 8 \ px $$
 
@@ -117,29 +117,35 @@ Esta técnica de aplicar por cada iteración operaciones que, comunmente, se har
 En el caso del filtro Cropflip, las tiras de píxeles corresponden a tiras de tamaño 'tamx' (es decir, al ancho del crop).  
 
 
-\subsection{Rendimiento y análisis}
+\subsection{Experimentos}
 
+\subsubsection{Comparación entre implementaciones}
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.90\textwidth]{cropflip-time-speedup} 
+\caption{Tiempo de ejecución relativo de implementaciones ASM de cropflip contra la implementación C compilada con -O3}
 \label{fig:cropflip-time-speedup}
 \end{figure}
 
 A diferencia de los otros dos filtros, donde el procesamiento de imágenes involucra operaciones aritméticas paralelas, la implementación AVX de	 Cropflip casi no presenta 'speedup' respecto de las implementaciones de SSE con registros de 128 bits en paralelo 
 
+\subsubsection{Caché misses}
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.90\textwidth]{cropflip-cache-misses}
+\caption{Porcentaje de misses de la cache en la ejecución del filtro cropflip}
 \label{fig:cropflip-cache-misses}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.90\textwidth]{cropflip-cache-map-sse-par-gflan-MS-7817}
+\includegraphics[width=0.7\textwidth]{cropflip-cache-map-sse-par-gflan-MS-7817}
+\caption{Porcentaje de misses de la cache en función del tamaño de imagen durante la ejecución del filtro cropflip}
 \label{fig:cropflip-cache-map-sse_par-gflan-MS-7817}
 \end{figure}
- 
+
 
 Como habíamos anticipado al hablar del loop unrolling en SSE, el tamaño del binario no es lo suficientemente grande como para no poder ser cacheado eficientemente. La vecindad espacial de las tiras de píxeles también colaboran para que el hitrate se mantenga alto aún cuando las filas del crop no son contiguas en memoria como comentamos en la descripción. 
 

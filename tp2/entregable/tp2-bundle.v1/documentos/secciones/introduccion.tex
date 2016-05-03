@@ -25,3 +25,24 @@ Para cada combinacíon de filtro, implementación, imagen, tamaño y parámetros
 
 En los gráficos presentados usaremos siempre la media a menos que se indique lo contrario. Y en los gráficos de barras representamos además los percentiles 10 y 90 como lineas de error.
 
+\subsection{Aclaración sobre el redondeo de punto flotante}
+
+Por defecto las conversiones de punto flotante a números enteros se realizan redondeando al número par mas cercano\textsuperscript{\cite[Volume 1, Chapter 10.2.3]{intelsys}}, mientras que las operaciones de división de enteros siempre redondean hacia abajo.
+Como nuestros filtros, si usan operaciones de punto flotante, intentan emular operaciones de enteros nos conviene configurar el redondeo de flotantes hacia cero.
+
+Esto se logra seteando los bits 13 y 14 del registro \asm{MXCSR} con instrucciones.
+Como el registro es calee-saved deberemos guardarlo antes de modificarlo.
+Le cargaremos el valor por defecto, 0x1F80, mas la máscara que queremos.
+
+\begin{lstlisting}
+; Guardamos el registro
+SUB RSP, 8
+STMXCSR [RSP]
+; Cargamos nuestro valor
+LDMXCSR [MXCSR_RZ] ; MXCSR_RZ tiene el valor x7F80
+\end{lstlisting}
+
+Y al finalizar la función volvemos a cargar el valor original.
+
+Esto lo haremos en todas las implementaciones que trabajen con números flotantes.
+
