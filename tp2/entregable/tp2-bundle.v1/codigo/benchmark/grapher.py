@@ -81,6 +81,9 @@ class Grapher:
         sets = []
         groups = []
 
+        params = None
+        size = None
+
         for host,t in tests.items():
             if filterName+"-implementaciones" not in t["tests"]:
                 continue
@@ -88,7 +91,11 @@ class Grapher:
             datapoints = {}
             base = None
 
-            for result in t["tests"][filterName+"-implementaciones"]["results"]:
+            test = t["tests"][filterName+"-implementaciones"]
+            params = test["params"][0]
+            size = test["sizes"][0]
+
+            for result in test["results"]:
                 datapoints[result["implementation"]] = (
                         result["q2Cycles"],
                         result["p90Cycles"] - result["q2Cycles"],
@@ -114,6 +121,7 @@ class Grapher:
         plt.ylabel('Ciclos de clock', fontsize=14)
         plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%g'))
         plt.legend(loc='best')
+        plt.title(filterName.replace("-c","")+' lena.'+str(size[0])+'x'+str(size[1])+'.bmp '+params, fontsize=14)
 
         plt.savefig(path+filterName+"-cycles.png")
 
@@ -125,13 +133,20 @@ class Grapher:
         sets = []
         groups = []
 
+        params = None
+        size = None
+
         for host,t in tests.items():
             if filterName+"-implementaciones" not in t["tests"]:
                 continue
 
             datapoints = {}
 
-            for result in t["tests"][filterName+"-implementaciones"]["results"]:
+            test = t["tests"][filterName+"-implementaciones"]
+            params = test["params"][0]
+            size = test["sizes"][0]
+
+            for result in test["results"]:
                 datapoints[result["implementation"]] = (
                         100 * result["cacheMisses"] / result["cacheReferences"],
                         0, 0
@@ -156,6 +171,7 @@ class Grapher:
         plt.ylabel('Porcentaje de misses a la cache', fontsize=14)
         plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%g%%'))
         plt.legend(loc='best')
+        plt.title(filterName.replace("-c","")+' lena.'+str(size[0])+'x'+str(size[1])+'.bmp '+params, fontsize=14)
 
         plt.savefig(path+filterName+"-cache-misses.png")
 
@@ -167,13 +183,20 @@ class Grapher:
         sets = []
         groups = []
 
+        params = None
+        size = None
+
         for host,t in tests.items():
             if filterName+"-implementaciones" not in t["tests"]:
                 continue
 
             datapoints = {}
 
-            for result in t["tests"][filterName+"-implementaciones"]["results"]:
+            test = t["tests"][filterName+"-implementaciones"]
+            params = test["params"][0]
+            size = test["sizes"][0]
+
+            for result in test["results"]:
                 datapoints[result["implementation"]] = (
                         100 * result["branchMisses"] / result["branches"],
                         0, 0
@@ -198,6 +221,7 @@ class Grapher:
         plt.ylabel('Porcentaje de branch misspredictions', fontsize=14)
         plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter(r'%g%%'))
         plt.legend(loc='best')
+        plt.title(filterName.replace("-c","")+' lena.'+str(size[0])+'x'+str(size[1])+'.bmp '+params, fontsize=14)
 
         plt.savefig(path+filterName+"-branch-misses.png")
 
@@ -210,6 +234,9 @@ class Grapher:
         groups = []
         maxMedianTime = 0.
 
+        params = None
+        size = None
+
         for host,t in tests.items():
             if filterName+"-implementaciones" not in t["tests"]:
                 continue
@@ -217,7 +244,11 @@ class Grapher:
             datapoints = {}
             base = None
 
-            for result in t["tests"][filterName+"-implementaciones"]["results"]:
+            test = t["tests"][filterName+"-implementaciones"]
+            params = test["params"][0]
+            size = test["sizes"][0]
+
+            for result in test["results"]:
                 datapoints[result["implementation"]] = (
                         result["q2Time"],
                         result["p90Time"] - result["q2Time"],
@@ -253,6 +284,7 @@ class Grapher:
         plt.ylabel('Tiempo', fontsize=14)
         plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%g'+unit))
         plt.legend(loc='best')
+        plt.title(filterName.replace("-c","")+' lena.'+str(size[0])+'x'+str(size[1])+'.bmp '+params, fontsize=14)
 
         plt.savefig(path+filterName+"-time.png")
 
@@ -263,6 +295,10 @@ class Grapher:
         # groups: [impl]
         sets = []
         groups = []
+
+        params = None
+        size = None
+
         for host,t in tests.items():
             if filterName+"-implementaciones" not in t["tests"]:
                 continue
@@ -270,7 +306,11 @@ class Grapher:
             datapoints = {}
             base = None
 
-            for result in t["tests"][filterName+"-implementaciones"]["results"]:
+            test = t["tests"][filterName+"-implementaciones"]
+            params = test["params"][0]
+            size = test["sizes"][0]
+
+            for result in test["results"]:
                 if result["implementation"] == "c" or result["implementation"] == "c_O3":
                     base = result["q2Time"]
                 else:
@@ -304,6 +344,7 @@ class Grapher:
         plt.ylabel('Speedup', fontsize=14)
         plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%gx'))
         plt.legend(loc='best')
+        plt.title(filterName.replace("-c","")+' lena.'+str(size[0])+'x'+str(size[1])+'.bmp '+params, fontsize=14)
         plt.ylim(ymin=0.)
 
         plt.savefig(path+filterName+"-time-speedup.png");
@@ -316,10 +357,14 @@ class Grapher:
         # groups: [impl]
         sets = []
         groups = []
+
+        params = None
+
         for host,t in tests.items():
             if filterName+"-sizes" not in t["tests"]:
                 continue
             test = t["tests"][filterName+"-sizes"]
+            params = test["params"][0]
 
             sizes = test["sizes"]
             widths = list(set([w for w,h in sizes]))
@@ -343,6 +388,7 @@ class Grapher:
 
             plt.xlabel('Ancho en píxeles', fontsize=14)
             plt.ylabel('Alto en píxeles', fontsize=14)
+            plt.title(filterName+' -i '+implementation+' lena.WxH.bmp '+params, fontsize=14)
 
             plt.savefig(path+filterName+"-"+name+"-map-"+implementation+"-"+host+".png");
 
