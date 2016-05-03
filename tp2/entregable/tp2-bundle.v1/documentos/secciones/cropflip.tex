@@ -136,7 +136,7 @@ A diferencia de los otros dos filtros, donde el procesamiento de imágenes invol
 
 
 
-Se observa una diferencia del orden de casi el triple de ciclos de clock entre las versiones de SSE y SSE con loop unrolling ('SSE Parelo') donde parecería que el buen hitrate y los puntos fuertes del loop unrolling (paralelismo y minimizar branch mispredictions)  compensan notablemente el hecho de que los accesos a memoria son individuales y no pueden solaparse.
+Se observa una diferencia de ciclos de clock entre las versiones de SSE a favor del loop unrolling ('SSE Parelo') donde parecería que, aún con buen hitrate, los puntos fuertes  (paralelismo y minimizar branch mispredictions)  no destacan tanto por el hecho de que los accesos a memoria son individuales y no pueden solaparse.
 \\
 Pudimos corrobar que no es casualidad que el rendimiento de la implementación en C@-O3 sea similar al de las implementaciones SSE (particularmente 'SSE paralelo') utilizando GDB para ver el código compilado y comprobando que vectorizaba con operaciones SSE como se muestra a continuación:
 
