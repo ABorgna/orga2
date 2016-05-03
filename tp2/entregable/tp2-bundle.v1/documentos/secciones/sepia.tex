@@ -164,12 +164,7 @@ Esta implementación ejecuta la misma cantidad de operaciones en punto flotante 
 
 \subsection{Experimentos}
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.65\textwidth]{sepia-time-speedup}
-    \caption{Media del speedup relativo respecto a C compilado con O3 sobre lena.bmp 512x512. Percentiles 10 y 90 representados con barras de error.}
-    \label{fig:sepia-time-speedup}
-\end{figure}
+ Luego de realizar varias corridas de cada una de las implementaciones, se llegaron a los siguientes resultados en cuanto al tiempo total de ejecución:
 
 \begin{figure}[h]
     \centering
@@ -178,6 +173,31 @@ Esta implementación ejecuta la misma cantidad de operaciones en punto flotante 
     \label{fig:sepia-time}
 \end{figure}
 
+Se puede inferir entonces que las suposiciones anteriores en cuanto a mejoras de performance resultaron ser verdaderas. La implementación en SSE corre más rápido que la misma en C y la implementación en AVX2 corre aún más rápido que SSE.
+Es importante aclarar que para realizar este experimento, se compiló la implementación en C con la opción de optimización automática O3. Las diferencias de performance entre la implementación C sin optimizar (O0) y las distintas optimizaciones se puede apreciar en el siguiente gráfico:
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.65\textwidth]{sepia-c-time}
+    \caption{Media del tiempo de ejecución sobre lena.bmp 512x512. Percentiles 10 y 90 representados con barras de error.}
+    \label{fig:sepia-c-time}
+\end{figure}
+
+Como puede verse, la versión sin optimizar es muchas veces más lenta que la versión completamente optimizada. Es decir que la diferencia entre la implementación en C sin optimizar y las implementaciones en SSE y AVX2 es aún más grande en cuanto a performance.
+
+En el siguiente gráfico se explicita con más detalle qué tanto más rápidas son las dos implementaciones en ASM con respecto a C compilado con la optimización O3:
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.65\textwidth]{sepia-time-speedup}
+    \caption{Media del speedup relativo respecto a C compilado con O3 sobre lena.bmp 512x512. Percentiles 10 y 90 representados con barras de error.}
+    \label{fig:sepia-time-speedup}
+\end{figure}
+
+Se puede ver que SSE presenta un speedup de poco menos de 2 y AVX2 presenta un speedup de casi 3.5, evidenciando aún más fuertemente la mejora que se obtiene a medida que se va aumentando el paralelismo del procesamiento de píxeles.
+
+Como siguiente cuestión, nos planteamos la pregunta sobre qué tanto porcentaje de Cache Misses se presentan al correr los códigos. Para encontrar una respuesta, decidimos hacer un experimento en el cual surgieron los siguientes resultados para la implementación en SSE:
+
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.65\textwidth]{sepia-cache-map-sse-angua}
@@ -185,16 +205,11 @@ Esta implementación ejecuta la misma cantidad de operaciones en punto flotante 
     \label{fig:sepia-cache-map-sse-angua}
 \end{figure}
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.65\textwidth]{sepia-cycles}
-    \caption{Media de la cantidad de ciclos ejecutados sobre lena.bmp 512x512. Percentiles 10 y 90 representados con barras de error.}
-    \label{fig:sepia-cycles}
-\end{figure}
+Los casos que se encuentran alrededor de 128x128 tienen un miss rate ligeramente menor debido a que varios píxeles ya se encontraban en cache a la hora de volver a testear la misma imágen pero con distinto tamaño. Luego, al aumentar el ancho o el alto de la imagen, el miss rate va aumentando progresivamente ya que cada vez aumenta más la cantidad de datos que no estaban anteriormente en cache.
+Es importante resaltar cómo se produce un cambio brusco de color en la diagonal que va de 4096x128 a 128x4096. Para poder explicar este fenómeno es necesario recalcar que el procesador con el cual se realizó este experimento posee 3MB de memoria cache. También hay que recordar que cada píxel ocupa 4B en memoria. Si realizamos algunas cuentas con cualquiera de los elementos de la diagonal antes mencionada:
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.65\textwidth]{sepia-c-cycles}
-    \caption{Media de la cantidad de ciclos ejecutados sobre lena.bmp 512x512. Percentiles 10 y 90 representados con barras de error.}
-    \label{fig:sepia-c-cycles}
-\end{figure}
+$$(4096 \cdot 128) px = 2^{19} px = 2^{19} \cdot 4 B = 2 \cdot 2^{20} B = 2MB$$
+
+Ahora que sabemos esto, tiene más sentido ver por qué a partir de que el tamaño total de la imagen es mayor o igual a $2^{19}$, comienza a haber un aumento considerable de cache misses, ya que la imagen misma comienza a no entrar en la cache entera. Si nos movemos a la siguiente diagonal (es decir, multiplicamos por 2 el tamaño de la imagen) estaríamos trabajando ya con casos que ocupan 4MB, lo cual es incluso mayor al tamaño de la cache con la que estamos trabajando. Por eso a partir de ese punto, todas las imágenes que tengan un tamaño mayor o igual poseen un miss rate bastante similar.
+
+Esta misma estructura se repite para los casos de las implementaciones en C y en AVX2. Esa es la razón por la cual no incluimos también los gráficos para esos dos casos ya que presentan gráficos muy similares. La única diferencia es que el máximo miss rate en C es de $\sim80\%$ y en AVX es de $\sim60\%$. No sabemos bien por qué ocurre esto, pero suponemos que puede ser debido al tamaño de las lecturas. A medida que se procesan más píxeles por registro, menos lecturas hay que ejecutar por loop.
