@@ -128,7 +128,13 @@ En el caso del filtro Cropflip, las tiras de píxeles corresponden a tiras de ta
 \label{fig:cropflip-time-speedup}
 \end{figure}
 
-A diferencia de los otros dos filtros, donde el procesamiento de imágenes involucra operaciones aritméticas paralelas, la implementación AVX de	 Cropflip casi no presenta 'speedup' respecto de las implementaciones de SSE con registros de 128 bits en paralelo 
+A diferencia de los otros dos filtros, donde el procesamiento de imágenes involucra operaciones aritméticas paralelas, la implementación AVX de	 Cropflip casi no presenta 'speedup' respecto de las implementaciones de SSE con registros de 128 bits en paralelo. 
+\\
+
+Sí se presentan entre las dos implementaciones de SSE, donde la diferencia es casi del doble a favor de SSE 'paralela'. Dados los parámetros tales que el recuadro de crop mide 128x128px, en la implementación con loop unrolling alcanza con dos iteraciones procesando 64px en cada una para cubrir cada fila. Mientras que para la versión SSE común hay que recorrer: $\frac{128 \ \frac{px}{fila}}{8 \ \frac{px}{iteracion}} = 32 \ \frac{iteraciones}{fila}$ .
+\\
+
+Sin embargo, la cantidad de iteraciones no refleja el hecho de que aún en ejecución fuera de orden los accesos a memoria siguen siendo individuales, teniendo que 'resecuencializar' las instrucciones para acceder ordenadamente. Podría suponerse que es debido a esto que el speedup no es del orden de magnitud que sugerirían las respectivas iteraciones por fila.
 
 \subsubsection{Caché misses}
 
@@ -142,10 +148,11 @@ A diferencia de los otros dos filtros, donde el procesamiento de imágenes invol
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7\textwidth]{cropflip-cache-map-sse-par-gflan-MS-7817}
-\caption{Porcentaje de misses de la cache en función del tamaño de imagen durante la ejecución del filtro cropflip}
+\caption{Porcentaje de misses de la cache en función del tamaño de imagen durante la ejecución del filtro cropflip en la implementación SSE_paralelo}
 \label{fig:cropflip-cache-map-sse_par-gflan-MS-7817}
 \end{figure}
 
+\subsubsection{Ciclos de Clock y Tiempo de ejecución - ASM y C}
 
 Como habíamos anticipado al hablar del loop unrolling en SSE, el tamaño del binario no es lo suficientemente grande como para no poder ser cacheado eficientemente. La vecindad espacial de las tiras de píxeles también colaboran para que el hitrate se mantenga alto aún cuando las filas del crop no son contiguas en memoria como comentamos en la descripción. 
 
@@ -187,7 +194,7 @@ A modo comparativo también incluímos el análisis de rendimiento entre las div
 \label{fig:cropflip-time}
 \end{figure}
 
-También es remarcable que el salto en rendimiento se produce entre versiones de ASM y de C con optimización menor a -O3, donde bajan del rango de 20-160 microsegundos para las implementaciones C-O1/C-O2 a 3-8 microsegundos para las de ASM y C-03 (y cercanos al 10 por ciento para los rangos de ciclos de clock).
+También es remarcable lo masivo que es el salto en rendimiento que se produce entre versiones de ASM y de C con optimización menor a -O3, donde bajan del rango de 20-160 microsegundos para las implementaciones C-O1/C-O2 a 3-8 microsegundos para las de ASM y C-03 (y cercanos al 10 por ciento para los rangos de ciclos de clock de las versiones de ASM vs C). Aún así, no parece verdaderamente remunerador para código centrado en accesos a memoria la elección de ASM frente al código C compilado con -O3.  
 
 \begin{figure}[H]
 \centering
@@ -196,7 +203,7 @@ También es remarcable que el salto en rendimiento se produce entre versiones de
 \end{figure}
 
 En este gráfico se puede apreciar algo bastante curioso: mientras que para algunos procesadores el loop unrolling minimizó muy efectivamente el porcentaje de branch mispredictions en las implementaciones de AVX y de SSE en paralelo frente a las implementaciones que procesan con un único vector (ya vimos que la implementación en C con optimización O3 también usa un registro XMM para los accesos a memoria), para otros significó un retroceso.
-\ Esto resulta particularmente contraintuitivo si tenemos en cuenta que en teoría minimizar iteraciones parecería implicar minimizar predicciones y por lo tanto penalidades. Sin embargo esto se puede deber a que, en cada ciclo se requiere evaluar si la cantidad restante de píxeles para copiar es mayor a  64/4/1 ó 128/8/1 píxeles para poder saltar a cada subrutina. Resultando así contraproducente desde este punto de vista dicha implementación.
+\ Esto resulta particularmente contraintuitivo si tenemos en cuenta que en teoría minimizar iteraciones parecería implicar minimizar predicciones y por lo tanto penalidades. Sin embargo esto se puede deber a que, en cada ciclo, se requiere evaluar si la cantidad restante de píxeles para copiar es mayor a  64/4/1 ó 128/8/1 píxeles para poder saltar a cada subrutina. Resultando así contraproducente desde este punto de vista dicha implementación.
 
 
 \begin{figure}[H]
