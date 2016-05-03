@@ -15,4 +15,13 @@ Se define $I^k_{i,j}$ como la componente $k \in \{r,g,b,a\}$ en la fila $i$ y la
 
 Se llama $O^k_{i,j}$ a la imagen de salida generada por el filtro especificado. Por ejemplo, el siguiente filtro asigna a todas las componentes de cada píxel el valor de la componente roja que se encuentra en su respectivo píxel.
 
-$$\forall k \in \{r,g,b,a\} \qquad O^k_{i,j} = I^r_{i,j}$$ 
+$$\forall k \in \{r,g,b,a\} \qquad O^k_{i,j} = I^r_{i,j}$$
+
+\subsection{Mediciones y gráficos}
+
+Para realizar mediciones implementamos un script de benchmarking automático\footnote{codigo/benchmark/benchmark.py} que nos facilite la tarea y reduzca el error humano.
+
+Para cada combinacíon de filtro, implementación, imagen, tamaño y parámetros adicionales corremos el tp2 un mínimo de 100 iteraciones y 2 segundos. Empezando con el mínimo de iteraciones realizamos una búsqueda exponencial hasta encontrar una cantidad que sobrepase el límite de tiempo. Usando la cantidad de iteraciones encontrada calculamos los percentiles y el promedio del tiempo y cantidad de ciclos por ejecución. Además, guardamos el porcentaje promedio de misses a la caché y el porcentaje promedio de mispredicciones de salto.
+
+En los gráficos presentados usaremos siempre la media a menos que se indique lo contrario. Y en los gráficos de barras representamos además los percentiles 10 y 90 como lineas de error.
+
