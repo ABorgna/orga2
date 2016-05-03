@@ -42,7 +42,7 @@ TESTS = {
         "filter": "cropflip",
         "imgs": ["img/lena.bmp"],
         "implementations": ["c","sse","sse_par","avx"],
-        "sizes": [(2**w,2**h) for w in range(5, 14) for h in range(5,14)],
+        "sizes": [(2**w,2**h) for w in range(4, 14) for h in range(4,14)],
         "params": ["%w %h 0 0"]     # width and height
     },
     "sepia-implementaciones": {
@@ -63,7 +63,7 @@ TESTS = {
         "filter": "sepia",
         "imgs": ["img/lena.bmp"],
         "implementations": ["c","sse","avx2"],
-        "sizes": [(2**w,2**h) for w in range(5, 14) for h in range(5,14)],
+        "sizes": [(2**w,2**h) for w in range(4, 14) for h in range(4,14)],
         "params": ["100"]
     },
     "ldr-implementaciones": {
@@ -84,7 +84,7 @@ TESTS = {
         "filter": "ldr",
         "imgs": ["img/lena.bmp"],
         "implementations": ["c","sse","avx2"],
-        "sizes": [(2**w,2**h) for w in range(5, 14) for h in range(5,14)],
+        "sizes": [(2**w,2**h) for w in range(4, 14) for h in range(4,14)],
         "params": ["100"]
     },
     "ldr-precision": {
