@@ -164,3 +164,37 @@ Esta implementación ejecuta la misma cantidad de operaciones en punto flotante 
 
 \subsection{Experimentos}
 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.65\textwidth]{sepia-time-speedup}
+    \caption{Media del speedup relativo respecto a C compilado con O3 sobre lena.bmp 512x512. Percentiles 10 y 90 representados con barras de error.}
+    \label{fig:sepia-time-speedup}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.65\textwidth]{sepia-time}
+    \caption{Media del tiempo de ejecución sobre lena.bmp 512x512. Percentiles 10 y 90 representados con barras de error.}
+    \label{fig:sepia-time}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.65\textwidth]{sepia-cache-map-sse-angua}
+    \caption{Heat Map que muestra el rate de Cache Misses según el tamaño de la imagen lena.bmp}
+    \label{fig:sepia-cache-map-sse-angua}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.65\textwidth]{sepia-cycles}
+    \caption{Media de la cantidad de ciclos ejecutados sobre lena.bmp 512x512. Percentiles 10 y 90 representados con barras de error.}
+    \label{fig:sepia-cycles}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.65\textwidth]{sepia-c-cycles}
+    \caption{Media de la cantidad de ciclos ejecutados sobre lena.bmp 512x512. Percentiles 10 y 90 representados con barras de error.}
+    \label{fig:sepia-c-cycles}
+\end{figure}
