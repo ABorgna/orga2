@@ -84,7 +84,7 @@ De esta manera, las lecturas y escrituras en memoria representan $\frac{1}{16} =
 Se diferencian de la implementación anterior de SSE en el uso de la mayor cantidad posible de registros XMM (YMM de 256 bits en el caso de las implementaciones de AVX) para las operaciones de transferencia de bloques de pixeles de la imagen fuente a la destino. 
 \\
 
-Dado que las lecturas y escrituras en memoria de cada registro son independientes entre sí, la ejecución fuera de orden del procesador hace que la transferencia por bloque sea más rápida que la implementación individual (que recorre la imagen con un único registro XMM). Por cuestiones de vecindad espacial de los píxeles en la memoria, los accesos a memoria de cada registro tienen chances particularmente altas de hit en caché, no demorando así las lecturas del resto de los registros.
+Dado que las lecturas y escrituras en memoria de cada registro son independientes entre sí, la ejecución fuera de orden del procesador hace que la transferencia por bloque sea más rápida que la implementación individual (que recorre la imagen con un único registro XMM). Por cuestiones de vecindad espacial de los píxeles en la memoria, los accesos a memoria de cada registro tienen chances particularmente altas de hit en caché (ver gráfico \ref{cropflip-cache-misses}), no demorando así las lecturas del resto de los registros.
 \\
 
 Recordando que los registros de AVX tienen 32 bytes de capacidad y cada píxel en nuestro formato ocupa 4 bytes, cada registro YMM tendrá capacidad para:
@@ -111,42 +111,86 @@ La asignación de píxeles se hace llamando a las funciones externas 'copyN_sse'
 {[rdi+224]} $\leftarrow$ \xmm{14} \\
 {[rdi+240]} $\leftarrow$ \xmm{15} \\
 
-Esta técnica de aplicar por cada iteración operaciones que, comunmente, se harían en varias se conoce como 'loop unrolling'. Como desventaja frente a la optimización por paralelismo y branch mispredictions, en códigos de mucho mayor tamaño podría aumentar tan significativamente el tamaño del binario que aumente fuertemente el número de 'cache misses'. En nuestro caso copyN.o (que incluye a 'copyN_sse' y 'copyN_avx2') pesa 3,3 kB y es bastante probable que entre enteramente en caché.
+Esta técnica de aplicar por cada iteración operaciones que, comunmente, se harían en varias se conoce como 'loop unrolling'. Como desventaja frente a la optimización por paralelismo y branch mispredictions (ver gráfico \ref{cropflip-brach-misses}), en códigos de mucho mayor tamaño podría aumentar tan significativamente el tamaño del binario que aumente fuertemente el número de 'cache misses'. En nuestro caso copyN.o (que incluye a 'copyN_sse' y 'copyN_avx2') pesa 3,3 kB y es bastante probable que entre enteramente en caché.
 \\
 
-En el caso del filtro Cropflip, las tiras de píxeles corresponden a tiras de tamaño 'tamx' (es decir, al ancho del crop).  
+En el caso del filtro Cropflip, las tiras de píxeles corresponden a tiras de tamaño 'tamx' (es decir, al a	ncho del crop).  
 
 
 \subsection{Rendimiento y análisis}
 
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.65\textwidth]{cropflip-time-speedup} 
+\label{fig:cropflip-time-speedup}
+\end{figure}
+
 A diferencia de los otros dos filtros, donde el procesamiento de imágenes involucra operaciones aritméticas paralelas, la implementación AVX de	 Cropflip no presenta un 'speedup' tan significativo respecto de las implementaciones de SSE con registros de 128 bits en paralelo \footnote{Los benchmarks en AVX sobre el procesador AMD resultan distorsionados por cuestiones de compatibilidad}. 
 
-\includegraphics[width=15cm]{cropflip-cycles} 
-\\
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.65\textwidth]{cropflip-cycles} 
+\label{fig:cropflip-cycles}
+\end{figure}
 
 
-Se observa una diferencia del orden de casi el triple de ciclos de clock entre las versiones de SSE y SSE con loop unrolling ('SSE Parelo') donde parecería que el buen hitrate y los puntos fuertes del loop unrolling (paralelismo y minimizar branch mispredictions) compensan notablemente el hecho de que los accesos a memoria son individuales y no pueden solaparse.
-\\
-\\
-\\
-\\
 
-Pudimos corrobar que no es casualidad que el rendimiento de la implementación en C@-O3 sea similar al de las implementaciones SSE (particularmente 'SSE paralelo') utilizando GDB para ver el código compilado y comprobando que vectorizaba con operaciones SSE.
-\ A modo comparativo también incluímos el análisis de rendimiento entre las diversas optimizaciones para la implementación de C.
+Se observa una diferencia del orden de casi el triple de ciclos de clock entre las versiones de SSE y SSE con loop unrolling ('SSE Parelo') donde parecería que el buen hitrate y los puntos fuertes del loop unrolling (paralelismo y minimizar branch mispredictions)  compensan notablemente el hecho de que los accesos a memoria son individuales y no pueden solaparse.
 \\
-\\
-\includegraphics[width=15cm]{untitled}
-\\
-\includegraphics[width=15cm]{cropflip-c-time}
-\\
-\includegraphics[width=15cm]{cropflip-c-cycles} 
+Pudimos corrobar que no es casualidad que el rendimiento de la implementación en C@-O3 sea similar al de las implementaciones SSE (particularmente 'SSE paralelo') utilizando GDB para ver el código compilado y comprobando que vectorizaba con operaciones SSE como se muestra a continuación:
 
-\includegraphics[width=15cm]{cropflip-time}
-\\
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.65\textwidth]{untitled}
+\end{figure}
+
+A modo comparativo también incluímos el análisis de rendimiento entre las diversas optimizaciones para la implementación de C.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.65\textwidth]{cropflip-c-cycles} 
+\label{fig:cropflip-c-cycles}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.65\textwidth]{cropflip-c-time} 
+\label{fig:cropflip-c-time}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.65\textwidth]{cropflip-time}
+\label{fig:cropflip-time}
+\end{figure}
+
 También es remarcable que el salto en rendimiento se produce entre versiones de ASM y de C con optimización menor a -O3, donde bajan del rango de 20-80 a 3-8 microsegundos.
 
-\includegraphics[width=15cm]{cropflip-time-speedup} 
-\\
-	\footnote{Barras indicativas de mediana de 'speedup' vs implementación en C-03. Se indica el promedio con líneas}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.65\textwidth]{cropflip-branch-misses}
+\label{fig:cropflip-branch-misses}
+\end{figure}
 
 
+En este gráfico se puede apreciar la efectividad del loop unrolling en las implementaciones de AVX y de SSE en paralelo frente a las implementaciones que procesan con un único vector (ya vimos que la implementación en C con optimización O3 también usa un registro XMM para los accesos a memoria).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.65\textwidth]{cropflip-cache-misses}
+\label{fig:cropflip-cache-misses}
+\end{figure}
+
+Como habíamos anticipado al hablar del loop unrolling en SSE, el tamaño del binario no es lo suficientemente grande como para no poder ser cacheado eficientemente. La vecindad espacial de las tiras de píxeles también colaboran para que el hitrate se mantenga alto aún cuando las filas del crop son contiguas en memoria como comentamos en la descripción.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{cropflip-cycles}
+\label{fig:cropflip-cycles}
+\end{figure}
+
+
+
+
+	
