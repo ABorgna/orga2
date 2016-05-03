@@ -128,66 +128,67 @@ En el caso del filtro Cropflip, las tiras de píxeles corresponden a tiras de ta
 \label{fig:cropflip-time-speedup}
 \end{figure}
 
-A diferencia de los otros dos filtros, donde el procesamiento de imágenes involucra operaciones aritméticas paralelas, la implementación AVX de	 Cropflip casi no presenta 'speedup' respecto de las implementaciones de SSE con registros de 128 bits en paralelo 
-
-\subsubsection{Caché misses}
+A diferencia de los otros dos filtros, donde el procesamiento de imágenes involucra operaciones aritméticas paralelas, la implementación AVX de Cropflip casi no presenta 'speedup' respecto de las implementaciones de SSE con registros de 128 bits en paralelo.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.90\textwidth]{cropflip-cache-misses}
-\caption{Porcentaje de misses de la cache en la ejecución del filtro cropflip}
-\label{fig:cropflip-cache-misses}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.7\textwidth]{cropflip-cache-map-sse-par-gflan-MS-7817}
-\caption{Porcentaje de misses de la cache en función del tamaño de imagen durante la ejecución del filtro cropflip}
-\label{fig:cropflip-cache-map-sse_par-gflan-MS-7817}
-\end{figure}
-
-
-Como habíamos anticipado al hablar del loop unrolling en SSE, el tamaño del binario no es lo suficientemente grande como para no poder ser cacheado eficientemente. La vecindad espacial de las tiras de píxeles también colaboran para que el hitrate se mantenga alto aún cuando las filas del crop no son contiguas en memoria como comentamos en la descripción. 
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.90\textwidth]{cropflip-cycles} 
+\includegraphics[width=0.90\textwidth]{cropflip-cycles}
 \label{fig:cropflip-cycles}
+\caption{Ciclos de clock del timestamp counter durante la ejecución del filtro cropflip}
 \end{figure}
-
-
 
 Se observa una diferencia de casi la mitad ciclos de clock entre las versiones de SSE a favor del loop unrolling ('SSE Parelo') donde parecería que, gracias a un buen hitrate, los puntos fuertes  (particularmente paralelismo, no tanto minimizar branch mispredictions como veremos más adelante) destacan a pesar del hecho de que los accesos a memoria son individuales y no pueden solaparse.
+
+Es notable como el procesador de AMD es el único que corre mas lento la implementación AVX (comportamiento que no vimos en las implementaciones AVX de otros filtros). Suponemos que puede deberse a un mal rendimiento de la implementación de copia a los registros \ymm{}.
 \\
 
 Pudimos corrobar que no es casualidad que el rendimiento de la implementación en C@-O3 sea similar al de las implementaciones SSE (particularmente 'SSE paralelo') utilizando GDB para ver el código compilado y comprobando que vectorizaba con operaciones SSE como se muestra a continuación:
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.90\textwidth]{untitled}
-\end{figure}
+\begin{lstlisting}
+0x0000000000403995 <cropflip_c+229>: xor    edx,edx
+0x0000000000403997 <cropflip_c+231>: movdqu xmm0,XMMWORD PTR [rcx+rax*1]
+0x000000000040399c <cropflip_c+236>: add    edx,0x1
+0x000000000040399f <cropflip_c+239>: movdqu XMMWORD PTR [rsi+rax*1],xmm0
+0x00000000004039a4 <cropflip_c+244>: add    rax,0x10
+\end{lstlisting}
 
 A modo comparativo también incluímos el análisis de rendimiento entre las diversas optimizaciones para la implementación de C.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.90\textwidth]{cropflip-c-cycles} 
-\label{fig:cropflip-c-cycles}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.90\textwidth]{cropflip-c-time} 
+\includegraphics[width=0.90\textwidth]{cropflip-c-time}
 \label{fig:cropflip-c-time}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.90\textwidth]{cropflip-time}
-\label{fig:cropflip-time}
+\caption{Tiempo de ejecución de la implementación C del filtro cropflip compilada con distintos optimizaciones}
 \end{figure}
 
 También es remarcable que el salto en rendimiento se produce entre versiones de ASM y de C con optimización menor a -O3, donde bajan del rango de 20-160 microsegundos para las implementaciones C-O1/C-O2 a 3-8 microsegundos para las de ASM y C-03 (y cercanos al 10 por ciento para los rangos de ciclos de clock).
+
+\subsubsection{Caché misses}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{cropflip-cache-map-sse-par-gflan-MS-7817}
+\caption{Porcentaje de misses de la cache en función del tamaño durante la ejecución del filtro cropflip, copiando e invirtiendo la imagen entera, en un procesador con 8MB de caché}
+\label{fig:cropflip-cache-map-sse_par-gflan-MS-7817}
+\end{figure}
+
+
+Observamos que como realizamos las corridas con la caché en caliente y gracias a la vecindad temporal, cuando el tamaño en bytes de la imágen es menor al de la caché el hitrate se mantiene cerca del 100\%. Cuando la imagen ya no entra en caché se termina desplazando a sí misma durante la ejecución y la cantidad de misses sube hasta cerca del 40\%.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{cropflip-time-rel-map-sse-par-gflan-MS-7817}
+\caption{Millones de píxeles procesados por segundo en función del tamaño durante la ejecución del filtro cropflip, copiando e invirtiendo la imagen entera, en un procesador con 8MB de caché L3 y 256kB de caché L2 por nucleo}
+\label{fig:cropflip-tame-rel-map-sse_par-gflan-MS-7817}
+\end{figure}
+
+En esta imagen podemos observar cómo cuando la imagen ya no entra en caché el throughput baja a menos de la mitad, ya que el procesador se queda esperando a la memoria mas de la mitad del tiempo.
+
+También observamos una segunda franja cuando la imagen ocupa menos de 256kB, que corresponde al tamaño de la caché L2. Es interesante ver la diferencia de rendimiento entre ambas caches, ya que podemos procesar el doble de rápido cuando todos los accesos son a L2.
+
+Cuando la imagen tiene poco ancho el procesamiento se ve interrumpido muy seguido por la lógica de cambio de linea, y el rendimiento se ve afectado.
+
+\subsubsection{Observación sobre las predicciones de saltos}
 
 \begin{figure}[H]
 \centering
@@ -196,16 +197,6 @@ También es remarcable que el salto en rendimiento se produce entre versiones de
 \end{figure}
 
 En este gráfico se puede apreciar algo bastante curioso: mientras que para algunos procesadores el loop unrolling minimizó muy efectivamente el porcentaje de branch mispredictions en las implementaciones de AVX y de SSE en paralelo frente a las implementaciones que procesan con un único vector (ya vimos que la implementación en C con optimización O3 también usa un registro XMM para los accesos a memoria), para otros significó un retroceso.
-\ Esto resulta particularmente contraintuitivo si tenemos en cuenta que en teoría minimizar iteraciones parecería implicar minimizar predicciones y por lo tanto penalidades. Sin embargo esto se puede deber a que, en cada ciclo se requiere evaluar si la cantidad restante de píxeles para copiar es mayor a  64/4/1 ó 128/8/1 píxeles para poder saltar a cada subrutina. Resultando así contraproducente desde este punto de vista dicha implementación.
 
+Esto resulta particularmente contraintuitivo si tenemos en cuenta que en teoría minimizar iteraciones parecería implicar minimizar predicciones y por lo tanto penalidades. Sin embargo esto se puede deber a que, en cada ciclo se requiere evaluar si la cantidad restante de píxeles para copiar es mayor a  64/4/1 ó 128/8/1 píxeles para poder saltar a cada subrutina. Resultando así contraproducente desde este punto de vista dicha implementación.
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.90\textwidth]{cropflip-cycles}
-\label{fig:cropflip-cycles}
-\end{figure}
-
-
-
-
-	
