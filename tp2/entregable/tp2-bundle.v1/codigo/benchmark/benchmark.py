@@ -94,7 +94,7 @@ TESTS = {
         "implementations": ["sse","sse_integer"],
         "sizes": [(0,0)],               # (0,0) == original size
         "params": ["255"],
-        "singleRun": True,              # Optional, defaults to False
+        "singleRun": False,              # Optional, defaults to False
         "referenceImplementation": "c"  # Optional, will generate "maxDiff" if not None
     }
 }
