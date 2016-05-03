@@ -395,7 +395,7 @@ class Grapher:
             plt.ylabel('Alto en píxeles', fontsize=14)
             plt.title(filterName+' -i '+implementation+' lena.WxH.bmp '+params+"\n"+model, fontsize=14)
 
-            plt.savefig(path+filterName+"-"+name+"-map-"+implementation+"-"+host+".png");
+            plt.savefig(path+filterName+"-"+name+"-map-"+implementation.replace("_","-")+"-"+host+".png");
 
             plt.close("all")
 
