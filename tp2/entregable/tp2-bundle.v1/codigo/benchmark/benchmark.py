@@ -38,6 +38,13 @@ TESTS = {
         "sizes": [(512,512)],
         "params": ["128 128 128 128"]
     },
+    "cropflip-sizes": {
+        "filter": "cropflip",
+        "imgs": ["img/lena.bmp"],
+        "implementations": ["c","sse","sse_par","avx"],
+        "sizes": [(2**w,2**h) for w in range(5, 14) for h in range(5,14)],
+        "params": ["%w %h 0 0"]     # width and height
+    },
     "sepia-implementaciones": {
         "filter": "sepia",
         "imgs": ["img/lena.bmp"],
@@ -56,7 +63,7 @@ TESTS = {
         "filter": "sepia",
         "imgs": ["img/lena.bmp"],
         "implementations": ["c","sse","avx2"],
-        "sizes": [(2**w,2**h) for w in range(7, 14) for h in range(7,14)],
+        "sizes": [(2**w,2**h) for w in range(5, 14) for h in range(5,14)],
         "params": ["100"]
     },
     "ldr-implementaciones": {
@@ -77,7 +84,7 @@ TESTS = {
         "filter": "ldr",
         "imgs": ["img/lena.bmp"],
         "implementations": ["c","sse","avx2"],
-        "sizes": [(2**w,2**h) for w in range(7, 14) for h in range(7,14)],
+        "sizes": [(2**w,2**h) for w in range(5, 14) for h in range(5,14)],
         "params": ["100"]
     },
     "ldr-precision": {
@@ -167,6 +174,9 @@ class Benchmark:
                     resizedImg = self.generateTestImage(img,size)
 
                     for param in test["params"]:
+
+                        param = param.replace('%w',str(size[0]))
+                        param = param.replace('%h',str(size[1]))
 
                         if test.get("referenceImplementation", None) is not None:
                             self.runTest(resizedImg,test["filter"],test["referenceImplementation"],
