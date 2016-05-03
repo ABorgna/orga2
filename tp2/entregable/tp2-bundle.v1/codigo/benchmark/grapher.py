@@ -44,7 +44,7 @@ class Grapher:
         implementationPlots = [self.plotTime, self.plotSpeedup, self.plotCycles,
                 self.plotCacheMisses, self.plotBranchMisses]
 
-        testNames = ["cropflip", "cropflip-c","sepia","sepia-c","ldr","ldr-c"]
+        testNames = ["cropflip", "cropflip-c","sepia","sepia-c","ldr","ldr-c","ldr-precision"]
 
         [plot(tests,t,GRAPHS_PATH) for plot in implementationPlots for t in testNames]
 
@@ -52,10 +52,13 @@ class Grapher:
 
         cacheMissFn = lambda result : 100 * result["cacheMisses"] / result["cacheReferences"]
         branchMissFn = lambda result : 100 * result["branchMisses"] / result["branches"]
-        timeFn = lambda result : result["q2Time"]
-        relativeTimeFn = lambda result : (result["size"][0] * result["size"][1]) / (1e6 * result["q2Time"])
+        timeFn = lambda result : result["q2Time"] if result["q2Time"] else 1e-6
+        relativeTimeFn = lambda result : (result["size"][0] * result["size"][1]) / (1e6 * result["q2Time"]) \
+                if result["q2Time"] != 0 else (result["size"][0] * result["size"][1])
 
-        filtrosImpl = [("ldr","c"),("ldr","sse"),("ldr","avx2"),("sepia","c"),("sepia","sse"),("sepia","avx2")]
+        filtrosImpl = [("ldr","c"),("ldr","sse"),("ldr","avx2"),
+                       ("sepia","c"),("sepia","sse"),("sepia","avx2"),
+                       ("cropflip","c"),("cropflip","sse"),("cropflip","sse_par"),("cropflip","avx")]
 
         testImpls = []
         for filtro, impl in filtrosImpl:
@@ -363,6 +366,8 @@ class Grapher:
         for host,t in tests.items():
             if filterName+"-sizes" not in t["tests"]:
                 continue
+
+            model = t["model"]
             test = t["tests"][filterName+"-sizes"]
             params = test["params"][0]
 
@@ -388,7 +393,7 @@ class Grapher:
 
             plt.xlabel('Ancho en píxeles', fontsize=14)
             plt.ylabel('Alto en píxeles', fontsize=14)
-            plt.title(filterName+' -i '+implementation+' lena.WxH.bmp '+params, fontsize=14)
+            plt.title(filterName+' -i '+implementation+' lena.WxH.bmp '+params+"\n"+model, fontsize=14)
 
             plt.savefig(path+filterName+"-"+name+"-map-"+implementation+"-"+host+".png");
 

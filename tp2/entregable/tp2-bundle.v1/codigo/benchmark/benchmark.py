@@ -80,6 +80,13 @@ TESTS = {
         "sizes": [(512,512)],
         "params": ["100"]
     },
+    "ldr-precision-implementaciones": {
+        "filter": "ldr",
+        "imgs": ["img/lena.bmp"],
+        "implementations": ["c","sse","sse_integer"],
+        "sizes": [(512,512)],
+        "params": ["100"]
+    },
     "ldr-sizes": {
         "filter": "ldr",
         "imgs": ["img/lena.bmp"],
