@@ -21,7 +21,10 @@ $$\forall k \in \{r,g,b,a\} \qquad O^k_{i,j} = I^r_{i,j}$$
 
 Para realizar mediciones implementamos un script de benchmarking automático\footnote{codigo/benchmark/benchmark.py} que nos facilite la tarea y reduzca el error humano.
 
-Para cada combinacíon de filtro, implementación, imagen, tamaño y parámetros adicionales corremos el tp2 un mínimo de 100 iteraciones y 2 segundos. Empezando con el mínimo de iteraciones realizamos una búsqueda exponencial hasta encontrar una cantidad que sobrepase el límite de tiempo. Usando la cantidad de iteraciones encontrada calculamos los percentiles y el promedio del tiempo y cantidad de ciclos por ejecución. Además, guardamos el porcentaje promedio de misses a la caché y el porcentaje promedio de mispredicciones de salto.
+Para cada combinacíon de filtro, implementación, imagen, tamaño y parámetros adicionales corremos el tp2 un mínimo de 100 iteraciones y 2 segundos. Empezando con el mínimo de iteraciones realizamos una búsqueda exponencial hasta encontrar una cantidad que sobrepase el límite de tiempo. Usando la cantidad de iteraciones encontrada calculamos los percentiles y el promedio del tiempo con una precisión de 1uS y cantidad de ciclos por ejecución. Además, guardamos el porcentaje promedio de misses a la caché y el porcentaje promedio de mispredicciones de salto.
+
+Nuestra medida de ciclos de ejecución es provista por la instrucción \asm{rdtsc}. En todos los procesadores donde realizamos las mediciones el \asm{tsc} se incrementa a una frecuencia fija e independiente, y se encuentra sincronizado entre nucleos del procesador\footnote{Se puede verificar esta característica buscando el flag $constant\_tsc$ en $/proc/cpuid$}\textsuperscript{\cite[Volume 3B, Chapter 17.15]{intelsys}}, por lo que resulta una medida válida de comparación entre ejecuciones en el mismo procesador.
+\\
 
 En los gráficos presentados usaremos siempre la media a menos que se indique lo contrario. Y en los gráficos de barras representamos además los percentiles 10 y 90 como lineas de error.
 
