@@ -1,2 +1,11 @@
 \section{Conclusiones y trabajo futuro}
 
+Considerando los resultados de nuestros experimentos, creemos que la implementación de partes de un programa en assembler vale el esfuerzo cuando nuestro performance está limitado por una rutina que puede ser paralelizada. Ya que el tiempo que lleva programar en assembler es bastante mayor a lenguajes de mas alto nivel debemos considerar nuestros recursos antes de realizar todo el programa en asm.
+
+En los filtros que realizaban cálculos logramos una gran mejora de performance al implementar usando la extensión AVX2 contra la versión SSE. Hay que tener mucho cuidado al usarla ya que varias instrucciones resultaron tener comportamientos diferentes a los que uno esperaría, sobre todo cuando se quiere hacer operaciones entre valores como un shuffle o una suma horizontal. De todos modos, leyendo cuidadosamente el manual y documentando bien cada paso se logran muy buenos resultados.
+\\
+
+Nos quedó en el tintero experimentar con flotantes de doble precisión y ver si podemos lograr precisiones exactas sin pagar la penalidad de las cuentas con enteros.
+
+También querríamos constatar, ya que este año salen al mercado procesadores con la extensión AVX-512, si el aumento de rendimiento se mantiene mientras mas suba el tamaño de los registros, o nos encontraremos con demaciado overhead de los cálculos auxiliares.
+
