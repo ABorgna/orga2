@@ -10,7 +10,7 @@
 #define PIC1_PORT 0x20
 #define PIC2_PORT 0xA0
 
-static __inline __attribute__((always_inline)) void outb(int port, unsigned char data) {
+__inline __attribute__((always_inline)) void outb(int port, unsigned char data) {
     __asm __volatile("outb %0,%w1" : : "a" (data), "d" (port));
 }
 __inline __attribute__((always_inline)) void fin_intr_pic1(void) { outb(0x20, 0x20); }
