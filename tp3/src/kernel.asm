@@ -3,9 +3,13 @@
 ; TRABAJO PRACTICO 3 - System Programming - ORGANIZACION DE COMPUTADOR II - FCEN
 ; ==============================================================================
 
+extern GDT_DESC
+
+ 
 %include "imprimir.mac"
 
 global start
+
 
 
 ;; Saltear seccion de datos
@@ -44,6 +48,10 @@ start:
     ; Habilitar A20
     
     ; Cargar la GDT
+    
+    lgdt [GDT_DESC]
+    
+    imprimir_texto_mr iniciando_mp_msg, iniciando_mp_len, 0x07, 1, 0
 
     ; Setear el bit PE del registro CR0
     

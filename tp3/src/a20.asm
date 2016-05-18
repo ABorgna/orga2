@@ -4,6 +4,10 @@
 ; ==============================================================================
 ; rutinas para habilitar y deshabilitar A20
 
+global habilitar_A20
+global deshabilitar_A20
+global checkear_A20
+
 BITS 16
 
 section .text
