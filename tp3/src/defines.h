@@ -26,16 +26,17 @@
 
 /* Indices en la gdt */
 /* -------------------------------------------------------------------------- */
-#define GDT_COUNT 8
+#define GDT_COUNT 9
 
 #define GDT_NULL_DESC           0
-#define GDT_RESERVADO1_DESC           1
-#define GDT_RESERVADO2_DESC     2
-#define GDT_RESERVADO3_DESC     3
+#define GDT_RESERVADO_1_DESC     1
+#define GDT_RESERVADO_2_DESC     2
+#define GDT_RESERVADO_3_DESC     3
 #define GDT_CODE_0_DESC         4
 #define GDT_CODE_3_DESC         5
 #define GDT_DATA_0_DESC         6
 #define GDT_DATA_3_DESC         7
+#define GDT_VIDEO_DESC          8
 
 /* Offsets en la gdt */
 /* -------------------------------------------------------------------------- */
