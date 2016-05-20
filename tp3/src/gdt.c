@@ -10,7 +10,7 @@
 gdt_entry gdt[GDT_COUNT] = {
     /* Descriptor nulo*/
     /* Offset = 0x00 */
-    [GDT_NULL_DESC] = (gdt_entry) {
+    [GDT_NULL_INDEX] = (gdt_entry) {
         (unsigned short)    0x0000,         /* limit[0:15]  */
         (unsigned short)    0x0000,         /* base[0:15]   */
         (unsigned char)     0x00,           /* base[23:16]  */
@@ -27,7 +27,7 @@ gdt_entry gdt[GDT_COUNT] = {
     },
 
     /* Descriptores reservados para la catedra */
-    [GDT_RESERVADO_1_DESC] = (gdt_entry) {
+    [GDT_RESERVADO_1_INDEX] = (gdt_entry) {
         (unsigned short)    0x0000,         /* limit[0:15]  */
         (unsigned short)    0x0000,         /* base[0:15]   */
         (unsigned char)     0x00,           /* base[23:16]  */
@@ -42,7 +42,7 @@ gdt_entry gdt[GDT_COUNT] = {
         (unsigned char)     0x00,           /* g            */
         (unsigned char)     0x00,           /* base[31:24]  */
     },
-    [GDT_RESERVADO_2_DESC] = (gdt_entry) {
+    [GDT_RESERVADO_2_INDEX] = (gdt_entry) {
         (unsigned short)    0x0000,         /* limit[0:15]  */
         (unsigned short)    0x0000,         /* base[0:15]   */
         (unsigned char)     0x00,           /* base[23:16]  */
@@ -57,7 +57,7 @@ gdt_entry gdt[GDT_COUNT] = {
         (unsigned char)     0x00,           /* g            */
         (unsigned char)     0x00,           /* base[31:24]  */
     },
-    [GDT_RESERVADO_3_DESC] = (gdt_entry) {
+    [GDT_RESERVADO_3_INDEX] = (gdt_entry) {
         (unsigned short)    0x0000,         /* limit[0:15]  */
         (unsigned short)    0x0000,         /* base[0:15]   */
         (unsigned char)     0x00,           /* base[23:16]  */
@@ -74,7 +74,7 @@ gdt_entry gdt[GDT_COUNT] = {
     },
 
     /* Seccion de codigo nivel 0 */
-    [GDT_CODE_0_DESC] = (gdt_entry) {
+    [GDT_CODE_0_INDEX] = (gdt_entry) {
         (unsigned short)    0x6dff,         /* limit[0:15]  */
         (unsigned short)    0x0000,         /* base[0:15]   */
         (unsigned char)     0x00,           /* base[23:16]  */
@@ -91,7 +91,7 @@ gdt_entry gdt[GDT_COUNT] = {
     },
 
     /* Seccion de codigo nivel 3 */
-    [GDT_CODE_3_DESC] = (gdt_entry) {
+    [GDT_CODE_3_INDEX] = (gdt_entry) {
         (unsigned short)    0x6dff,         /* limit[0:15]  */
         (unsigned short)    0x0000,         /* base[0:15]   */
         (unsigned char)     0x00,           /* base[23:16]  */
@@ -108,7 +108,7 @@ gdt_entry gdt[GDT_COUNT] = {
     },
 
     /* Seccion de data nivel 0 */
-    [GDT_DATA_0_DESC] = (gdt_entry) {
+    [GDT_DATA_0_INDEX] = (gdt_entry) {
         (unsigned short)    0x6dff,         /* limit[0:15]  */
         (unsigned short)    0x0000,         /* base[0:15]   */
         (unsigned char)     0x00,           /* base[23:16]  */
@@ -125,7 +125,7 @@ gdt_entry gdt[GDT_COUNT] = {
     },
 
     /* Seccion de data nivel 3 */
-    [GDT_DATA_3_DESC] = (gdt_entry) {
+    [GDT_DATA_3_INDEX] = (gdt_entry) {
         (unsigned short)    0x6dff,         /* limit[0:15]  */
         (unsigned short)    0x0000,         /* base[0:15]   */
         (unsigned char)     0x00,           /* base[23:16]  */
@@ -142,7 +142,7 @@ gdt_entry gdt[GDT_COUNT] = {
     },
 
     /* Seccion de video */
-    [GDT_VIDEO_DESC] = (gdt_entry) {
+    [GDT_VIDEO_INDEX] = (gdt_entry) {
         (unsigned short)    0x0FBF,         /* limit[0:15]  */
         (unsigned short)    0xB800,         /* base[0:15]   */
         (unsigned char)     0x00,           /* base[23:16]  */

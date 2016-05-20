@@ -13,9 +13,9 @@ extern idt_inicializar
 
 %include "imprimir.mac"
 
-%define GDT_CODE_0_DESC 4
-%define GDT_DATA_0_DESC 6
-%define GDT_VIDEO_DESC  8
+%define GDT_CODE_0_DESC 4 << 3
+%define GDT_DATA_0_DESC 6 << 3
+%define GDT_VIDEO_DESC  8 << 3
 
 global start
 
@@ -63,21 +63,21 @@ start:
     mov cr0, eax
 
     ; Saltar a modo protegido
-    jmp (GDT_CODE_0_DESC << 3):mp
+    jmp GDT_CODE_0_DESC:mp
 
 
 BITS 32
 mp:
     ; Establecer selectores de segmentos
     xor eax, eax
-    mov ax, (GDT_DATA_0_DESC << 3)
+    mov ax, GDT_DATA_0_DESC
 
     mov ds, ax
     mov es, ax
     mov gs, ax
     mov ss, ax
 
-    mov ax, (GDT_VIDEO_DESC << 3)
+    mov ax, GDT_VIDEO_DESC
     mov fs, ax
 
     ; Establecer la base de la pila
@@ -86,9 +86,9 @@ mp:
 
     ; Imprimir mensaje de bienvenida
     imprimir_texto_mp iniciando_mp_msg, iniciando_mp_len, 0x07, 2, 0
-    call reventar_pantalla
 
     ; Inicializar pantalla
+    call reventar_pantalla
 
     ; Inicializar el manejador de memoria
 
@@ -109,9 +109,6 @@ mp:
 
     ; Cargar IDTDATA
     call idt_inicializar
-
-    ;int 3
-    mov eax, [fs:0xffffffff]
 
     ; Configurar controlador de interrupciones
 
