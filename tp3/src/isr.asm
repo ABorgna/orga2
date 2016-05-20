@@ -21,12 +21,34 @@ extern sched_proximo_indice
 ;; Definición de MACROS
 ;; -------------------------------------------------------------------------- ;;
 
-%macro ISR 1
+%macro ISR 2
 global _isr%1
 
+interrupt_msg_%1 db         %2
+interrupt_msg_%1_len equ    $ - interrupt_msg_%1
+
 _isr%1:
-    mov eax, %1
-    jmp $
+    xchg bx, bx
+    pushad
+    ;imprimir_texto_mp interrupt_msg_%1, interrupt_msg_%1_len, 0x07, 3, 0
+    popad
+    iret
+
+%endmacro
+
+%macro ISR_EC 2
+global _isr%1
+
+interrupt_msg_%1 db         %2
+interrupt_msg_%1_len equ    $ - interrupt_msg_%1
+
+_isr%1:
+    xchg bx, bx
+    add esp, 4
+    pushad
+    ;imprimir_texto_mp interrupt_msg_%1, interrupt_msg_%1_len, 0x07, 3, 0
+    popad
+    iret
 
 %endmacro
 
@@ -40,7 +62,26 @@ isrClock:            db '|/-\'
 ;;
 ;; Rutina de atención de las EXCEPCIONES
 ;; -------------------------------------------------------------------------- ;;
-ISR 0
+ISR 0, '0'
+ISR 1, '1'
+ISR 2, '2'
+ISR 3, '3'
+ISR 4, '4'
+ISR 5, '5'
+ISR 6, '6'
+ISR 7, '7'
+ISR_EC 8, '8'
+ISR 9, '9'
+ISR_EC 10, '10'
+ISR_EC 11, '11'
+ISR_EC 12, '12'
+ISR_EC 13, '13'
+ISR_EC 14, '14'
+ISR 15, '15'
+ISR 16, '16'
+ISR_EC 17, '17'
+ISR 18, '18'
+ISR 19, '19'
 
 ;;
 ;; Rutina de atención del RELOJ
@@ -77,5 +118,4 @@ proximo_reloj:
                 imprimir_texto_mp ebx, 1, 0x0f, 49, 79
                 popad
         ret
-        
-        
+
