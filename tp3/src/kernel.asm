@@ -4,6 +4,7 @@
 ; ==============================================================================
 
 extern GDT_DESC
+extern reventar_pantalla
 
 %include "imprimir.mac"
 
@@ -80,6 +81,7 @@ mp:
 
     ; Imprimir mensaje de bienvenida
     imprimir_texto_mp iniciando_mp_msg, iniciando_mp_len, 0x07, 2, 0
+    call reventar_pantalla
 
     ; Inicializar pantalla
 
@@ -120,4 +122,3 @@ mp:
 ;; -------------------------------------------------------------------------- ;;
 
 %include "a20.asm"
-

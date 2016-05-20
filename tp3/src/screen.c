@@ -7,12 +7,12 @@
 
 #include "screen.h"
 
-void print(const char * text, unsigned int x, unsigned int y, unsigned short attr) {
+void print(const char * text, unsigned int x, unsigned int y, unsigned char attr) {
     ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
     int i;
     for (i = 0; text[i] != 0; i++) {
         p[y][x].c = (unsigned char) text[i];
-        p[y][x].a = (unsigned char) attr;
+        p[y][x].a = attr;
         x++;
         if (x == VIDEO_COLS) {
             x = 0;
@@ -21,7 +21,7 @@ void print(const char * text, unsigned int x, unsigned int y, unsigned short att
     }
 }
 
-void print_hex(unsigned int numero, int size, unsigned int x, unsigned int y, unsigned short attr) {
+void print_hex(unsigned int numero, int size, unsigned int x, unsigned int y, unsigned char attr) {
     ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
     int i;
     char hexa[8];
@@ -40,18 +40,29 @@ void print_hex(unsigned int numero, int size, unsigned int x, unsigned int y, un
     }
 }
 
-void print_int(unsigned int n, unsigned int x, unsigned int y, unsigned short attr) {
+void print_int(unsigned int n, unsigned int x, unsigned int y, unsigned char attr, unsigned int limite) {
     ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
-    if( n > 9 ) {
-      int a = n / 10;
-      n -= 10 * a;
-      print_int(a,x-1,y,attr);
-    }
-    p[y][x].c = '0'+n;
-    p[y][x].a = attr;
+    if (!limite) return;
+      if( n > 9 ) {
+        int a = n / 10;
+        n -= 10 * a;
+        print_int(a,x-1,y,attr, limite-1);
+      }
+      p[y][x].c = '0'+n;
+      p[y][x].a = attr;
+
 }
 
+void reventar_pantalla(){
+  ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
+  int i, j;
+  for (i = 0; i < VIDEO_FILS; i++) {
+    for (j = 0; j < VIDEO_COLS; j++) {
+      p[i][j].c = 219;
+      p[i][j].a = (i + j) % 2 ?
+                  C_BG_BLACK | C_FG_LIGHT_GREY | C_BLINK :
+                  C_BG_BLUE | C_FG_MAGENTA | C_BLINK;
+    }
+  }
 
-
-
-
+}
