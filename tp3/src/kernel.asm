@@ -3,7 +3,12 @@
 ; TRABAJO PRACTICO 3 - System Programming - ORGANIZACION DE COMPUTADOR II - FCEN
 ; ==============================================================================
 
+; Gdt
 extern GDT_DESC
+
+; Idt
+extern IDT_DESC
+extern idt_inicializar
 
 %include "imprimir.mac"
 
@@ -98,8 +103,13 @@ mp:
     ; Inicializar el scheduler
 
     ; Inicializar la IDT
+    lidt [IDT_DESC]
 
-    ; Cargar IDT
+    ; Cargar IDTDATA
+    call idt_inicializar
+
+    ;int 3
+    mov eax, [fs:0xffffffff]
 
     ; Configurar controlador de interrupciones
 
