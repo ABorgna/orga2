@@ -6,6 +6,7 @@
 ; Gdt
 extern GDT_DESC
 extern reventar_pantalla
+extern mmu_inicializar_dir_kernel
 
 ; Idt
 extern IDT_DESC
@@ -93,8 +94,14 @@ mp:
     ; Inicializar el manejador de memoria
 
     ; Inicializar el directorio de paginas
+	call mmu_inicializar_dir_kernel
 
     ; Cargar directorio de paginas
+    mov eax, 0x27000
+    mov cr3, eax
+    mov eax, cr0
+	or eax, 1 << 31
+	mov cr0, eax
 
     ; Habilitar paginacion
 
