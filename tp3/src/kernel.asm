@@ -5,15 +5,17 @@
 
 ; Gdt
 extern GDT_DESC
-extern reventar_pantalla
 extern mmu_inicializar_dir_kernel
+
+; Screen
+extern reventar_pantalla
+extern dibujar_fondo_interfaz
 
 ; Idt
 extern IDT_DESC
 extern idt_inicializar
 
 %include "imprimir.mac"
-
 %define GDT_CODE_0_DESC 4 << 3
 %define GDT_DATA_0_DESC 6 << 3
 %define GDT_VIDEO_DESC  8 << 3
@@ -89,7 +91,7 @@ mp:
     imprimir_texto_mp iniciando_mp_msg, iniciando_mp_len, 0x07, 2, 0
 
     ; Inicializar pantalla
-    call reventar_pantalla
+    call dibujar_fondo_interfaz
 
     ; Inicializar el manejador de memoria
 
