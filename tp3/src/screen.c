@@ -117,3 +117,13 @@ void dibujar_fondo_interfaz(){
 	p[36][44].c = 219;
 	p[36][44].a = C_BG_BLACK | C_FG_CYAN | C_BLINK ; 	
 }
+
+void atar_con_alambre(){
+	print("(^.^)-b ... LO ATAMO' CON ALAMBRE ", VIDEO_COLS - 34, VIDEO_FILS -1, C_BG_BLACK | C_FG_LIGHT_GREEN);
+	print("^", VIDEO_COLS - 33, VIDEO_FILS -1, C_BG_BLACK | C_FG_LIGHT_GREEN | C_BLINK);
+	print("^", VIDEO_COLS - 31, VIDEO_FILS -1, C_BG_BLACK | C_FG_LIGHT_GREEN | C_BLINK);
+	while(1){
+		print("S", 0, 0, C_BG_MAGENTA);
+		print("S", 0, 0, C_BG_CYAN);
+	}
+}

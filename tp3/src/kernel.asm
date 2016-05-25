@@ -10,6 +10,7 @@ extern mmu_inicializar_dir_kernel
 ; Screen
 extern reventar_pantalla
 extern dibujar_fondo_interfaz
+extern atar_con_alambre
 
 ; Idt
 extern IDT_DESC
@@ -97,6 +98,7 @@ mp:
 
     ; Inicializar el directorio de paginas
 	call mmu_inicializar_dir_kernel
+	call atar_con_alambre
 
     ; Cargar directorio de paginas
     mov eax, 0x27000
