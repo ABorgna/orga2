@@ -16,6 +16,13 @@ extern atar_con_alambre
 extern IDT_DESC
 extern idt_inicializar
 
+; System clock
+extern initClock
+
+; Sound
+extern beep
+extern test_audio
+
 %include "imprimir.mac"
 %define GDT_CODE_0_DESC 4 << 3
 %define GDT_DATA_0_DESC 6 << 3
@@ -97,17 +104,17 @@ mp:
     ; Inicializar el manejador de memoria
 
     ; Inicializar el directorio de paginas
-	call mmu_inicializar_dir_kernel
-	call atar_con_alambre
+    call mmu_inicializar_dir_kernel
+    call atar_con_alambre
 
     ; Cargar directorio de paginas
     mov eax, 0x27000
     mov cr3, eax
-    mov eax, cr0
-	or eax, 1 << 31
-	mov cr0, eax
 
     ; Habilitar paginacion
+    mov eax, cr0
+    or eax, 1 << 31
+    mov cr0, eax
 
     ; Inicializar tss
 
@@ -122,12 +129,15 @@ mp:
     call idt_inicializar
 
     ; Configurar controlador de interrupciones
+    call initClock
 
     ; Cargar tarea inicial
 
     ; Habilitar interrupciones
 
     ; Saltar a la primera tarea: Idle
+    ;call test_audio
+    call beep
 
     ; Ciclar infinitamente (por si algo sale mal...)
     mov eax, 0xFFFF

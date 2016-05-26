@@ -17,6 +17,12 @@ extern fin_intr_pic1
 ;; Sched
 extern sched_proximo_indice
 
+;; System clock
+extern updateClock
+
+;; Audio
+extern audio_isr
+
 ;;
 ;; Definición de MACROS
 ;; -------------------------------------------------------------------------- ;;
@@ -28,7 +34,6 @@ interrupt_msg_%1 db         %2
 interrupt_msg_%1_len equ    $ - interrupt_msg_%1
 
 _isr%1:
-    xchg bx, bx
     pushad
     ;imprimir_texto_mp interrupt_msg_%1, interrupt_msg_%1_len, 0x07, 3, 0
     popad
@@ -43,7 +48,6 @@ interrupt_msg_%1 db         %2
 interrupt_msg_%1_len equ    $ - interrupt_msg_%1
 
 _isr%1:
-    xchg bx, bx
     add esp, 4
     pushad
     ;imprimir_texto_mp interrupt_msg_%1, interrupt_msg_%1_len, 0x07, 3, 0
@@ -84,8 +88,25 @@ ISR 18, '18'
 ISR 19, '19'
 
 ;;
-;; Rutina de atención del RELOJ
+;; Rutina de atención del PIT
 ;; -------------------------------------------------------------------------- ;;
+%define PIT0_s 0
+%define PIT0_frac 1
+_irq0_handler:
+    pushad
+
+    ; System clock
+    call updateClock
+
+    ; Update the audio player
+    call audio_isr
+
+    ; Send the EOI to the PIC
+    mov al, 0x20
+    out 0x20, al
+
+    popad
+    iret
 
 ;;
 ;; Rutina de atención del TECLADO

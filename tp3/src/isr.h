@@ -29,4 +29,6 @@ void _isr17();
 void _isr18();
 void _isr19();
 
+void _irq0_handler();
+
 #endif  /* !__ISR_H__ */

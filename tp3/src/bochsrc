@@ -850,6 +850,7 @@ debug_symbols: file="kernel.sym"
 # 'pci_ide', 'speaker' and 'unmapped'.
 #=======================================================================
 #plugin_ctrl: biosdev=0, speaker=0
+plugin_ctrl: usb=0
 
 #=======================================================================
 # USER_PLUGIN:
@@ -867,4 +868,10 @@ debug_symbols: file="kernel.sym"
 # romimage: file=:bios:BIOS-bochs-latest, address=0xf0000
 # floppya: 1_44=[fd:], status=inserted
 #=======================================================================
+
+#=======================================================================
+# Other things
+#=======================================================================
+sound: driver=alsa
+speaker: enabled=1, mode=sound
 

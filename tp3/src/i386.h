@@ -25,6 +25,12 @@ LS_INLINE void ltr(unsigned short sel);
 LS_INLINE unsigned short rtr(void);
 LS_INLINE void hlt(void);
 LS_INLINE void breakpoint(void);
+LS_INLINE unsigned char inb(unsigned short port);
+LS_INLINE unsigned short inw(unsigned short port);
+LS_INLINE unsigned int ind(unsigned short port);
+LS_INLINE void outb(unsigned short port, unsigned char val);
+LS_INLINE void outw(unsigned short port, unsigned short val);
+LS_INLINE void outd(unsigned short port, unsigned int val);
 
 /*
  * Implementaciones
@@ -102,6 +108,36 @@ LS_INLINE void hlt(void) {
 
 LS_INLINE void breakpoint(void) {
     __asm __volatile("xchg %%bx, %%bx" : :);
+}
+
+LS_INLINE unsigned char inb(unsigned short port) {
+    unsigned char al;
+    __asm __volatile("in %%dx, %%al" : "=a" (al) : "d" (port) );
+    return al;
+}
+
+LS_INLINE unsigned short inw(unsigned short port) {
+    unsigned short ax;
+    __asm __volatile("in %%dx, %%ax" : "=a" (ax) : "d" (port) );
+    return ax;
+}
+
+LS_INLINE unsigned int ind(unsigned short port) {
+    unsigned int eax;
+    __asm __volatile("in %%dx, %%eax" : "=a" (eax) : "d" (port) );
+    return eax;
+}
+
+LS_INLINE void outb(unsigned short port, unsigned char val) {
+    __asm __volatile("out %1, %0" : : "d" (port), "a" (val));
+}
+
+LS_INLINE void outw(unsigned short port, unsigned short val) {
+    __asm __volatile("out %1, %0" : : "d" (port), "a" (val));
+}
+
+LS_INLINE void outd(unsigned short port, unsigned int val) {
+    __asm __volatile("out %1, %0" : : "d" (port), "a" (val));
 }
 
 #endif  /* !__i386_H__ */

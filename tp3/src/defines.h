@@ -9,8 +9,11 @@
 #ifndef __DEFINES_H__
 #define __DEFINES_H__
 
+#include <stdint.h>
+
 /* Bool */
 /* -------------------------------------------------------------------------- */
+#define bool char
 #define TRUE                    0x00000001
 #define FALSE                   0x00000000
 #define ERROR                   1
