@@ -38,11 +38,12 @@ void mmu_mapear_pagina(unsigned int virtual, unsigned int cr3, unsigned int fisi
 /* considerar pasar por parámetro también los atributos de los descriptores*/
 	int *dir = (int*) CR3_PD(cr3);
 	int *tab;
-	int i;
+	int i, nueva_pag;
 
-	if (! dir[PDE_INDEX(virtual)] & PG_PRESENT){
-		tab = mmu_proxima_pagina_fisica_libre();		//Pseudo malloc
-		dir[PDE_INDEX(virtual)] = tab | 0x3;			//Indexamos @ PDE y luego cereamos la nueva tabla
+	if (! (dir[PDE_INDEX(virtual)] & PG_PRESENT)){
+		nueva_pag = mmu_proxima_pagina_fisica_libre();					//Pseudo malloc
+		tab = (int*) nueva_pag;
+		dir[PDE_INDEX(virtual)] = nueva_pag | 0x3;							//Indexamos @ PDE y luego cereamos la nueva tabla
 
 		for (i = 0; i < 1024; i++) {
 			tab[i] = 0;
@@ -50,7 +51,7 @@ void mmu_mapear_pagina(unsigned int virtual, unsigned int cr3, unsigned int fisi
 
 	}
 	else {
-		tab = PTE_BASE(dir[PDE_INDEX(virtual)]);
+		tab = (int*) PTE_BASE(dir[PDE_INDEX(virtual)]);
 	}
 
 	tab[PTE_INDEX(virtual)] = PTE_BASE(fisica) | 0x3;		//Mapeamos su página a una posición múltiplo de PAGE_SIZE
@@ -61,11 +62,11 @@ void mmu_unmapear_pagina(unsigned int virtual, unsigned int cr3){
 	int *dir = (int*) CR3_PD(cr3);
 	int *tab;
 	int i;
-	
+
 /* análogo a mapear, pero se quita el flag de presenta para las tablas que quedan vacías*/
 /* se asume que el parámetro de la dirección virtual ya se encuentra mapeado */
 
-	tab = PTE_BASE(dir[PDE_INDEX(virtual)]);
+	tab = (int*) PTE_BASE(dir[PDE_INDEX(virtual)]);
 	tab[PTE_INDEX(virtual)] = 0;
 	int tabla_vacia = TRUE;
 
