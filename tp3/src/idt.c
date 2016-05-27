@@ -49,29 +49,41 @@ idt[numero].segsel = (unsigned short) GDT_CODE_0_DESC;                      \
     idt[numero].offset_16_31 = (unsigned short)                             \
         ((unsigned int)(&_isr##numero) >> 16 & (unsigned int) 0xFFFF);
 
+#define IDT_ENTRY_INTERRUPT_DEFAULT(numero)                                 \
+    idt[numero].offset_0_15 = (unsigned short)                              \
+        ((unsigned int)(&_isr_default) & (unsigned int) 0xFFFF);            \
+idt[numero].segsel = (unsigned short) GDT_CODE_0_DESC;                      \
+    idt[numero].attr = (unsigned short) 0x8E00;                             \
+    idt[numero].offset_16_31 = (unsigned short)                             \
+        ((unsigned int)(&_isr_default) >> 16 & (unsigned int) 0xFFFF);
 
 void idt_inicializar() {
-    asm("xchgw %bx, %bx");
     // Excepciones
-    IDT_ENTRY_TRAP(0);
-    IDT_ENTRY_TRAP(1);
-    IDT_ENTRY_TRAP(2);
-    IDT_ENTRY_TRAP(3);
-    IDT_ENTRY_TRAP(4);
-    IDT_ENTRY_TRAP(5);
-    IDT_ENTRY_TRAP(6);
-    IDT_ENTRY_TRAP(7);
-    IDT_ENTRY_TRAP(8);
-    IDT_ENTRY_TRAP(9);
-    IDT_ENTRY_TRAP(10);
-    IDT_ENTRY_TRAP(11);
-    IDT_ENTRY_TRAP(12);
-    IDT_ENTRY_TRAP(13);
-    IDT_ENTRY_TRAP(14);
-    IDT_ENTRY_TRAP(15);
-    IDT_ENTRY_TRAP(16);
-    IDT_ENTRY_TRAP(17);
-    IDT_ENTRY_TRAP(18);
-    IDT_ENTRY_TRAP(19);
+    IDT_ENTRY_INTERRUPT(0);
+    IDT_ENTRY_INTERRUPT(1);
+    IDT_ENTRY_INTERRUPT(2);
+    IDT_ENTRY_INTERRUPT(3);
+    IDT_ENTRY_INTERRUPT(4);
+    IDT_ENTRY_INTERRUPT(5);
+    IDT_ENTRY_INTERRUPT(6);
+    IDT_ENTRY_INTERRUPT(7);
+    IDT_ENTRY_INTERRUPT(8);
+    IDT_ENTRY_INTERRUPT(9);
+    IDT_ENTRY_INTERRUPT(10);
+    IDT_ENTRY_INTERRUPT(11);
+    IDT_ENTRY_INTERRUPT(12);
+    IDT_ENTRY_INTERRUPT(13);
+    IDT_ENTRY_INTERRUPT(14);
+    IDT_ENTRY_INTERRUPT(15);
+    IDT_ENTRY_INTERRUPT(16);
+    IDT_ENTRY_INTERRUPT(17);
+    IDT_ENTRY_INTERRUPT(18);
+    IDT_ENTRY_INTERRUPT(19);
+
+    for(int i = 20; i < 32; i++) {IDT_ENTRY_INTERRUPT_DEFAULT(i);}
+
+    IDT_ENTRY_INTERRUPT(32);
+
+    for(int i = 33; i < 256; i++) {IDT_ENTRY_INTERRUPT_DEFAULT(i);}
 }
 

@@ -4,13 +4,25 @@
 
 #include "audioplayer.h"
 
+struct audio_note {
+    short freq;
+    short cycles;
+};
+
 bool audioPlaying = 0;
-short* audioFile;
-short* audioFileEnd;
+struct audio_note* audioFile;
+struct audio_note* audioFileEnd;
+short audioCycles;
 
-short test_audio_file[4] = {512, 1024, 2048, 4096};
+struct audio_note test_audio_file[] = {
+    {880, 4096},
+    {512, 1024},
+    {1024, 1024},
+    {2048, 1024},
+    {4096, 1024}
+};
 
-void play_audio(short* file, short* end){
+void play_audio(struct audio_note* file, struct audio_note* end){
     audioPlaying = 0;
     audioFile = file;
     audioFileEnd = end;
@@ -19,11 +31,22 @@ void play_audio(short* file, short* end){
 
 void audio_isr() {
     if(audioPlaying) {
-        if(audioFile == audioFileEnd){
-            nosound();
-            audioPlaying = 0;
+        if(!audioCycles) {
+            if(audioFile == audioFileEnd){
+                //nosound();
+                //audioPlaying = 0;
+                //breakpoint();
+                //breakpoint();
+                test_audio();
+            } else {
+                //breakpoint();
+                play_sound((*audioFile).freq);
+                audioCycles = (*audioFile).cycles;
+
+                audioFile++;
+            }
         } else {
-            play_sound(*audioFile);
+            audioCycles--;
         }
     }
 }

@@ -41,15 +41,15 @@
 #define GDT_DATA_3_INDEX         7
 #define GDT_VIDEO_INDEX          8
 
-#define GDT_NULL_DESC            0
-#define GDT_RESERVADO_1_DESC     1
-#define GDT_RESERVADO_2_DESC     2
-#define GDT_RESERVADO_3_DESC     3
-#define GDT_CODE_0_DESC          4
-#define GDT_CODE_3_DESC          5
-#define GDT_DATA_0_DESC          6
-#define GDT_DATA_3_DESC          7
-#define GDT_VIDEO_DESC           8
+#define GDT_NULL_DESC            0 << 3
+#define GDT_RESERVADO_1_DESC     1 << 3
+#define GDT_RESERVADO_2_DESC     2 << 3
+#define GDT_RESERVADO_3_DESC     3 << 3
+#define GDT_CODE_0_DESC          4 << 3
+#define GDT_CODE_3_DESC          5 << 3
+#define GDT_DATA_0_DESC          6 << 3
+#define GDT_DATA_3_DESC          7 << 3
+#define GDT_VIDEO_DESC           8 << 3
 
 /* Offsets en la gdt */
 /* -------------------------------------------------------------------------- */

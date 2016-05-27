@@ -16,6 +16,9 @@ extern atar_con_alambre
 extern IDT_DESC
 extern idt_inicializar
 
+; Interruptions
+extern resetear_pic
+
 ; System clock
 extern initClock
 
@@ -129,15 +132,21 @@ mp:
     call idt_inicializar
 
     ; Configurar controlador de interrupciones
+    call resetear_pic
     call initClock
 
     ; Cargar tarea inicial
 
     ; Habilitar interrupciones
+    sti
 
     ; Saltar a la primera tarea: Idle
-    ;call test_audio
-    call beep
+
+    ; Cosas de audio
+    call test_audio
+    ;call beep
+
+    ;int 0x20
 
     ; Ciclar infinitamente (por si algo sale mal...)
     mov eax, 0xFFFF

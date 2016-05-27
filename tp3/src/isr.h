@@ -8,6 +8,8 @@
 #ifndef __ISR_H__
 #define __ISR_H__
 
+void _isr_default();
+
 void _isr0();
 void _isr1();
 void _isr2();
@@ -29,6 +31,6 @@ void _isr17();
 void _isr18();
 void _isr19();
 
-void _irq0_handler();
+void _isr32();
 
 #endif  /* !__ISR_H__ */

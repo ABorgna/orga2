@@ -27,6 +27,15 @@ extern audio_isr
 ;; Definición de MACROS
 ;; -------------------------------------------------------------------------- ;;
 
+global _isr_default
+_isr_default:
+    pushad
+    nop
+    mov eax, 0xDEADBEEF
+    nop
+    popad
+    iret
+
 %macro ISR 2
 global _isr%1
 
@@ -90,9 +99,8 @@ ISR 19, '19'
 ;;
 ;; Rutina de atención del PIT
 ;; -------------------------------------------------------------------------- ;;
-%define PIT0_s 0
-%define PIT0_frac 1
-_irq0_handler:
+global _isr32
+_isr32:
     pushad
 
     ; System clock
