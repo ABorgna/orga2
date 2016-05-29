@@ -26,7 +26,7 @@ $$
  & \cellcolor[HTML]{FFCB2F}$I_{0}$ & \cellcolor[HTML]{FFCB2F}$I_{1}$ & \cellcolor[HTML]{FFCB2F}$I_{2}$ & \cellcolor[HTML]{FFCB2F}$I_{3}$ & \cellcolor[HTML]{FFCB2F}$I_{4}$  & \cellcolor[HTML]{FFCB2F}$I_{5}$ &  \\ \hline
  & \multicolumn{1}{l|}{}      & \multicolumn{1}{l|}{}       & \multicolumn{1}{l|}{}       & \multicolumn{1}{l|}{}       & \multicolumn{1}{l|}{}       & \multicolumn{1}{l|}{}      &
 \end{tabular}
-\caption{Ilustracion de la imagen fuente en memoria. En rojo los pixeles del crop \newline
+\caption{Ilustración de la imagen fuente en memoria. En rojo los píxeles del crop \newline
 (offsetx = 2, offsety = 2, tamx = 4, tamy = 4)}
 \end{table}
 
@@ -41,18 +41,18 @@ $$
   & \cellcolor[HTML]{FD6864}$I_{32}$ & \cellcolor[HTML]{FD6864}$I_{33}$  & \cellcolor[HTML]{FD6864}$I_{34}$  & \cellcolor[HTML]{FD6864}$I_{35}$ &  \\ \hline
   & \multicolumn{1}{l|}{}       & \multicolumn{1}{l|}{}  & \multicolumn{1}{l|}{}      & \multicolumn{1}{l|}{}      &
 \end{tabular}
-\caption{Ilustracion de la imagen destino en memoria}
+\caption{Ilustración de la imagen destino en memoria}
 \end{table}
 
 
 
 
-No es dificil notar que las filas del crop en la fuente no constituyen una tira contigua de píxeles en memoria, si no que se encuentran distanciadas por el tamaño en bytes de offsetx lo que implica que necesitaremos iterar en dos ciclos anidados para poder procesar el crop.
+No es difícil notar que las filas del crop en la fuente no constituyen una tira contigua de píxeles en memoria, si no que se encuentran distanciadas por el tamaño en bytes de offsetx lo que implica que necesitaremos iterar en dos ciclos anidados para poder procesar el crop.
 
 \subsection{Implementaciones}
 Al no involucrar operaciones aritméticas entre componentes de la imagen, las implementaciones del filtro se centran en accesos a memoria. Por lo tanto, las implementaciones solamente difieren en el modo en que se copian y asignan píxeles a la imagen output, radicando en esos métodos nuestro foco de análisis. 
 \subsubsection{Implementaciones C y SSE}
-La implementación C simplemente se trata de recorrer la imagen con una sola variable aplicando pixel a pixel la transformación dada por la fórmula matemática previamente mencionada. Mientras que la implementación corresponiente a SSE recorre la imagen fuente desde la fila superior del recuadro ($I_{32}$ en el cuadro 1) del crop hacia abajo de a 4 píxeles por iteración como indica el siguiente pseudo-código: 
+La implementación C simplemente se trata de recorrer la imagen con una sola variable aplicando pixel a pixel la transformación dada por la fórmula matemática previamente mencionada. Mientras que la implementación correspondiente a SSE recorre la imagen fuente desde la fila superior del recuadro ($I_{32}$ en el cuadro 1) del crop hacia abajo de a 4 píxeles por iteración como indica el siguiente pseudo-código: 
 
 
 \begin{codesnippet}
@@ -81,13 +81,13 @@ De esta manera, las lecturas y escrituras en memoria representan $\frac{1}{16} =
 
 
 \subsubsection{Implementaciones SIMD paralelo en 128 y 256 bits}
-Se diferencian de la implementación anterior de SSE en el uso de la mayor cantidad posible de registros \xmm{} (\ymm{} de 256 bits en el caso de las implementaciones de AVX) para las operaciones de transferencia de bloques de pixeles de la imagen fuente a la destino. 
+Se diferencian de la implementación anterior de SSE en el uso de la mayor cantidad posible de registros \xmm{} (\ymm{} de 256 bits en el caso de las implementaciones de AVX) para las operaciones de transferencia de bloques de píxeles de la imagen fuente a la destino. 
 \\
 
 Dado que las lecturas y escrituras en memoria de cada registro son independientes entre sí, la ejecución fuera de orden del procesador hace que la transferencia por bloque sea más rápida que la implementación individual (que recorre la imagen con un único registro \xmm{}). Por cuestiones de vecindad espacial de los píxeles en la memoria, los accesos a memoria de cada registro tienen chances particularmente altas de hit en caché, no demorando así las lecturas del resto de los registros.
 \\
 
-Recordando que los registros de AVX tienen 32 bytes de capacidad y cada píxel en nuestro formato ocupa 4 bytes, cada registro \ymm{} tendrá capacidad para:
+Recordando que los registros de AVX tienen 32 bytes de capacidad y cada pixel en nuestro formato ocupa 4 bytes, cada registro \ymm{} tendrá capacidad para:
 
 $$ \frac{32 \ bytes}{4 \ \frac{bytes}{px}} = 8 \ px $$
 
@@ -111,7 +111,7 @@ La asignación de píxeles se hace llamando a las funciones externas 'copyN_sse'
 {[rdi+224]} $\leftarrow$ \xmm{14} \\
 {[rdi+240]} $\leftarrow$ \xmm{15} \\
 
-Esta técnica de aplicar por cada iteración operaciones que, comunmente, se harían en varias se conoce como 'loop unrolling'. Como desventaja frente a la optimización por paralelismo y minimización branch mispredictions, en códigos de mucho mayor tamaño podría aumentar tan significativamente el tamaño del binario que aumente fuertemente el número de 'cache misses'. En nuestro caso copyN.o (que incluye a 'copyN_sse' y 'copyN_avx2') pesa 3,3 kB y es bastante probable que entre enteramente en caché.
+Esta técnica de aplicar por cada iteración operaciones que, comúnmente, se harían en varias se conoce como 'loop unrolling'. Como desventaja frente a la optimización por paralelismo y minimización branch mispredictions, en códigos de mucho mayor tamaño podría aumentar tan significativamente el tamaño del binario que aumente fuertemente el número de 'cache misses'. En nuestro caso copyN.o (que incluye a 'copyN_sse' y 'copyN_avx2') pesa 3,3 kB y es bastante probable que entre enteramente en caché.
 \\
 
 En el caso del filtro Cropflip, las tiras de píxeles corresponden a tiras de tamaño 'tamx' (es decir, al ancho del crop).  
@@ -120,6 +120,13 @@ En el caso del filtro Cropflip, las tiras de píxeles corresponden a tiras de ta
 \subsection{Experimentos - Rendimiento y análisis}
 
 \subsubsection{Comparación entre implementaciones}
+
+\cuidado \\
+1. No queda claro cual es la definicion de 'speedup' que usan. Un speedup de 0.4x es que tardo un 40\% menos de ciclos o que? Tampoco queda claro que usan como parametro de normalización. \\
+2. Sospechosamente, muchas barras dan exacto 1x de speedup. Esto es muy raro! \\
+3. Las  barras de error tienden a hacerme creer aun mas que hay un error en el grafico \\
+4. Si lo que se desea es comparar entre implementaciones, sería mejor que agrupen por sistema en vez de por tipo de implementación. Puesto así parece que el foco fuera comparar entre distintos procesadores, pero eso es secundario. \\
+\cuidado
 
 \begin{figure}[h]
 \centering
@@ -147,6 +154,10 @@ Es notable como el procesador de AMD es el único que corre mas lento la impleme
 \caption{Ciclos de clock del timestamp counter durante la ejecución del filtro cropflip}
 \end{figure}
 
+\cuidado \\
+se_par da speedup de 1x. Sin embargo surge otra cosa que pone en duda los resultados de sse: por que C con -O3, que tampoco hace loop unroling es el doble de rápido? \\
+\cuidado
+
 Se observa una diferencia de casi la mitad ciclos de clock entre las versiones de SSE a favor del loop unrolling ('SSE Parelo') donde parecería que, gracias a un buen hitrate, los puntos fuertes  (particularmente paralelismo, no tanto minimizar branch mispredictions como veremos más adelante) destacan a pesar del hecho de que los accesos a memoria son individuales y no pueden solaparse.
 \\
 
@@ -160,7 +171,12 @@ Pudimos corrobar que no es casualidad que el rendimiento de la implementación e
 0x00000000004039a4 <cropflip_c+244>: add    rax,0x10
 \end{lstlisting}
 
-A modo comparativo también incluímos el análisis de rendimiento entre las diversas optimizaciones para la implementación de C.
+\cuidado \\
+1. Que version de GCC se usó? probaron en varios sistemas, usaron el mismo GCC en todos? en caso de que no, al menos generó un codigo assembler equivalente? \\
+2. Con que flags se compiló? \\
+\cuidado
+
+A modo comparativo también incluimos el análisis de rendimiento entre las diversas optimizaciones para la implementación de C.
 
 \begin{figure}[H]
 \centering
@@ -171,6 +187,10 @@ A modo comparativo también incluímos el análisis de rendimiento entre las div
 
 También es remarcable que el salto en rendimiento se produce entre versiones de ASM y de C con optimización menor a -O3, donde bajan del rango de 20-160 microsegundos para las implementaciones C-O1/C-O2 a 3-8 microsegundos para las de ASM y C-03 (y cercanos al 10 por ciento para los rangos de ciclos de clock).
 
+\cuidado \\
+Estaría bueno que relacionen la version -O1/O2 (que seguramente no usa registros xmm) con respecto a -O3 donde los accesos a memoria que eran el 6.25\%. Tambien es interesante el resultado -O0, es ¿20 veces mas lento que O3?
+\cuidado
+
 \subsubsection{Caché misses}
 
 \begin{figure}[H]
@@ -180,12 +200,16 @@ También es remarcable que el salto en rendimiento se produce entre versiones de
 \label{fig:cropflip-cache-map-sse_par-gflan-MS-7817}
 \end{figure}
 
-Observamos que como realizamos las corridas con la caché en caliente y gracias a la vecindad temporal, cuando el tamaño en bytes de la imágen es menor al de la caché el hitrate se mantiene cerca del 100\%. Cuando la imagen ya no entra en caché se termina desplazando a sí misma durante la ejecución y la cantidad de misses sube hasta cerca del 40\%.
+\cuidado \\
+Los resultados que ponen acá son muy interesantes, pero tienen un problema de presentación: al principio al leer no se entiende bien que es lo que quisieron hacer. Sería mejor que antes de las figuras y conclusiones dedicaran un parrafito a explicar que que se preguntaron, que quisieron medir para responder sus preguntas y cómo hicieron para medirlo.
+\cuidado
+
+Observamos que como realizamos las corridas con la caché en caliente y gracias a la vecindad temporal, cuando el tamaño en bytes de la imagen es menor al de la caché el hitrate se mantiene cerca del 100\%. Cuando la imagen ya no entra en caché se termina desplazando a sí misma durante la ejecución y la cantidad de misses sube hasta cerca del 40\%.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7\textwidth]{cropflip-time-rel-map-sse-par-gflan-MS-7817}
-\caption{Millones de píxeles procesados por segundo en función del tamaño durante la ejecución del filtro cropflip, copiando e invirtiendo la imagen entera, en un procesador con 8MB de caché L3 y 256kB de caché L2 por nucleo}
+\caption{Millones de píxeles procesados por segundo en función del tamaño durante la ejecución del filtro cropflip, copiando e invirtiendo la imagen entera, en un procesador con 8MB de caché L3 y 256kB de caché L2 por núcleo}
 \label{fig:cropflip-tame-rel-map-sse_par-gflan-MS-7817}
 \end{figure}
 

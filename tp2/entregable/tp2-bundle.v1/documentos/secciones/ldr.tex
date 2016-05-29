@@ -2,7 +2,7 @@
 
 \subsection{Descripción}
 
-El filtro LDR modifica las zonas mas brillantes de la imagen, realzando o disminuyendo su brillo según el parametro alpha sea positivo o negativo.
+El filtro LDR modifica las zonas mas brillantes de la imagen, realzando o disminuyendo su brillo según el parámetro alpha sea positivo o negativo.
 
 Formalmente,
 $$
@@ -29,7 +29,7 @@ Inicialmente se nos ocurrieron tres algoritmos para realizar el filtro:
 
 \item Recorrer cada pixel de la imagen calculando la suma de sus canales $r,g,b$, y guardar el resultado en una matriz auxiliar.
 
-    Luego recorrer nuevamente los pixeles no-borde y realizar la función usando los valores precalculados.
+    Luego recorrer nuevamente los píxeles no-borde y realizar la función usando los valores precalculados.
 
     Con este método evitamos repetir los cálculos de la suma de los canales de cada pixel, pero implica usar $\mathcal{O}(ancho * altura)$ memoria adicional (como la suma de tres bytes siempre entra en un word y no necesitamos copiar el alpha, la matriz tendrá la mitad del tamaño de la imagen). Además agrega el overhead de los accesos a memoria y ocupa espacio extra en la caché.
 
@@ -40,7 +40,7 @@ Inicialmente se nos ocurrieron tres algoritmos para realizar el filtro:
 
 \end{enumerate}
 
-De estos algoritmos decidimos implementar la primer opción en C, ya que es el metodo trivial contra el que queremos comparar.
+De estos algoritmos decidimos implementar la primer opción en C, ya que es el método trivial contra el que queremos comparar.
 
 Para nuestras implementaciones en assembler utilizamos el tercer método, ya que consideramos que era el que ofrecía mas potencial para paralelizar con instrucciones SSE.
 
@@ -87,7 +87,7 @@ Para implementar el algoritmo $(3)$ recorremos la imagen procesando de a 4 píxe
  & \multicolumn{1}{l|}{}      & \multicolumn{1}{l|}{}       & \multicolumn{1}{l|}{}       & \multicolumn{1}{l|}{}
  & \multicolumn{1}{l|}{}      & \multicolumn{1}{l|}{}       & \multicolumn{1}{l|}{}       & \multicolumn{1}{l|}{}       &
 \end{tabular}
-\caption{Ilustracion de la memoria en el ciclo de ldr. En gris los pixeles que queremos procesar, en verde las columnas de las cuales ya tenemos la suma guardada y en naranja las columnas que debemos calcular.}
+\caption{Ilustración de la memoria en el ciclo de ldr. En gris los píxeles que queremos procesar, en verde las columnas de las cuales ya tenemos la suma guardada y en naranja las columnas que debemos calcular.}
 \end{table}
 
 Obviaremos escribir las variables $i$ y $j$ en las siguientes ilustraciones para mantener la claridad. \\
@@ -96,12 +96,12 @@ El proceso del loop comienza con la suma de las columnas anteriores en \xmm{0}, 
 
 \xmm{0} \xmmWord{0}{0}{0}{0}{$sumC_1$}{$sumC_0$}{$sumC_{-1}$}{$sumC_{-2}$}
 
-Como cada pixel ocupa $32$ bytes podemos cargar los cuatro píxeles que vamos a necesitar de cada fila en 5 registros. \\
-Luego descomprimimos cada componente a tamaño word (usando 5 registros mas) y realizamos las sumas de los componentes para obtener la suma de cada pixel, cuidandonos de borrar el alpha. \\
+Como cada pixel ocupa $32$ bits podemos cargar los cuatro píxeles que vamos a necesitar de cada fila en 5 registros. \\
+Luego descomprimimos cada componente a tamaño word (usando 5 registros mas) y realizamos las sumas de los componentes para obtener la suma de cada pixel, cuidándonos de borrar el alpha. \\
 
 \xmm{N} \xmmWord{$sum_{5,v}$}{$sum_{4,v}$}{$sum_{3,v}$}{$sum_{2,v}$}{0}{0}{0}{0} para $-2 \le v \le 2$ y $N = v+3$.
 
-A continuacion sumamos todos los pixeles de la columna entre sí y combinamos el resultado con \xmm{0}, obteniendo el vector de sumas. \\
+A continuación sumamos todos los píxeles de la columna entre sí y combinamos el resultado con \xmm{0}, obteniendo el vector de sumas. \\
 
 \xmm{0} \xmmWord{$sumC_5$}{$sumC_4$}{$sumC_3$}{$sumC_2$}{$sumC_1$}{$sumC_0$}{$sumC_{-1}$}{$sumC_{-2}$}
 
@@ -119,12 +119,12 @@ Repetir 4 veces:
 
 Observar que en \xmm{0} ya quedaron los valores de las columnas listas para el siguiente loop.
 
-Ahora convertimos cada $sumargb$ a punto flotante, la multiplicamos por el valor de $\alpha$ que habíamos almacenade en \mm{2} y movemos replicamos cada una en un registro diferente. \\
+Ahora convertimos cada $sumargb$ a punto flotante, la multiplicamos por el valor de $\alpha$ que habíamos almacenado en \mm{2} y movemos replicamos cada una en un registro diferente. \\
 
 \xmm{N} \xmmFloat{$sumargb_u * \alpha$}{$sumargb_u * \alpha$}{$sumargb_u * \alpha$}{$sumargb_u * \alpha$}
 para $0 \le u \le 3$ y $N = u+5$
 
-Mientras tanto cargamos los valores originales de los pixeles a procesar y los convertimos a punto flotante, ocupando cada pixel un registro entero. \\
+Mientras tanto cargamos los valores originales de los píxeles a procesar y los convertimos a punto flotante, ocupando cada pixel un registro entero. \\
 
 \xmm{M} \xmmFloat{$A_u$}{$R_u$}{$G_u$}{$B_u$}
 para $0 \le u \le 3$ y $M = u+9$
@@ -149,22 +149,22 @@ Procesar de este modo genera que en los bordes laterales se grabe basura, por lo
 
 Para copiar las dos primeras y últimas filas usamos función $copyN\_sse$, compartida con el filtro cropflip y detallada mas arriba (\ref{explicacionCopyN}).
 
-\subsubsection{Asm - SSE con calculos de enteros}
+\subsubsection{Asm - SSE con cálculos de enteros}
 
-Cuando vimos que al hacer las operaciones en punto flotante los resultados no eran perfectamente iguales debido a errores de precision, decidimos codear una implementación realizando todos los cálculos con enteros.
+Cuando vimos que al hacer las operaciones en punto flotante los resultados no eran perfectamente iguales debido a errores de precisión, decidimos codear una implementación realizando todos los cálculos con enteros.
 
-La mayoría de los cambios son directos, usando por ejemplo \asm{pmulld} en vez de \asm{mulps}. Como el valor máximo que al que pueden llegar es $25 * 3 * 255 * 255 * 255 > 2^{16}$ seguimos necesitando $32b$ para almacenar los valores, esta vez como double words en vez de punto flotante de precision simple.
+La mayoría de los cambios son directos, usando por ejemplo \asm{pmulld} en vez de \asm{mulps}. Como el valor máximo que al que pueden llegar es $25 * 3 * 255 * 255 * 255 > 2^{16}$ seguimos necesitando $32b$ para almacenar los valores, esta vez como double words en vez de punto flotante de precisión simple.
 
-El primer problema que nos encontramos fue que no existe una instruccion de division de enteros en SIMD. Recurrimos a un método de division de enteros con signo usando multiplicaciones y shifts presentado por H.S. Warren\textsuperscript{\cite[Chapter~10]{hackersdelight}}. \\
+El primer problema que nos encontramos fue que no existe una instrucción de división de enteros en SIMD. Recurrimos a un método de división de enteros con signo usando multiplicaciones y shifts presentado por H.S. Warren\textsuperscript{\cite[Chapter~10]{hackersdelight}}. \\
 Siguiendo el método descripto llegamos a la fórmula:
 
 $$ \frac{x}{max} = x * magic >> s \qquad \forall -2^{31} \le x < 2^{31} $$
 $$ magic = 0x6e15c447 $$
 $$ s = 53 $$
 
-El siguiente problema una vez resuelto fue que al estar trabajando con números enteros el resultado de una multiplicación de valores de $32b$ ocupa $64b$ y por mas que solo necesitamos la parte alta de la multiplicación (ya que la parte baja se desecha con el shift de 53 lugares), la ISA no provee una instruccion que calcule solo lo que nos importa (cuando si tiene \asm{pmuldw} para realizar la misma operación con words).
+El siguiente problema una vez resuelto fue que al estar trabajando con números enteros el resultado de una multiplicación de valores de $32b$ ocupa $64b$ y por mas que solo necesitamos la parte alta de la multiplicación (ya que la parte baja se desecha con el shift de 53 lugares), la ISA no provee una instrucción que calcule solo lo que nos importa (cuando si tiene \asm{pmuldw} para realizar la misma operación con words).
 
-Para solucionarlo tuvimos que duplicar cada registro con valores, shifteando la copia para quedarse con la parte alte en la parte baja, y usar la instrucción \asm{pmuldq} que realiza la multiplicación completa sobre dos double words y las guarda como quad words.
+Para solucionarlo tuvimos que duplicar cada registro con valores, shifteando la copia para quedarse con la parte alta en la parte baja, y usar la instrucción \asm{pmuldq} que realiza la multiplicación completa sobre dos double words y las guarda como quad words.
 Luego realizamos los shifts y combinamos los resultados de nuevo en un registro por pixel.
 
 \begin{lstlisting}
@@ -242,7 +242,7 @@ VFMADD132PS XMM5, XMM9, XMM14
 
 \subsubsection{Asm - AVX2}
 
-Con AVX2 podemos realizar todas las operaciones que realizabamos con AVX ahora sobre los registros ymm de $256b$, por lo que ahora conservamos ocho sumas de columnas al iniciar, calculamos ocho sumas nuevas y procesamos de a ocho pixeles por ciclo.
+Con AVX2 podemos realizar todas las operaciones que realizábamos con AVX ahora sobre los registros ymm de $256b$, por lo que ahora conservamos ocho sumas de columnas al iniciar, calculamos ocho sumas nuevas y procesamos de a ocho píxeles por ciclo.
 
 La conversión del algoritmo es directa cuando trabajamos con cada valor independientemente, pero debemos tener cuidado en un par de casos, cuando usamos sumas horizontales o shifts.
 
@@ -255,7 +255,7 @@ Cuando calculamos la suma de cada pixel, si traducimos directamente las operacio
 
 para $-2 \le v \le 2$ y $N = v+3$.
 
-Pero nosotros necesitamos tener todos los resultados en la parte alta, por lo que debemos hacer una permutacion:
+Pero nosotros necesitamos tener todos los resultados en la parte alta, por lo que debemos hacer una permutación:
 
 \begin{lstlisting}
 VPERMQ YMM$_N$, YMM$_N$, 0b11010000
@@ -266,9 +266,9 @@ VPERMQ YMM$_N$, YMM$_N$, 0b11010000
 
 \vspace{5mm}
 
-Una vez que tenemos el vector con las 16 sumas de columnas combinadas en \ymm{0} y queremos calcular $sumargb$ para cada uno de los 8 pixeles no podemos usar el mismo algoritmo que en SSE ya que no hay shifts del registro de $256b$ completo, por lo que debemos proceder de otra forma.
+Una vez que tenemos el vector con las 16 sumas de columnas combinadas en \ymm{0} y queremos calcular $sumargb$ para cada uno de los 8 píxeles no podemos usar el mismo algoritmo que en SSE ya que no hay shifts del registro de $256b$ completo, por lo que debemos proceder de otra forma.
 
-Primero, copiamos \ymm{0} a \ymm{1} y aplicando \asm{vpshufb} con una constante que cargamos de memoria borramos las primeras 4 words de la parte alta e invertimos el orden de las siguientes 4. Luego volmemos a copiar \ymm{1} a \ymm{5}. 
+Primero, copiamos \ymm{0} a \ymm{1} y aplicando \asm{vpshufb} con una constante que cargamos de memoria borramos las primeras 4 words de la parte alta e invertimos el orden de las siguientes 4. Luego volvemos a copiar \ymm{1} a \ymm{5}. 
 
 \ymm{0} \ymmWord
 {$sumC_{13}$}{$sumC_{12}$}{$sumC_{11}$}{$sumC_{10}$}
@@ -320,7 +320,7 @@ Y nos si hacemos la suma nos queda el registro listo para continuar.
 {X}{X}{X}{X}
 {$sumrgb_3$}{$sumrgb_2$}{$sumrgb_1$}{$sumrgb_0$}
 
-Las demas instrucciones se traducen directamente desde AVX.
+Las demás instrucciones se traducen directamente desde AVX.
 
 \subsection{Experimentos}
 
@@ -374,16 +374,16 @@ Por otro lado la implementación AVX2 corre un 50\% mas rápido que SSE, mostran
     \label{fig:ldr-perdida-precision}
 \end{figure}
 
-Aún con el registro \asm{MXCSR} configurado para redondear siempre hacia cero al convertir números de punto flotante a enteros encontramos diferencias en las imágenes de salida. En una batería de imágenes de prueba encontramos que nunca un canal de un pixel difería en mas de 1 de la imágen original, y esta diferencia se encontraba en menos del 0.02\% de los píxeles.
+Aún con el registro \asm{MXCSR} configurado para redondear siempre hacia cero al convertir números de punto flotante a enteros encontramos diferencias en las imágenes de salida. En una batería de imágenes de prueba encontramos que nunca un canal de un pixel difería en mas de 1 de la imagen original, y esta diferencia se encontraba en menos del 0.02\% de los píxeles.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{ldr-precision-time-speedup}
-    \caption{Speedup relativo respecto a la implementación en C compilada con O3 del filtro ldr sobre lena.bmp 512x512.}
+    \caption{Comparación de tiempo de ejecución usando cálculos enteros contra cálculos de punto flotante respecto a la implementación en C compilada con O3 del filtro ldr sobre lena.bmp 512x512}
     \label{fig:ldr-precision-time-speedup}
 \end{figure}
 
-Considerando que la diferencia es tan mínima y que la implementación exacta usando calculos enteros resultó ser un 25\% mas lenta que la de punto flotante decidimos que para un uso general, tratandose de un filtro de imágenes que serán captadas por un ojo humano, resulta mucho mas conveniente usar cálculos de punto flotante.
+Considerando que la diferencia es tan mínima y que la implementación exacta usando cálculos enteros resultó ser un 25\% mas lenta que la de punto flotante, como se muestra en la figura \ref{fig:ldr-precision-time-speedup}, decidimos que para un uso general, tratándose de un filtro de imágenes que serán captadas por un ojo humano, resulta mucho mas conveniente usar cálculos de punto flotante.
 
 \subsubsection{Throughput de píxeles en función del tamaño de imagen}
 
@@ -402,7 +402,7 @@ Considerando que la diferencia es tan mínima y que la implementación exacta us
     \label{fig:ldr-perdida-precision}
 \end{figure}
 
-Observamos que el rendimiento se mantiene casi constante para la mayoría de los tamaños de imagen aún cuando el tamaño de la imagen sobrepasa el de la caché. Esto se debe a que el controlador de caché identifica perfectamente el patrón de accesos del algoritmo, y la cantidad de operaciones que se realizan en el ciclo le dan tiempo suficiente para prefetchear los datos necesarios de memoria.
+Observamos en la figura \ref{fig:ldr-perdida-precision} que el rendimiento se mantiene casi constante para la mayoría de los tamaños de imagen aún cuando el tamaño de la imagen sobrepasa el de la caché. Esto se debe a que el controlador de caché identifica perfectamente el patrón de accesos del algoritmo, y la cantidad de operaciones que se realizan en el ciclo le dan tiempo suficiente para prefetchear los datos necesarios de memoria.
 
-Los valores se ven distorsionados cuando la imagen tiene poca altura ya que en ese caso la copia de las primeras y últimas dos filas, operacíon mucho mas rápida que los cálculos del filtro, representa un porcentaje mas alto de las operaciones. Como para la copia de los bordes se deben realizar accesos no secuenciales a memoria no vemos esta distorsión para imágenes con poco ancho.
+Los valores se ven distorsionados cuando la imagen tiene poca altura ya que en ese caso la copia de las primeras y últimas dos filas, operación mucho mas rápida que los cálculos del filtro, representa un porcentaje mas alto de las operaciones. Como para la copia de los bordes se deben realizar accesos no secuenciales a memoria no vemos esta distorsión para imágenes con poco ancho.
 

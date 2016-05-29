@@ -1,4 +1,4 @@
-\section{Introduccion}
+\section{Introducción}
 
 \subsection{Objetivos generales}
 
@@ -9,11 +9,11 @@ A partir de cada filtro, se plantearán implementaciones en C, SSE \footnote{Str
 
 Dado que la temática de la aplicación de este trabajo práctico es el procesamiento de imágenes, es preciso especificar con qué tipo de imágenes vamos a trabajar y cómo vamos a describir matemáticamente las funciones que apliquen los filtros.
 
-La imágenes sobre las que trabajamos son consideradas como matrices de píxeles. Cada píxel posee cuatro componentes: rojo (r), verde (g), azul (b) y transparencia (a). Cada una de estas componentes tiene un largo de 8 bits, por lo cual su rango de representación es $[0, 255]$.
+La imágenes sobre las que trabajamos son consideradas como matrices de píxeles. Cada pixel posee cuatro componentes: rojo (r), verde (g), azul (b) y transparencia (a). Cada una de estas componentes tiene un largo de 8 bits, por lo cual su rango de representación es $[0, 255]$.
 
-Se define $I^k_{i,j}$ como la componente $k \in \{r,g,b,a\}$ en la fila $i$ y la columna $j$ de la imagen, donde $i$ crece de abajo hacia arriba y $j$ crece de izquierda a derecha. Por ejemplo, el píxel de la esquina inferior izquierda correspondería a la fila 0 y a la columna 0.
+Se define $I^k_{i,j}$ como la componente $k \in \{r,g,b,a\}$ en la fila $i$ y la columna $j$ de la imagen, donde $i$ crece de abajo hacia arriba y $j$ crece de izquierda a derecha. Por ejemplo, el pixel de la esquina inferior izquierda correspondería a la fila 0 y a la columna 0.
 
-Se llama $O^k_{i,j}$ a la imagen de salida generada por el filtro especificado. Por ejemplo, el siguiente filtro asigna a todas las componentes de cada píxel el valor de la componente roja que se encuentra en su respectivo píxel.
+Se llama $O^k_{i,j}$ a la imagen de salida generada por el filtro especificado. Por ejemplo, el siguiente filtro asigna a todas las componentes de cada pixel el valor de la componente roja que se encuentra en su respectivo pixel.
 
 $$\forall k \in \{r,g,b,a\} \qquad O^k_{i,j} = I^r_{i,j}$$
 
@@ -21,9 +21,11 @@ $$\forall k \in \{r,g,b,a\} \qquad O^k_{i,j} = I^r_{i,j}$$
 
 Para realizar mediciones implementamos un script de benchmarking automático\footnote{codigo/benchmark/benchmark.py} que nos facilite la tarea y reduzca el error humano.
 
-Para cada combinacíon de filtro, implementación, imagen, tamaño y parámetros adicionales corremos el tp2 un mínimo de 100 iteraciones y 2 segundos. Empezando con el mínimo de iteraciones realizamos una búsqueda exponencial hasta encontrar una cantidad que sobrepase el límite de tiempo. Usando la cantidad de iteraciones encontrada calculamos los percentiles y el promedio del tiempo con una precisión de 1uS y cantidad de ciclos por ejecución. Además, guardamos el porcentaje promedio de misses a la caché y el porcentaje promedio de mispredicciones de salto.
+Para cada combinación de filtro, implementación, imagen, tamaño y parámetros adicionales corremos el tp2 un mínimo de 100 iteraciones y 2 segundos. Empezando con el mínimo de iteraciones realizamos una búsqueda exponencial hasta encontrar una cantidad que sobrepase el límite de tiempo. Usando la cantidad de iteraciones encontrada calculamos los percentiles y el promedio del tiempo con una precisión de 1uS y cantidad de ciclos por ejecución. Además, guardamos el porcentaje promedio de misses a la caché y el porcentaje promedio de mispredicciones de salto.
 
-Nuestra medida de ciclos de ejecución es provista por la instrucción \asm{rdtsc}. En todos los procesadores donde realizamos las mediciones el \asm{tsc} se incrementa a una frecuencia fija e independiente, y se encuentra sincronizado entre nucleos del procesador\footnote{Se puede verificar esta característica buscando el flag $constant\_tsc$ en $/proc/cpuid$}\textsuperscript{\cite[Volume 3B, Chapter 17.15]{intelsys}}, por lo que resulta una medida válida de comparación entre ejecuciones en el mismo procesador.
+Nuestra medida de ciclos de ejecución es provista por la instrucción \asm{rdtsc}. En todos los procesadores donde realizamos las mediciones el \asm{tsc} se incrementa a una frecuencia fija e independiente, y se encuentra sincronizado entre núcleos del procesador\footnote{Se puede verificar esta característica buscando el flag $constant\_tsc$ en $/proc/cpuid$}\textsuperscript{\cite[Volume 3B, Chapter 17.15]{intelsys}}, por lo que resulta una medida válida de comparación entre ejecuciones en el mismo procesador.
+
+Para las mediciones de hits a cache y misses del branch predictor utilizamos la herramienta $perf$\footnote{https://perf.wiki.kernel.org/index.php/Main_Page} que nos devuelve los valores totales sobre la ejecución del programa a travéz de los registros contadores de performance de la cpu.
 \\
 
 En los gráficos presentados usaremos siempre la media a menos que se indique lo contrario. Y en los gráficos de barras representamos además los percentiles 10 y 90 como lineas de error.

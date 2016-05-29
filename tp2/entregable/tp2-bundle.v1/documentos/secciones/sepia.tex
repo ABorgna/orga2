@@ -20,7 +20,7 @@ Antes de entrar en detalle a cada una de las implementaciones hechas, es importa
 
 $$suma_{i,j} = I^r_{i,j} + I^g_{i,j} + I^b_{i,j} \leq 255 + 255 + 255 = 3 \cdot 255$$
 
-Lo cual excede el rango de representación de las componentes de un píxel. Esto puede resultar en un problema o no dependiendo de cada caso, ya que es necesario calcular $suma_{i,j}$ para resultados intermedios. Como el resultado final de aplicar el filtro en cada componente es multiplicar $suma_{i,j}$ por un número menor o igual a 1, se consideró aplicar la ley distributiva para poder salvar este problema, ya que, por ejemplo, en el caso de la componente azul
+Lo cual excede el rango de representación de las componentes de un pixel. Esto puede resultar en un problema o no dependiendo de cada caso, ya que es necesario calcular $suma_{i,j}$ para resultados intermedios. Como el resultado final de aplicar el filtro en cada componente es multiplicar $suma_{i,j}$ por un número menor o igual a 1, se consideró aplicar la ley distributiva para poder salvar este problema, ya que, por ejemplo, en el caso de la componente azul
 
 $$ O^b_{i,j} = 0,2 \cdot suma_{i,j} = 0,2 \cdot (I^r_{i,j} + I^g_{i,j} + I^b_{i,j}) = 0,2 \cdot I^r_{i,j} +  0,2 \cdot I^g_{i,j} + 0,2 \cdot I^b_{i,j} \leq 0,2 \cdot 255 + 0,2 \cdot 255 + 0,2 \cdot 255 = 0,6 \cdot 255 \leq 255$$
 
@@ -49,11 +49,11 @@ Para volver a $char (8 bits)$ se resuelve distinto en cada caso.
 	\item En el caso de $suma_r$, se pregunta primero si el resultado final dio mayor o igual a 255. Si eso es cierto, lo satura a 255. Caso contrario, lo deja como está. En esencia se está ejecutando un $min(I^r_{i,j},255)$.
 \end{itemize}
 
-La cantidad de operaciones de punto flotante por píxel en esta implementación es de $\frac{3op}{px}$.
+La cantidad de operaciones de punto flotante por pixel en esta implementación es de $\frac{3op}{px}$.
 
 \subsubsection{Asm - SSE}
 
-Cada componente ocupa 1 byte y cada píxel tiene 4 componentes, por lo cual un píxel ocupa 4 bytes. Como los registros \xmm{} son de 16B, es posible procesar 4 píxeles en un solo registro simultáneamente.
+Cada componente ocupa 1 byte y cada pixel tiene 4 componentes, por lo cual un pixel ocupa 4 bytes. Como los registros \xmm{} son de 16B, es posible procesar 4 píxeles en un solo registro simultáneamente.
 Al inicio del loop, se copian 4 píxeles de la imagen fuente a \xmm{0} para empezar a procesar. Para simplificar la notación, se llamará $K_{i}$ a la componente K del pixel $i \in {0,1,2,3}$
 
 \xmm{0} \xmmByte{$A_{3}$}{$R_{3}$}{$G_{3}$}{$B_{3}$}{$A_{2}$}{$R_{2}$}{$G_{2}$}{$B_{2}$}{$A_{1}$}{$R_{1}$}{$G_{1}$}{$B_{1}$}{$A_{0}$}{$R_{0}$}{$G_{0}$}{$B_{0}$}
@@ -76,7 +76,7 @@ Se ejecutan las sumas horizontales necesarias para que \xmm{1} tenga el resultad
 
 donde $S_{i} = R_{i} + G_{i} + B_{i}$
 
-Se convierte \xmm{1} a float para poder realizar la multiplicación por los factores correspondientes, y luego se ejecutan varios shuffle de tal manera que haya un registro completo por cada píxel
+Se convierte \xmm{1} a float para poder realizar la multiplicación por los factores correspondientes, y luego se ejecutan varios shuffle de tal manera que haya un registro completo por cada pixel
 
 \xmm{1} \xmmFloat{$S_{0}$}{$S_{0}$}{$S_{0}$}{$S_{0}$}
 
@@ -122,7 +122,7 @@ Por último, se unen los datos de \xmm{0} y \xmm{1} y se almacena en la imagen d
 
 \xmm{0} \xmmByte{$O^a_{3}$}{$O^r_{3}$}{$O^g_{3}$}{$O^b_{3}$}{$O^a_{2}$}{$O^r_{2}$}{$O^g_{2}$}{$O^b_{2}$}{$O^a_{1}$}{$O^r_{1}$}{$O^g_{1}$}{$O^b_{1}$}{$O^a_{0}$}{$O^r_{0}$}{$O^g_{0}$}{$O^b_{0}$}
 
-La cantidad de operaciones de punto flotante por píxel en esta implementación es de $\frac{4op}{4px} = \frac{1op}{px}$, La cual es menor comparado a la cantidad de operaciones por píxel de la implementación en C (la cual es $\frac{3op}{px}$).
+La cantidad de operaciones de punto flotante por pixel en esta implementación es de $\frac{4op}{4px} = \frac{1op}{px}$, La cual es menor comparado a la cantidad de operaciones por pixel de la implementación en C (la cual es $\frac{3op}{px}$).
 
 \vspace{2mm}
 
@@ -172,7 +172,7 @@ Esta implementación ejecuta la misma cantidad de operaciones en punto flotante 
 
 \subsection{Experimentos}
 
-\subsubsection{Comparación entre implementaciónes}
+\subsubsection{Comparación entre implementaciones}
 
  Luego de realizar varias corridas de cada una de las implementaciones, se llegaron a los siguientes resultados en cuanto al tiempo total de ejecución:
 
@@ -198,6 +198,10 @@ Se puede ver que SSE presenta un speedup de poco menos de 2 y AVX2 presenta un s
 
 Es importante aclarar que para realizar este experimento, se compiló la implementación en C con la opción de optimización automática O3.
 
+\cuidado \\
+Estaria bueno aca que mencionen la cantidad de operaciones por pixel que calcularon antes para cada implementacion. Por ej. C vs SSE hace el triple de operaciones, por lo que sería esperable que funcione alrededor de 3X veces mas lento
+\cuidado
+
 \subsubsection{Comparación entre optimizaciones de C}
 
 Las diferencias de performance entre la implementación C sin optimizar (O0) y las distintas optimizaciones se puede apreciar en el siguiente gráfico:
@@ -205,7 +209,7 @@ Las diferencias de performance entre la implementación C sin optimizar (O0) y l
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.9\textwidth]{sepia-c-time-speedup}
-    \caption{Tiempo de ejecución relativo de diferentes optimizaciónes de la implementación en C respecto a lo optimización O3}
+    \caption{Tiempo de ejecución relativo de diferentes optimizaciones de la implementación en C respecto a lo optimización O3}
     \label{fig:sepia-c-time}
 \end{figure}
 
@@ -222,9 +226,9 @@ Como siguiente cuestión, nos planteamos la pregunta sobre qué tanto porcentaje
     \label{fig:sepia-cache-map-sse-angua}
 \end{figure}
 
-Los casos que se encuentran alrededor de 128x128 tienen un miss rate ligeramente menor debido a que varios píxeles ya se encontraban en cache a la hora de volver a testear la misma imágen pero con distinto tamaño. Luego, al aumentar el ancho o el alto de la imagen, el miss rate va aumentando progresivamente ya que cada vez aumenta más la cantidad de datos que no estaban anteriormente en cache.
+Los casos que se encuentran alrededor de 128x128 tienen un miss rate ligeramente menor debido a que varios píxeles ya se encontraban en cache a la hora de volver a testear la misma imagen pero con distinto tamaño. Luego, al aumentar el ancho o el alto de la imagen, el miss rate va aumentando progresivamente ya que cada vez aumenta más la cantidad de datos que no estaban anteriormente en cache.
 
-Es importante resaltar cómo se produce un cambio brusco de color en la diagonal que va de 4096x128 a 128x4096. Para poder explicar este fenómeno es necesario recalcar que el procesador con el cual se realizó este experimento posee 3MB de memoria cache. También hay que recordar que cada píxel ocupa 4B en memoria. Si realizamos algunas cuentas con cualquiera de los elementos de la diagonal antes mencionada:
+Es importante resaltar cómo se produce un cambio brusco de color en la diagonal que va de 4096x128 a 128x4096. Para poder explicar este fenómeno es necesario recalcar que el procesador con el cual se realizó este experimento posee 3MB de memoria cache. También hay que recordar que cada pixel ocupa 4B en memoria. Si realizamos algunas cuentas con cualquiera de los elementos de la diagonal antes mencionada:
 
 $$(4096 \cdot 128) px = 2^{19} px = 2^{19} \cdot 4 B = 2 \cdot 2^{20} B = 2MB$$
 
