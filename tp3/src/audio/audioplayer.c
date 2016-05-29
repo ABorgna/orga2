@@ -3,47 +3,47 @@
 #include "speaker.h"
 
 #include "audioplayer.h"
-
-struct audio_note {
-    short freq;
-    short cycles;
-};
+#include "tracks.h"
 
 bool audioPlaying = 0;
-struct audio_note* audioFile;
-struct audio_note* audioFileEnd;
+bool loopAudio = 0;
 short audioCycles;
+struct audio_note* audioFilePtr;
+struct audio_note* audioFileStart;
+struct audio_note* audioFileEnd;
 
-struct audio_note test_audio_file[] = {
-    {880, 4096},
-    {512, 1024},
-    {1024, 1024},
-    {2048, 1024},
-    {4096, 1024}
-};
-
-void play_audio(struct audio_note* file, struct audio_note* end){
+void play_audio(struct audio_note* file, struct audio_note* end, bool loop){
     audioPlaying = 0;
-    audioFile = file;
+
+    audioFilePtr = file;
+    audioFileStart = file;
     audioFileEnd = end;
+    loopAudio = loop;
+
     audioPlaying = 1;
+}
+
+void stop_audio() {
+    audioPlaying = 0;
+    nosound();
 }
 
 void audio_isr() {
     if(audioPlaying) {
         if(!audioCycles) {
-            if(audioFile == audioFileEnd){
-                //nosound();
-                //audioPlaying = 0;
-                //breakpoint();
-                //breakpoint();
-                test_audio();
+            if(audioFilePtr == audioFileEnd){
+                if(loopAudio) {
+                    audioFilePtr = audioFileStart;
+                } else {
+                    stop_audio();
+                }
             } else {
                 //breakpoint();
-                play_sound((*audioFile).freq);
-                audioCycles = (*audioFile).cycles;
 
-                audioFile++;
+                play_sound((*audioFilePtr).freq);
+                audioCycles = (*audioFilePtr).cycles;
+
+                audioFilePtr++;
             }
         } else {
             audioCycles--;
@@ -52,6 +52,9 @@ void audio_isr() {
 }
 
 void test_audio() {
-    play_audio(test_audio_file, test_audio_file+4);
+    play_audio(
+            (struct audio_note*) &audio_track_pacman,
+            (struct audio_note*) &audio_track_end_pacman,
+            true );
 }
 

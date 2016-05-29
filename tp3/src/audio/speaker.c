@@ -8,6 +8,11 @@ void play_sound(uint32_t nFrequence) {
     uint32_t div;
     uint8_t tmp;
 
+    if(!nFrequence) {
+        nosound();
+        return;
+    }
+
     // Set the PIT to the desired frequency
     div = 1193180 / nFrequence;
     outb(0x43, 0xb6);

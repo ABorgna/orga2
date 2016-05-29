@@ -37,6 +37,12 @@
 *.out
 *.toc
 
+# Python
+__pycache__
+
+# Bochs
+bx_enh_dbg.ini
+
 # Linked libraries
 
 /practicas/*

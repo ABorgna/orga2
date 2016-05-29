@@ -16,10 +16,13 @@ DEPEND = Makefile \
 	gdt.c gdt.h pic.c pic.h idt.c idt.h isr.h tss.c tss.h mmu.c mmu.h \
 	sched.c sched.h screen.c screen.h \
 	game.c game.h syscall.h audio/speaker.c audio/speaker.h \
-	audio/audioplayer.c audio/audioplayer.h clock/clock.c clock/clock.h
+	audio/audioplayer.c audio/audioplayer.h audio/tracks.asm \
+	clock/clock.c clock/clock.h
+
+AUDIO_TRACKS = audio/tracks/pacman.audio
 
 OBJ=$(KERNEL_OBJ) gdt.o pic.o idt.o isr.o mmu.o sched.o tss.o screen.o game.o \
-    audio/speaker.o audio/audioplayer.o clock/clock.o
+    audio/speaker.o audio/audioplayer.o clock/clock.o audio/tracks.o
 
 DISK_IMG=diskette.img
 DISK_IMG_BZ=diskette.img.bz2
@@ -56,7 +59,7 @@ QUIET = @
 
 .PHONY=clean all image tasks defines.h
 
-all:  clean tasks image 
+all:  clean tasks image
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $^
@@ -64,7 +67,10 @@ all:  clean tasks image
 %.o: %.asm
 	$(NASM) $(NASMFLAGS) -o $@ $^
 
-kernel.bin: $(OBJ) $(TASKS)
+%.audio: %.mid
+	tools/frommidi.py $^ $@
+
+kernel.bin: $(AUDIO_TRACKS) $(OBJ) $(TASKS)
 	@echo 'Linkeando kernel...'
 	$(LD) $(LDFLAGS) -o $@.tmp $(OBJ)
 	$(NM) $@.tmp | grep -v " U " | awk '{print "0x" $$1 " " $$3}' > kernel.sym

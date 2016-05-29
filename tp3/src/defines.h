@@ -16,6 +16,8 @@
 #define bool char
 #define TRUE                    0x00000001
 #define FALSE                   0x00000000
+#define true                    0x00000001
+#define false                   0x00000000
 #define ERROR                   1
 
 
@@ -58,5 +60,9 @@
 /* Direcciones de memoria */
 /* -------------------------------------------------------------------------- */
 #define VIDEO_SCREEN            0x000B8000 /* direccion fisica del buffer de video */
+
+/* Macros utiles */
+/* -------------------------------------------------------------------------- */
+#define ARRAY_SIZE(foo) (sizeof(foo)/sizeof(foo[0]))
 
 #endif  /* !__DEFINES_H__ */
