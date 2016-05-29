@@ -129,8 +129,8 @@ tasks: $(TASKSBINS)
 
 clean:
 	@echo 'Limpiando todo...'
-	rm -f *.o
-	rm -f audio/*.o
+	find . -name '*.o' -type f -exec rm -f "{}" \;
+	rm -f audio/tracks/*.audio
 	rm -f *.bin
 	rm -f *.tmp
 	rm -f *.ctsko
