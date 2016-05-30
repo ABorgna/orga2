@@ -5,8 +5,8 @@
   funciones del controlador de interrupciones
 */
 
-#include "defines.h"
-#include "i386.h"
+#include "../defines.h"
+#include "../i386.h"
 
 #include "pic.h"
 

@@ -10,7 +10,7 @@
 
 #include "defines.h"
 #include "i386.h"
-#include "gdt.h"
+#include "mem/gdt.h"
 #include "sched.h"
 
 typedef struct str_tss {

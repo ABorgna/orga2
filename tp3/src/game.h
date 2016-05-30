@@ -9,7 +9,7 @@
 
 #include "defines.h"
 #include "screen.h"
-#include "mmu.h"
+#include "mem/mmu.h"
 
 typedef enum direccion_e { IZQ = 0xAAA, DER = 0x441, ARB = 0xA33, ABA = 0x883  } direccion;
 

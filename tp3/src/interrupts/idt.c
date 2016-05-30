@@ -5,11 +5,11 @@
   definicion de las rutinas de atencion de interrupciones
 */
 
-#include "defines.h"
+#include "../defines.h"
 #include "idt.h"
 #include "isr.h"
 
-#include "tss.h"
+#include "../tss.h"
 
 idt_entry idt[255] = { };
 

@@ -10,7 +10,7 @@
 
 #include "screen.h"
 #include "tss.h"
-#include "gdt.h"
+#include "mem/gdt.h"
 
 unsigned short sched_proximo_indice();
 

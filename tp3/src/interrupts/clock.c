@@ -1,6 +1,6 @@
 #include "../defines.h"
 #include "../i386.h"
-#include "../pic.h"
+#include "pic.h"
 
 #include "clock.h"
 

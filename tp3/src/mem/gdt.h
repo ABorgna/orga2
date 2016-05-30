@@ -8,7 +8,7 @@
 #ifndef __GDT_H__
 #define __GDT_H__
 
-#include "defines.h"
+#include "../defines.h"
 
 typedef struct str_gdt_descriptor {
     unsigned short  gdt_length;
