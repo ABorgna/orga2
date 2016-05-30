@@ -5,7 +5,6 @@
 
 ; Gdt
 extern GDT_DESC
-extern mmu_inicializar_dir_kernel
 
 ; Screen
 extern reventar_pantalla
@@ -15,6 +14,10 @@ extern atar_con_alambre
 ; Idt
 extern IDT_DESC
 extern idt_inicializar
+
+; MMU
+extern mmu_inicializar
+extern mmu_inicializar_dir_kernel
 
 ; Interruptions
 extern resetear_pic
@@ -105,6 +108,7 @@ mp:
     call dibujar_fondo_interfaz
 
     ; Inicializar el manejador de memoria
+    call mmu_inicializar
 
     ; Inicializar el directorio de paginas
     call mmu_inicializar_dir_kernel
@@ -144,9 +148,6 @@ mp:
 
     ; Cosas de audio
     call test_audio
-    ;call beep
-
-    ;int 0x20
 
     ; Ciclar infinitamente (por si algo sale mal...)
     mov eax, 0xFFFF

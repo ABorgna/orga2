@@ -6,76 +6,107 @@
 */
 
 #include "mmu.h"
-#define PAGE_SIZE 1<<12
-#define INICIO_PAGINAS_LIBRES 0x100000
 
 unsigned int proxima_pagina_libre;
 
 void mmu_inicializar() {
-	proxima_pagina_libre = INICIO_PAGINAS_LIBRES;
+    proxima_pagina_libre = INICIO_PAGINAS_LIBRES;
 }
 
 void mmu_inicializar_dir_kernel(){
-	int *dir = (int*) PAGE_DIR;
-	int i;
-	for(i = 0 ; i < 1024 ; i++){
-		dir[i] = 0;
-	}
-	dir[0] = 0x28000 | 0x3;
-	int * tab = (int*) 0x28000;
-	for(i = 0; i < 1024 ; i++){
-		tab[i] = 0x1000*i | 0x03;
-	}
+    // Inicializar el directorio vacío
+    pde* dir = KERNEL_PAGE_DIR;
+    for(int i = 0 ; i < 1024 ; i++){
+        dir[i] = (pde){0};
+    }
+
+    // Inicializar los primeros 4MB con identity mapping
+    pte* tabla = KERNEL_PAGE_TABLE;
+    dir[0].base = PTE_BASE(tabla);
+    dir[0].present = 1;
+    dir[0].write = 1;
+
+    for(int i = 0; i < 1024 ; i++){
+        tabla[i].base = i;
+        tabla[i].present = 1;
+        tabla[i].write = 1;
+    }
 }
 
 unsigned int mmu_proxima_pagina_fisica_libre() {
-	unsigned int pagina_libre = proxima_pagina_libre;
-	proxima_pagina_libre += PAGE_SIZE;
-	return pagina_libre;
+    unsigned int pagina_libre = proxima_pagina_libre;
+    proxima_pagina_libre += PAGE_SIZE;
+    return pagina_libre;
 }
 
-void mmu_mapear_pagina(unsigned int virtual, unsigned int cr3, unsigned int fisica /* agregar atributos a futuro*/ ){
-/* considerar pasar por parámetro también los atributos de los descriptores*/
-	int *dir = (int*) CR3_PD(cr3);
-	int *tab;
-	int i, nueva_pag;
+void mmu_inicializar_dir_tarea() {
+    /* todo */
+}
 
-	if (! (dir[PDE_INDEX(virtual)] & PG_PRESENT)){
-		nueva_pag = mmu_proxima_pagina_fisica_libre();					//Pseudo malloc
-		tab = (int*) nueva_pag;
-		dir[PDE_INDEX(virtual)] = nueva_pag | 0x3;							//Indexamos @ PDE y luego cereamos la nueva tabla
+void mmu_mapear_pagina_kernel(unsigned int virtual, unsigned int cr3, unsigned int fisica){
+    pte attr = {0};
+    attr.present = 1;
+    attr.write = 1;
+    mmu_mapear_pagina(virtual, cr3, fisica, attr);
+}
 
-		for (i = 0; i < 1024; i++) {
-			tab[i] = 0;
-		}
+void mmu_mapear_pagina_user(unsigned int virtual, unsigned int cr3, unsigned int fisica){
+    pte attr = {0};
+    attr.present = 1;
+    attr.write = 1;
+    attr.user = 1;
+    mmu_mapear_pagina(virtual, cr3, fisica, attr);
+}
 
-	}
-	else {
-		tab = (int*) PTE_BASE(dir[PDE_INDEX(virtual)]);
-	}
+void mmu_mapear_pagina(unsigned int virtual, unsigned int cr3, unsigned int fisica, pte attributos){
+    pde* dir = (pde*) CR3_PD(cr3);
+    pte* tabla;
 
-	tab[PTE_INDEX(virtual)] = PTE_BASE(fisica) | 0x3;		//Mapeamos su página a una posición múltiplo de PAGE_SIZE
-	tlbflush();
+    if (!dir[PDE_INDEX(virtual)].present){
+        //Pseudo malloc
+        tabla = (pte*) mmu_proxima_pagina_fisica_libre();
+
+        // Inicializar las entradas de la tabla
+        for (int i = 0; i < 1024; i++) {
+            tabla[i] = (pte){0};
+        }
+
+        // Agregar la nueva tabla al directorio
+        dir[PDE_INDEX(virtual)].base = PTE_BASE(tabla);
+        dir[PDE_INDEX(virtual)].present = 1;
+        dir[PDE_INDEX(virtual)].write = 1;
+    }
+    else {
+        tabla = (pte*) PTE_BASE_TO_PTR(dir[PDE_INDEX(virtual)].base);
+    }
+
+    // Mapeamos su página en la tabla
+    tabla[PTE_INDEX(virtual)].base = PTE_BASE(fisica);
+    tabla[PTE_INDEX(virtual)].present = 1;
+    tabla[PTE_INDEX(virtual)].write = 1;
+
+    // Flushear la cache
+    tlbflush();
 }
 
 void mmu_unmapear_pagina(unsigned int virtual, unsigned int cr3){
-	int *dir = (int*) CR3_PD(cr3);
-	int *tab;
-	int i;
+    pde* dir = (pde*) CR3_PD(cr3);
+    pte* tabla;
 
-/* análogo a mapear, pero se quita el flag de presenta para las tablas que quedan vacías*/
-/* se asume que el parámetro de la dirección virtual ya se encuentra mapeado */
+    // No hacemos nada si la tabla no estaba mapeada
+    if(!dir[PDE_INDEX(virtual)].present) {
+        return;
+    }
 
-	tab = (int*) PTE_BASE(dir[PDE_INDEX(virtual)]);
-	tab[PTE_INDEX(virtual)] = 0;
-	int tabla_vacia = TRUE;
+    tabla = (pte*) PTE_BASE_TO_PTR(dir[PDE_INDEX(virtual)].base);
 
-	for (i = 0; i < 1024 && tabla_vacia; i++) {
-		if (tab[i] & PG_PRESENT) tabla_vacia = FALSE;
-	}
+    // Tampoco hacer nada si la pagina no estaba mapeada en la tabla
+    if(!tabla[PTE_INDEX(virtual)].present){
+        return;
+    }
 
-	if (tabla_vacia){
-		dir[PDE_INDEX(virtual)] = 0;
-	}
-	tlbflush();
+    tabla[PTE_INDEX(virtual)].present = 0;
+
+    // Flushear la cache
+    tlbflush();
 }
