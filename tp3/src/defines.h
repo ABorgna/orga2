@@ -13,7 +13,7 @@
 
 /* Assertions */
 /* -------------------------------------------------------------------------- */
-#define assert(x) {if((x)){__asm __volatile("xchg %%bx, %%bx" : :);}}
+#define assert(x) {if(!(x)){__asm __volatile("xchg %%bx, %%bx" : :);}}
 
 
 /* Bool */

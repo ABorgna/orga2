@@ -19,13 +19,13 @@ DEPEND = Makefile \
 	sched.c sched.h screen.c screen.h \
 	game.c game.h syscall.h audio/speaker.c audio/speaker.h \
 	audio/audioplayer.c audio/audioplayer.h audio/tracks.asm \
-	interrupts/clock.c interrupts/clock.h
+	interrupts/pit.c interrupts/pit.h
 
 AUDIO_TRACKS = audio/tracks/pacman.audio
 
 OBJ=$(KERNEL_OBJ) mem/gdt.o interrupts/pic.o interrupts/idt.o interrupts/isr.o \
     mem/mmu.o sched.o tss.o screen.o game.o \
-    audio/speaker.o audio/audioplayer.o interrupts/clock.o audio/tracks.o
+    audio/speaker.o audio/audioplayer.o interrupts/pit.o audio/tracks.o
 
 DISK_IMG=diskette.img
 DISK_IMG_BZ=diskette.img.bz2
