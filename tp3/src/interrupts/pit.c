@@ -5,6 +5,7 @@
 #include "pit.h"
 
 void initClock(){
+    // Start the timer at 1kHz
     setupPIT(0,1000);
 
     // Enable PIT 0 interrupts

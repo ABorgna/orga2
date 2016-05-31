@@ -29,13 +29,13 @@ class Convert:
             return self.addMidiSilence(array, time)
         else:
             if len(array):
-                array[-1] = (int) (time*10000)
+                array[-1] = (int) (time*1000)
 
             return array + [self.noteToFreq(note), 1]
 
     def addMidiSilence(self, array, time):
         if len(array):
-            array[-1] = (int) (time*10000)
+            array[-1] = (int) (time*1000)
         return array + [0, 1]
 
     def noteToFreq(self, note):
