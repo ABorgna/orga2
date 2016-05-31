@@ -41,12 +41,15 @@ typedef struct str_pte {
     unsigned int    base:20;
 } __attribute__((__packed__, aligned (4))) pte;
 
+#define KERNEL_PAGE_DIR ((pde*) 0x27000)
+#define KERNEL_PAGE_TABLE ((pte*) 0x28000)
+
 void mmu_inicializar();
 void mmu_inicializar_dir_kernel();
 
-void mmu_mapear_pagina_kernel(unsigned int virtual, unsigned int cr3, unsigned int fisica);
-void mmu_mapear_pagina_user(unsigned int virtual, unsigned int cr3, unsigned int fisica);
-void mmu_mapear_pagina(unsigned int virtual, unsigned int cr3, unsigned int fisica, pte attributos);
-void mmu_unmapear_pagina(unsigned int virtual, unsigned int cr3);
+void mmu_mapear_pagina_kernel(void* virtual, void* fisica);
+void mmu_mapear_pagina_user(void* virtual, void* fisica, pde* dir);
+void mmu_mapear_pagina(void* virtual, void* fisica, pde* dir, pte attributos);
+void mmu_unmapear_pagina(void* virtual, pde* dir);
 
 #endif	/* !__MMU_H__ */

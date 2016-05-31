@@ -11,6 +11,11 @@
 
 #include <stdint.h>
 
+/* Assertions */
+/* -------------------------------------------------------------------------- */
+#define assert(x) {if((x)){__asm __volatile("xchg %%bx, %%bx" : :);}}
+
+
 /* Bool */
 /* -------------------------------------------------------------------------- */
 #define bool char
@@ -53,10 +58,8 @@
 #define GDT_DATA_3_DESC          7 << 3
 #define GDT_VIDEO_DESC           8 << 3
 
-/* Offsets mmu */
+/* MMU */
 /* -------------------------------------------------------------------------- */
-#define KERNEL_PAGE_DIR ((pde*) 0x27000)
-#define KERNEL_PAGE_TABLE ((pte*) 0x27000)
 #define PAGE_SIZE (1<<12)
 #define INICIO_PAGINAS_LIBRES 0x100000
 #define PDE_INDEX(virtual) ((unsigned int)(virtual) >> 22)
@@ -65,6 +68,16 @@
 #define PTE_BASE_TO_PTR(dir) ((void*)((unsigned int)(dir) << 12))
 #define CR3_PD(cr3) ((cr3) & ~0xfff)
 #define PTE_OFFSET(virtual) ((unsigned int)(virtual) & 0xfff)
+
+
+/* Mapa y tareas */
+/* -------------------------------------------------------------------------- */
+#define MAP_CELL_SIZE 0x1000
+#define BASE_MAPA ((void*) 0x400000)
+#define TAREA_IDLE ((void*) 0x10000)
+#define TAREA_A ((void*) 0x11000)
+#define TAREA_B ((void*) 0x12000)
+#define TAREA_H ((void*) 0x13000)
 
 
 /* Offsets en la gdt */

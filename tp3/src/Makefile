@@ -62,7 +62,7 @@ QUIET = @
 
 .PHONY=clean all image tasks defines.h
 
-all:  clean tasks image
+all: clean tasks image
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $^

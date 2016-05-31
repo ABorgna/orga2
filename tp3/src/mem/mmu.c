@@ -7,10 +7,10 @@
 
 #include "mmu.h"
 
-unsigned int proxima_pagina_libre;
+void* proxima_pagina_libre;
 
 void mmu_inicializar() {
-    proxima_pagina_libre = INICIO_PAGINAS_LIBRES;
+    proxima_pagina_libre = (void*) INICIO_PAGINAS_LIBRES;
 }
 
 void mmu_inicializar_dir_kernel(){
@@ -31,35 +31,66 @@ void mmu_inicializar_dir_kernel(){
         tabla[i].present = 1;
         tabla[i].write = 1;
     }
+
+    mmu_mapear_pagina_kernel(TAREA_IDLE,TAREA_IDLE);
+    mmu_mapear_pagina_kernel(TAREA_A,TAREA_A);
+    mmu_mapear_pagina_kernel(TAREA_B,TAREA_B);
+    mmu_mapear_pagina_kernel(TAREA_H,TAREA_H);
 }
 
-unsigned int mmu_proxima_pagina_fisica_libre() {
-    unsigned int pagina_libre = proxima_pagina_libre;
+void* mmu_proxima_pagina_fisica_libre() {
+    void* pagina_libre = proxima_pagina_libre;
     proxima_pagina_libre += PAGE_SIZE;
     return pagina_libre;
 }
 
-void mmu_inicializar_dir_tarea() {
-    /* todo */
+pde* mmu_inicializar_dir_tarea(void* tarea, unsigned char x, unsigned char y) {
+    assert(x < 80);
+    assert(y < 80);
+    assert(!((int)tarea & 0xfff));
+
+    // Crear el directorio de paginas para la tarea e inicializarlo
+    pde* dir = (pde*) mmu_proxima_pagina_fisica_libre();
+    for(int i = 0 ; i < 1024 ; i++){
+        dir[i] = (pde){0};
+    }
+
+    // Calcular la posicion de memoria de la celda del mapa
+    void* celda = BASE_MAPA + x * MAP_CELL_SIZE + y * 80 * MAP_CELL_SIZE;
+
+    // Mapear las paginas necesarias en el kernel para poder copiar el contenido
+    mmu_mapear_pagina_kernel(celda, celda);
+
+    // Copiar la tarea
+    for(int i = 0; i < 1024 ; i++) {
+        *(((int*) celda) + i) = *(((int*) tarea) + i);
+    }
+
+    // Mapear la celda para la tarea
+    mmu_mapear_pagina_user((void*) 0x08000000, celda, dir);
+
+    return dir;
 }
 
-void mmu_mapear_pagina_kernel(unsigned int virtual, unsigned int cr3, unsigned int fisica){
+void mmu_mapear_pagina_kernel(void* virtual, void* fisica){
     pte attr = {0};
     attr.present = 1;
     attr.write = 1;
-    mmu_mapear_pagina(virtual, cr3, fisica, attr);
+    mmu_mapear_pagina(virtual, fisica, KERNEL_PAGE_DIR, attr);
 }
 
-void mmu_mapear_pagina_user(unsigned int virtual, unsigned int cr3, unsigned int fisica){
+void mmu_mapear_pagina_user(void* virtual, void* fisica, pde* dir){
     pte attr = {0};
     attr.present = 1;
     attr.write = 1;
     attr.user = 1;
-    mmu_mapear_pagina(virtual, cr3, fisica, attr);
+    mmu_mapear_pagina(virtual, fisica, dir, attr);
 }
 
-void mmu_mapear_pagina(unsigned int virtual, unsigned int cr3, unsigned int fisica, pte attributos){
-    pde* dir = (pde*) CR3_PD(cr3);
+void mmu_mapear_pagina(void* virtual, void* fisica, pde* dir, pte atributos){
+    assert(!((int)virtual & 0xfff));
+    assert(!((int)fisica & 0xfff));
+
     pte* tabla;
 
     if (!dir[PDE_INDEX(virtual)].present){
@@ -81,16 +112,17 @@ void mmu_mapear_pagina(unsigned int virtual, unsigned int cr3, unsigned int fisi
     }
 
     // Mapeamos su página en la tabla
-    tabla[PTE_INDEX(virtual)].base = PTE_BASE(fisica);
-    tabla[PTE_INDEX(virtual)].present = 1;
-    tabla[PTE_INDEX(virtual)].write = 1;
+    atributos.base = PTE_BASE(fisica);
+    atributos.present = 1;
+    tabla[PTE_INDEX(virtual)] = atributos;
 
     // Flushear la cache
     tlbflush();
 }
 
-void mmu_unmapear_pagina(unsigned int virtual, unsigned int cr3){
-    pde* dir = (pde*) CR3_PD(cr3);
+void mmu_unmapear_pagina(void* virtual, pde* dir){
+    assert(!((int)virtual & 0xfff));
+
     pte* tabla;
 
     // No hacemos nada si la tabla no estaba mapeada
