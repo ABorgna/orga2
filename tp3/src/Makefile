@@ -19,13 +19,15 @@ DEPEND = Makefile \
 	sched.c sched.h screen.c screen.h \
 	game.c game.h syscall.h audio/speaker.c audio/speaker.h \
 	audio/audioplayer.c audio/audioplayer.h audio/tracks.asm \
-	interrupts/pit.c interrupts/pit.h
+	interrupts/pit.c interrupts/pit.h \
+	interrupts/keyboard.c interrupts/keyboard.h
 
 AUDIO_TRACKS = audio/tracks/pacman.audio
 
 OBJ=$(KERNEL_OBJ) mem/gdt.o interrupts/pic.o interrupts/idt.o interrupts/isr.o \
     mem/mmu.o sched.o tss.o screen.o game.o \
-    audio/speaker.o audio/audioplayer.o interrupts/pit.o audio/tracks.o
+    audio/speaker.o audio/audioplayer.o interrupts/pit.o audio/tracks.o \
+    interrupts/keyboard.o
 
 DISK_IMG=diskette.img
 DISK_IMG_BZ=diskette.img.bz2
@@ -62,7 +64,7 @@ QUIET = @
 
 .PHONY=clean all image tasks defines.h
 
-all: clean tasks image
+all: pseudo_clean tasks image
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $^
@@ -128,6 +130,20 @@ tasks: $(TASKSBINS)
 	$(QUIET) dd if=$(TASKA)    bs=1 count=4K of=$(TASKS) seek=4K  status=noxfer > /dev/null 2>&1
 	$(QUIET) dd if=$(TASKB)    bs=1 count=4K of=$(TASKS) seek=8K  status=noxfer > /dev/null 2>&1
 	$(QUIET) dd if=$(TASKH)    bs=1 count=4K of=$(TASKS) seek=12K status=noxfer > /dev/null 2>&1
+	@echo ''
+
+pseudo_clean:
+	@echo 'Limpiando todo...'
+	find . -name '*.o' -type f -exec rm -f "{}" \;
+	rm -f *.bin
+	rm -f *.tmp
+	rm -f *.ctsko
+	rm -f kernel.sym
+	rm -f *.ctsk
+	rm -f *.tsko
+	rm -f *.tsk
+	rm -f $(DISK_IMG)
+	rm -rf *~
 	@echo ''
 
 clean:

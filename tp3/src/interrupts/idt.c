@@ -1,4 +1,4 @@
-/* ** por compatibilidad se omiten tildes **
+    /* ** por compatibilidad se omiten tildes **
 ================================================================================
  TRABAJO PRACTICO 3 - System Programming - ORGANIZACION DE COMPUTADOR II - FCEN
 ================================================================================
@@ -58,6 +58,8 @@ idt[numero].segsel = (unsigned short) GDT_CODE_0_DESC;                      \
         ((unsigned int)(&_isr_default) >> 16 & (unsigned int) 0xFFFF);
 
 void idt_inicializar() {
+    int i;
+
     // Excepciones
     IDT_ENTRY_INTERRUPT(0);
     IDT_ENTRY_INTERRUPT(1);
@@ -80,10 +82,11 @@ void idt_inicializar() {
     IDT_ENTRY_INTERRUPT(18);
     IDT_ENTRY_INTERRUPT(19);
 
-    for(int i = 20; i < 32; i++) {IDT_ENTRY_INTERRUPT_DEFAULT(i);}
+    for(i = 20; i < 32; i++) {IDT_ENTRY_INTERRUPT_DEFAULT(i);}
 
     IDT_ENTRY_INTERRUPT(32);
+    IDT_ENTRY_INTERRUPT(33);
 
-    for(int i = 33; i < 256; i++) {IDT_ENTRY_INTERRUPT_DEFAULT(i);}
+    for(i = 34; i < 256; i++) {IDT_ENTRY_INTERRUPT_DEFAULT(i);}
 }
 

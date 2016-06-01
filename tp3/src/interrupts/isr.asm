@@ -23,6 +23,9 @@ extern updateClock
 ;; Audio
 extern audio_isr
 
+;; Keyboard
+extern keyboard_isr
+
 ;;
 ;; Definición de MACROS
 ;; -------------------------------------------------------------------------- ;;
@@ -44,7 +47,7 @@ interrupt_msg_%1_len equ    $ - interrupt_msg_%1
 
 _isr%1:
     pushad
-    ;imprimir_texto_mp interrupt_msg_%1, interrupt_msg_%1_len, 0x07, 3, 0
+    imprimir_texto_mp interrupt_msg_%1, interrupt_msg_%1_len, 0x07, 3, 0
     popad
     iret
 
@@ -59,7 +62,7 @@ interrupt_msg_%1_len equ    $ - interrupt_msg_%1
 _isr%1:
     add esp, 4
     pushad
-    ;imprimir_texto_mp interrupt_msg_%1, interrupt_msg_%1_len, 0x07, 3, 0
+    imprimir_texto_mp interrupt_msg_%1, interrupt_msg_%1_len, 0x07, 3, 0
     popad
     iret
 
@@ -119,6 +122,18 @@ _isr32:
 ;;
 ;; Rutina de atención del TECLADO
 ;; -------------------------------------------------------------------------- ;;
+global _isr33
+_isr33:
+    pushad
+    call keyboard_isr
+    ;imprimir lo que vino por el puerto...
+
+    ; Send the EOI to the PIC
+    mov al, 0x20
+    out 0x20, al
+    
+    popad
+    iret
 
 ;;
 ;; Rutinas de atención de las SYSCALLS

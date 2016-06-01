@@ -21,6 +21,7 @@ extern mmu_inicializar_dir_kernel
 
 ; Interruptions
 extern resetear_pic
+extern keyboard_init
 
 ; System clock
 extern initClock
@@ -135,9 +136,11 @@ mp:
     ; Cargar IDTDATA
     call idt_inicializar
 
-    ; Configurar controlador de interrupciones
+    ; Configurar controlador de interrupciones 
     call resetear_pic
     call initClock
+    xchg ebx, ebx
+    call keyboard_init
 
     ; Cargar tarea inicial
 
