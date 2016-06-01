@@ -16,7 +16,8 @@ void mmu_inicializar() {
 void mmu_inicializar_dir_kernel(){
     // Inicializar el directorio vacío
     pde* dir = KERNEL_PAGE_DIR;
-    for(int i = 0 ; i < 1024 ; i++){
+    int i;
+    for(i = 0 ; i < 1024 ; i++){
         dir[i] = (pde){0};
     }
 
@@ -26,7 +27,7 @@ void mmu_inicializar_dir_kernel(){
     dir[0].present = 1;
     dir[0].write = 1;
 
-    for(int i = 0; i < 1024 ; i++){
+    for(i = 0; i < 1024 ; i++){
         tabla[i].base = i;
         tabla[i].present = 1;
         tabla[i].write = 1;
@@ -48,10 +49,11 @@ pde* mmu_inicializar_dir_tarea(void* tarea, unsigned char x, unsigned char y) {
     assert(x < 80);
     assert(y < 42);
     assert(!((int)tarea & 0xfff));
+    int i;
 
     // Crear el directorio de paginas para la tarea e inicializarlo
     pde* dir = (pde*) mmu_proxima_pagina_fisica_libre();
-    for(int i = 0 ; i < 1024 ; i++){
+    for(i = 0 ; i < 1024 ; i++){
         dir[i] = (pde){0};
     }
 
@@ -62,7 +64,7 @@ pde* mmu_inicializar_dir_tarea(void* tarea, unsigned char x, unsigned char y) {
     mmu_mapear_pagina_kernel(celda, celda);
 
     // Copiar la tarea
-    for(int i = 0; i < 1024 ; i++) {
+    for(i = 0; i < 1024 ; i++) {
         *(((int*) celda) + i) = *(((int*) tarea) + i);
     }
 
@@ -90,7 +92,8 @@ void mmu_mapear_pagina_user(void* virtual, void* fisica, pde* dir){
 void mmu_mapear_pagina(void* virtual, void* fisica, pde* dir, pte atributos){
     assert(!((int)virtual & 0xfff));
     assert(!((int)fisica & 0xfff));
-
+    int i;
+    
     pte* tabla;
 
     if (!dir[PDE_INDEX(virtual)].present){
@@ -98,7 +101,7 @@ void mmu_mapear_pagina(void* virtual, void* fisica, pde* dir, pte atributos){
         tabla = (pte*) mmu_proxima_pagina_fisica_libre();
 
         // Inicializar las entradas de la tabla
-        for (int i = 0; i < 1024; i++) {
+        for (i = 0; i < 1024; i++) {
             tabla[i] = (pte){0};
         }
 

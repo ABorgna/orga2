@@ -26,6 +26,8 @@ void print_hex(unsigned int numero, int size, unsigned int x, unsigned int y, un
 
 void print_int(unsigned int n, unsigned int x, unsigned int y, unsigned char attr, unsigned int limite);
 
+void print_char(unsigned char c, unsigned int x, unsigned int y, unsigned char attr);
+
 void reventar_pantalla();
 
 #endif  /* !__SCREEN_H__ */

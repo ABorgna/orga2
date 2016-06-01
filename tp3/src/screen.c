@@ -55,6 +55,12 @@ void print_int(unsigned int n, unsigned int x, unsigned int y, unsigned char att
 
 }
 
+void print_char(unsigned char c, unsigned int x, unsigned int y, unsigned char attr) {
+    ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
+      p[y][x].c = c;
+      p[y][x].a = attr;
+}
+
 void reventar_pantalla(){
     ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
     int i, j;

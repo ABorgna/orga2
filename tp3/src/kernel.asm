@@ -23,6 +23,7 @@ extern mmu_inicializar_dir_kernel
 extern resetear_pic
 extern init_audioplayer
 extern init_rtc
+extern keyboard_init
 
 ; Sound
 extern beep
@@ -137,6 +138,7 @@ mp:
     ; Configurar controlador de interrupciones
     call resetear_pic
     call init_audioplayer
+    call keyboard_init
     push 0
     call init_rtc
     add esp, 4
