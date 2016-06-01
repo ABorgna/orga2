@@ -4,18 +4,6 @@
 
 #include "pit.h"
 
-void initClock(){
-    // Start the timer at 1kHz
-    setupPIT(0,1000);
-
-    // Enable PIT 0 interrupts
-    IRQ_clear_mask(0);
-}
-
-void updateClock(){
-    // Called every 1ms (roughly)
-}
-
 void setupPIT(uint8_t channel, uint32_t hz) {
     assert(channel == 0 || channel == 2);
 
@@ -29,3 +17,4 @@ void setupPIT(uint8_t channel, uint32_t hz) {
     outb(0x40 + channel, (uint8_t) (divisor & 0xFF));
     outb(0x40 + channel, (uint8_t) (divisor >> 8));
 }
+

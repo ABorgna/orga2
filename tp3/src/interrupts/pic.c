@@ -24,7 +24,7 @@ void resetear_pic() {
     outb(PIC2_DATA, 0xFF); /* Enmasca todas! */
 
     // Enmascarar todas las interrupciones
-    outb(PIC2_DATA, ~0x04);
+    outb(PIC1_DATA, ~0x04);
     outb(PIC2_DATA, 0xFF);
 }
 

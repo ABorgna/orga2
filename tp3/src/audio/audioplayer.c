@@ -1,5 +1,7 @@
 #include "../defines.h"
 #include "../i386.h"
+#include "../interrupts/pit.h"
+#include "../interrupts/pic.h"
 #include "speaker.h"
 
 #include "audioplayer.h"
@@ -11,6 +13,14 @@ short audioCycles;
 struct audio_note* audioFilePtr;
 struct audio_note* audioFileStart;
 struct audio_note* audioFileEnd;
+
+void init_audioplayer(){
+    // Start the timer at 1kHz
+    setupPIT(0,1000);
+
+    // Enable PIT 0 interrupts
+    IRQ_clear_mask(0);
+}
 
 void play_audio(struct audio_note* file, struct audio_note* end, bool loop){
     audioPlaying = 0;
@@ -38,8 +48,6 @@ void audio_isr() {
                     stop_audio();
                 }
             } else {
-                //breakpoint();
-
                 play_sound((*audioFilePtr).freq);
                 audioCycles = (*audioFilePtr).cycles;
 

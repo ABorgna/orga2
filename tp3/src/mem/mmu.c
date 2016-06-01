@@ -46,7 +46,7 @@ void* mmu_proxima_pagina_fisica_libre() {
 
 pde* mmu_inicializar_dir_tarea(void* tarea, unsigned char x, unsigned char y) {
     assert(x < 80);
-    assert(y < 80);
+    assert(y < 42);
     assert(!((int)tarea & 0xfff));
 
     // Crear el directorio de paginas para la tarea e inicializarlo

@@ -18,7 +18,7 @@ extern fin_intr_pic1
 extern sched_proximo_indice
 
 ;; System clock
-extern updateClock
+extern rtc_isr
 
 ;; Audio
 extern audio_isr
@@ -30,8 +30,10 @@ extern audio_isr
 global _isr_default
 _isr_default:
     pushad
+    xchg bx, bx
     nop
     mov eax, 0xDEADBEEF
+    mov eax, 0x0DEFA017
     nop
     popad
     iret
@@ -103,15 +105,12 @@ global _isr32
 _isr32:
     pushad
 
-    ; System clock
-    call updateClock
-
-    ; Update the audio player
-    call audio_isr
-
     ; Send the EOI to the PIC
     mov al, 0x20
     out 0x20, al
+
+    ; Update the audio player
+    call audio_isr
 
     popad
     iret
@@ -120,6 +119,23 @@ _isr32:
 ;; Rutina de atención del TECLADO
 ;; -------------------------------------------------------------------------- ;;
 
+;;
+;; Rutina de atención del RTC
+;; -------------------------------------------------------------------------- ;;
+global _isr40
+_isr40:
+    pushad
+
+    ; Send the EOI to PICs 1 & 2
+    mov al, 0x20
+    out 0x20, al
+    out 0xA0, al
+
+    ; System clock
+    call rtc_isr
+
+    popad
+    iret
 ;;
 ;; Rutinas de atención de las SYSCALLS
 ;; -------------------------------------------------------------------------- ;;

@@ -19,18 +19,21 @@ DEPEND = Makefile \
 	sched.c sched.h screen.c screen.h \
 	game.c game.h syscall.h audio/speaker.c audio/speaker.h \
 	audio/audioplayer.c audio/audioplayer.h audio/tracks.asm \
-	interrupts/pit.c interrupts/pit.h
+	interrupts/pit.c interrupts/pit.h \
+	interrupts/clock.c interrupts/clock.h \
+	interrupts/rtc.c interrupts/rtc.h
 
 AUDIO_TRACKS = audio/tracks/pacman.audio
 
 OBJ=$(KERNEL_OBJ) mem/gdt.o interrupts/pic.o interrupts/idt.o interrupts/isr.o \
     mem/mmu.o sched.o tss.o screen.o game.o \
-    audio/speaker.o audio/audioplayer.o interrupts/pit.o audio/tracks.o
+    audio/speaker.o audio/audioplayer.o interrupts/pit.o audio/tracks.o \
+    interrupts/clock.o interrupts/rtc.o
 
 DISK_IMG=diskette.img
 DISK_IMG_BZ=diskette.img.bz2
 
-CFLAGS=-m32 -g -ggdb -Wall -Werror -O0 \
+CFLAGS=-m32 -g -ggdb -Wall -Werror -O0 --std=c11 \
   -fno-zero-initialized-in-bss -fno-stack-protector -ffreestanding
 
 

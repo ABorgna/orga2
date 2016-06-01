@@ -7,6 +7,7 @@ struct audio_note {
     unsigned short cycles;
 };
 
+void init_audioplayer();
 void play_audio(struct audio_note* file, struct audio_note* end, bool loop);
 void stop_audio();
 void audio_isr();

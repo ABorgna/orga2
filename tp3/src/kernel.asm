@@ -21,9 +21,8 @@ extern mmu_inicializar_dir_kernel
 
 ; Interruptions
 extern resetear_pic
-
-; System clock
-extern initClock
+extern init_audioplayer
+extern init_rtc
 
 ; Sound
 extern beep
@@ -137,7 +136,10 @@ mp:
 
     ; Configurar controlador de interrupciones
     call resetear_pic
-    call initClock
+    call init_audioplayer
+    push 0
+    call init_rtc
+    add esp, 4
 
     ; Cargar tarea inicial
 

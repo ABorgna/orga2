@@ -25,6 +25,8 @@ LS_INLINE void ltr(unsigned short sel);
 LS_INLINE unsigned short rtr(void);
 LS_INLINE void hlt(void);
 LS_INLINE void breakpoint(void);
+LS_INLINE void enable_interrupts(void);
+LS_INLINE void disable_interrupts(void);
 LS_INLINE unsigned char inb(unsigned short port);
 LS_INLINE unsigned short inw(unsigned short port);
 LS_INLINE unsigned int ind(unsigned short port);
@@ -108,6 +110,14 @@ LS_INLINE void hlt(void) {
 
 LS_INLINE void breakpoint(void) {
     __asm __volatile("xchg %%bx, %%bx" : :);
+}
+
+LS_INLINE void enable_interrupts(void) {
+    __asm __volatile("sti" : :);
+}
+
+LS_INLINE void disable_interrupts(void) {
+    __asm __volatile("cli" : :);
 }
 
 LS_INLINE unsigned char inb(unsigned short port) {
