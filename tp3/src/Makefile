@@ -24,7 +24,7 @@ DEPEND = Makefile \
 	interrupts/rtc.c interrupts/rtc.h \
 	interrupts/keyboard.c interrupts/keyboard.h
 
-AUDIO_TRACKS = audio/tracks/pacman.audio
+AUDIO_TRACKS = audio/tracks/pacman_0.audio
 
 OBJ=$(KERNEL_OBJ) mem/gdt.o interrupts/pic.o interrupts/idt.o interrupts/isr.o \
     mem/mmu.o sched.o tss.o screen.o game.o \
@@ -75,8 +75,8 @@ all: pseudo_clean tasks image
 %.o: %.asm
 	$(NASM) $(NASMFLAGS) -o $@ $^
 
-%.audio: %.mid
-	tools/frommidi.py $^ $@
+%.audio: $(shell echo $% | sed -e 's/_[0-9]*/.mid/')
+	tools/frommidi.py $(shell echo $@ | sed -e 's/_[0-9]*.audio/.mid/') $@
 
 kernel.bin: $(AUDIO_TRACKS) $(OBJ) $(TASKS)
 	@echo 'Linkeando kernel...'
@@ -86,7 +86,7 @@ kernel.bin: $(AUDIO_TRACKS) $(OBJ) $(TASKS)
 	rm $@.tmp
 	@echo ''
 
-	@echo 'Generando imagen del kernel...'
+	@echo 'Generando imagen del kern.el...'
 	mv kernel.bin kernel.bin.tmp
 	dd if=/dev/zero of=kernel.bin bs=1 count=$(KERNELSIZE) conv=notrunc status=noxfer > /dev/null 2>&1
 	dd if=kernel.bin.tmp of=kernel.bin bs=1 count=$(CODESIZE) conv=notrunc status=noxfer > /dev/null 2>&1

@@ -10,5 +10,5 @@ audio_track_end_%1:
 
 %endmacro
 
-INCLUDE_AUDIO pacman, "audio/tracks/pacman.audio"
+INCLUDE_AUDIO pacman, "audio/tracks/pacman_0.audio"
 
