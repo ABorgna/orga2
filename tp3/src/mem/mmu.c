@@ -71,6 +71,11 @@ pde* mmu_inicializar_dir_tarea(void* tarea, unsigned char x, unsigned char y) {
     // Mapear la celda para la tarea
     mmu_mapear_pagina_user((void*) 0x08000000, celda, dir);
 
+    // Mapear las paginas del kernel
+    for(int i = 0; i < 1024; i++){
+      mmu_mapear_pagina_kernel(i * (1 << 12), i * (1 << 12));
+    }
+
     return dir;
 }
 
@@ -93,7 +98,7 @@ void mmu_mapear_pagina(void* virtual, void* fisica, pde* dir, pte atributos){
     assert(!((int)virtual & 0xfff));
     assert(!((int)fisica & 0xfff));
     int i;
-    
+
     pte* tabla;
 
     if (!dir[PDE_INDEX(virtual)].present){

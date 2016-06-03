@@ -34,5 +34,6 @@ void _isr19();
 void _isr32();
 void _isr33();
 void _isr40();
+void _isr0x66();
 
 #endif  /* !__ISR_H__ */

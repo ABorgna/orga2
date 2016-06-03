@@ -33,6 +33,8 @@ LS_INLINE unsigned int ind(unsigned short port);
 LS_INLINE void outb(unsigned short port, unsigned char val);
 LS_INLINE void outw(unsigned short port, unsigned short val);
 LS_INLINE void outd(unsigned short port, unsigned int val);
+LS_INLINE unsigned int sp();
+LS_INLINE unsigned int bp();
 
 /*
  * Implementaciones
@@ -148,6 +150,18 @@ LS_INLINE void outw(unsigned short port, unsigned short val) {
 
 LS_INLINE void outd(unsigned short port, unsigned int val) {
     __asm __volatile("out %1, %0" : : "d" (port), "a" (val));
+}
+
+LS_INLINE unsigned int sp() {
+    unsigned int eax;
+    __asm __volatile("mov %%esp, %%eax" : "=a" (eax) : );
+    return eax;
+}
+
+LS_INLINE unsigned int bp() {
+    unsigned int eax;
+    __asm __volatile("mov %%ebp, %%eax" : "=a" (eax) : );
+    return eax;
 }
 
 #endif  /* !__i386_H__ */
