@@ -4,9 +4,9 @@ import re
 
 HELP = """A simple midi-to-custom-format converter
 
-Usage: ./frommidi.py input.midi output
+Usage: ./frommidi.py input.midi output_#.audio
 
-Writes output_#.audio for each channel available
+Converts only channel #
 """
 
 import sys
