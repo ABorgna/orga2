@@ -166,7 +166,7 @@ gdt_entry gdt[GDT_COUNT-1] = {
    //   (unsigned short)    0x006B,            /* limit[0:15]  */
    //   (unsigned short)    BASE1(&tss_idle),  /* base[0:15]   */
    //   (unsigned char)     BASE2(&tss_idle),  /* base[23:16]  */
-   //   (unsigned char)     0x09,	             /* type         */
+   //   (unsigned char)     0x09,              /* type         */
    //   (unsigned char)     0x01,              /* s            */
    //   (unsigned char)     0x00,              /* dpl          */
    //   (unsigned char)     0x01,              /* p            */
@@ -174,7 +174,7 @@ gdt_entry gdt[GDT_COUNT-1] = {
    //   (unsigned char)     0x00,              /* avl          */
    //   (unsigned char)     0x00,              /* l            */
    //   (unsigned char)     0x00,              /* db           */
-   //   (unsigned char)     0x01,              /* g            */
+   //   (unsigned char)     0x01,              /* g            */ //CALABAZA
    //   (unsigned char)     BASE3(&tss_idle),  /* base[31:24]  */
    // },
 };
