@@ -6,8 +6,11 @@
 */
 
 #include "gdt.h"
+#include "../tss.h"
+#include "../defines.h"
 
-gdt_entry gdt[GDT_COUNT] = {
+gdt_entry gdt[GDT_COUNT-1] = {
+
     /* Descriptor nulo*/
     /* Offset = 0x00 */
     [GDT_NULL_INDEX] = (gdt_entry) {
@@ -157,12 +160,26 @@ gdt_entry gdt[GDT_COUNT] = {
         (unsigned char)     0x00,           /* g            */
         (unsigned char)     0x00,           /* base[31:24]  */
     },
+
+  /* TSS de la tarea idle*/
+   // [GDT_TSS_IDLE] = (gdt_entry)  {
+   //   (unsigned short)    0x006B,            /* limit[0:15]  */
+   //   (unsigned short)    BASE1(&tss_idle),  /* base[0:15]   */
+   //   (unsigned char)     0x09,              /* base[23:16]  */
+   //   (unsigned char)     0x09,	           /* type         */
+   //   (unsigned char)     0x01,              /* s            */
+   //   (unsigned char)     0x00,              /* dpl          */
+   //   (unsigned char)     0x01,              /* p            */
+   //   (unsigned char)     BASE2(&tss_idle),  /* limit[16:19] */
+   //   (unsigned char)     0x00,              /* avl          */
+   //   (unsigned char)     0x00,              /* l            */
+   //   (unsigned char)     0x00,              /* db           */
+   //   (unsigned char)     0x01,              /* g            */
+   //   (unsigned char)     BASE3(&tss_idle),  /* base[31:24]  */
+   // },
 };
 
 gdt_descriptor GDT_DESC = {
     sizeof(gdt) - 1,
     (unsigned int) &gdt
 };
-
-
-

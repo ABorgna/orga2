@@ -80,6 +80,11 @@
 #define TAREA_B ((void*) 0x12000)
 #define TAREA_H ((void*) 0x13000)
 
+/* Base de descriptores en la gdt */
+/* -------------------------------------------------------------------------- */
+#define BASE1(dir)  (((unsigned int) (dir)) & 0xffff)
+#define BASE2(dir)  (((unsigned int) (dir)) & 0x3f0000)
+#define BASE3(dir)  (((unsigned int) (dir)) & 0xffc00000)
 
 /* Offsets en la gdt */
 /* -------------------------------------------------------------------------- */

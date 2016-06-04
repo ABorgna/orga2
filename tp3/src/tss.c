@@ -6,7 +6,7 @@
 */
 
 #include "tss.h"
-#include "mmu.h"
+#include "./mem/mmu.h"
 
 tss tss_inicial;
 tss tss_idle;
@@ -53,5 +53,5 @@ void tss_inicializar() {
       (unsigned short)   0,               /* unused10;  */
       (unsigned short)   0,               /* dtrap;     */
       (unsigned short)   0,               /* iomap;     */
-  }
+  };
 }
