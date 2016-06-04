@@ -165,12 +165,12 @@ gdt_entry gdt[GDT_COUNT-1] = {
    // [GDT_TSS_IDLE] = (gdt_entry)  {
    //   (unsigned short)    0x006B,            /* limit[0:15]  */
    //   (unsigned short)    BASE1(&tss_idle),  /* base[0:15]   */
-   //   (unsigned char)     0x09,              /* base[23:16]  */
-   //   (unsigned char)     0x09,	           /* type         */
+   //   (unsigned char)     BASE2(&tss_idle),  /* base[23:16]  */
+   //   (unsigned char)     0x09,	             /* type         */
    //   (unsigned char)     0x01,              /* s            */
    //   (unsigned char)     0x00,              /* dpl          */
    //   (unsigned char)     0x01,              /* p            */
-   //   (unsigned char)     BASE2(&tss_idle),  /* limit[16:19] */
+   //   (unsigned char)     0x00,              /* limit[16:19] */
    //   (unsigned char)     0x00,              /* avl          */
    //   (unsigned char)     0x00,              /* l            */
    //   (unsigned char)     0x00,              /* db           */
