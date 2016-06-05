@@ -25,10 +25,6 @@ extern init_audioplayer
 extern init_rtc
 extern keyboard_init
 
-; Sound
-extern beep
-extern test_audio
-
 %include "imprimir.mac"
 %define GDT_CODE_0_DESC 4 << 3
 %define GDT_DATA_0_DESC 6 << 3
@@ -149,9 +145,6 @@ mp:
     sti
 
     ; Saltar a la primera tarea: Idle
-
-    ; Cosas de audio
-    call test_audio
 
     ; Ciclar infinitamente (por si algo sale mal...)
     mov eax, 0xFFFF

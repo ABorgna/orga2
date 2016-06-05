@@ -9,6 +9,8 @@
     void audio_track_end_##name() ;
 
 DEFINE_TRACK(pacman);
+DEFINE_TRACK(spectra0);
+DEFINE_TRACK(spectra1);
 
 #undef DEFINE_TRACK
 #endif // __TRACKS_PLAYER_H__

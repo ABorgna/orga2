@@ -48,7 +48,12 @@ void play_audio(uint8_t channel,
     channels[channel].playing = 1;
 }
 
-void stop_audio(uint8_t channel) {
+void stop_audio(void) {
+    stop_audio_ch(0);
+    stop_audio_ch(1);
+}
+
+void stop_audio_ch(uint8_t channel) {
     channels[channel].playing = 0;
 
     if(current_channel == channel) {
@@ -101,7 +106,7 @@ void audio_step(uint8_t channel) {
 
 void update_current_channel(){
     if(channels[0].playing && channels[1].playing) {
-        if(!(audio_step_counter & 0xf)) {
+        if(!(audio_step_counter & 0x3)) {
             current_channel = 1 - current_channel;
         }
     } else {
@@ -109,14 +114,22 @@ void update_current_channel(){
     }
 }
 
-void test_audio() {
+void play_spectra() {
+    play_audio(0,
+            (struct audio_note*) &audio_track_spectra0,
+            (struct audio_note*) &audio_track_end_spectra0,
+            true );
+    play_audio(1,
+            (struct audio_note*) &audio_track_spectra1,
+            (struct audio_note*) &audio_track_end_spectra1,
+            true );
+}
+
+void play_pacman() {
+    stop_audio_ch(0);
     play_audio(1,
             (struct audio_note*) &audio_track_pacman,
             (struct audio_note*) &audio_track_end_pacman,
-            true );
-    play_audio(0,
-            test_beep,
-            test_beep+ARRAY_SIZE(test_beep),
             true );
 }
 

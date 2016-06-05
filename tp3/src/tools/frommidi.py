@@ -18,16 +18,25 @@ class Convert:
     def frommidi(self, infile, outfile, channel=0):
         self.timeOffsets = {}
 
-        outArray = []
+        outArray = [0,1]
+        dTime = 0.
 
         for m in MidiFile(infile).play():
-            if m.type == 'note_on' and m.channel == channel:
-                outArray = \
-                    self.addMidiNote(outArray, m.time, m.note, m.velocity)
+            if m.type == 'note_on':
+                dTime += m.time
 
-            if m.type == 'note_off' and m.channel == channel:
-                outArray = \
-                    self.addMidiNote(outArray, m.time, 0, 0)
+                if m.channel == channel:
+                    outArray = \
+                        self.addMidiNote(outArray, dTime, m.note, m.velocity)
+                    dTime %= 0.001
+
+            if m.type == 'note_off':
+                dTime += m.time
+
+                if m.channel == channel:
+                    outArray = \
+                        self.addMidiNote(outArray, dTime, 0, 0)
+                    dTime %= 0.001
 
         self.writeFile(outArray, outfile)
 
@@ -37,18 +46,17 @@ class Convert:
 
         millis = (int) (time*1000)
 
-        while len(array) and millis >= 256:
+        while millis >= 256:
             array[-1] = 255
             array += [array[-2], 1]
             millis -= 255
 
-        if len(array):
+        if millis > 1:
             array[-1] = millis
+        else:
+            array = array[:-2]
 
-        return array + [note, 1]
-
-    def noteToFreq(self, note):
-        return 440 * (2**((note - 69)/12))
+        return array + [note, 100]
 
     def writeFile(self, array, outfile):
         narray = np.array(array, dtype=np.uint8)

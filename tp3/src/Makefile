@@ -24,7 +24,9 @@ DEPEND = Makefile \
 	interrupts/rtc.c interrupts/rtc.h \
 	interrupts/keyboard.c interrupts/keyboard.h
 
-AUDIO_TRACKS = audio/tracks/pacman_0.audio
+AUDIO_TRACKS = audio/tracks/pacman_0.audio \
+	       audio/tracks/spectra_0.audio \
+	       audio/tracks/spectra_1.audio
 
 OBJ=$(KERNEL_OBJ) mem/gdt.o interrupts/pic.o interrupts/idt.o interrupts/isr.o \
     mem/mmu.o sched.o tss.o screen.o game.o \
