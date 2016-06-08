@@ -72,7 +72,7 @@ pde* mmu_inicializar_dir_tarea(void* tarea, unsigned char x, unsigned char y) {
     mmu_mapear_pagina_user((void*) 0x08000000, celda, dir);
 
     // Mapear las paginas del kernel
-    for(int i = 0; i < 1024; i++){
+    for(i = 0; i < 1024; i++){
       mmu_mapear_pagina_kernel((void*) (i * (1 << 12)), (void*) (i * (1 << 12)));
     }
 

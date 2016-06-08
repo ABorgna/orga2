@@ -72,10 +72,9 @@ void idt_inicializar() {
     IDT_ENTRY_INTERRUPT(32); // PIT 0
     IDT_ENTRY_INTERRUPT(33);
 
-    for(int i = 34; i < 40; i++) {IDT_ENTRY_INTERRUPT_DEFAULT(i);}
+    for(i = 34; i < 40; i++) {IDT_ENTRY_INTERRUPT_DEFAULT(i);}
 
     IDT_ENTRY_INTERRUPT(40); // RTC
 
-    for(int i = 41; i < 256; i++) {IDT_ENTRY_INTERRUPT_DEFAULT(i);}
+    for(i = 41; i < 256; i++) {IDT_ENTRY_INTERRUPT_DEFAULT(i);}
 }
-

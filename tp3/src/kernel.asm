@@ -5,6 +5,7 @@
 
 ; Gdt
 extern GDT_DESC
+extern teseses_inicializar
 
 ; Screen
 extern reventar_pantalla
@@ -24,6 +25,9 @@ extern resetear_pic
 extern init_audioplayer
 extern init_rtc
 extern keyboard_init
+
+; TSS
+extern tss_idle_inicializar
 
 %include "imprimir.mac"
 %define GDT_CODE_0_DESC 4 << 3
@@ -120,8 +124,10 @@ mp:
     mov cr0, eax
 
     ; Inicializar tss
+    call teseses_inicializar
 
     ; Inicializar tss de la tarea Idle
+    call tss_idle_inicializar
 
     ; Inicializar el scheduler
 

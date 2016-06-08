@@ -7,11 +7,15 @@
 
 #include "tss.h"
 #include "./mem/mmu.h"
+#include "./mem/gdt.h"
 
 tss tss_inicial;
 tss tss_idle;
+tss tss_H[15];
+tss tss_A[5];
+tss tss_B[5];
 
-void tss_inicializar() {
+void tss_idle_inicializar() {
 	unsigned int estac_ptr = sp();
 	unsigned int beis_ptr = bp();
  	tss_idle = (tss) {
@@ -27,7 +31,7 @@ void tss_inicializar() {
       (unsigned short)   0,               /* ss2;       */
       (unsigned short)   0,               /* unused3;   */
       (unsigned int)     KERNEL_PAGE_DIR, /* cr3;       */
-      (unsigned int)     0x08001000,      /* eip;       */
+      (unsigned int)     0x00010000,      /* eip;       */
       (unsigned int)     0x002,           /* eflags; TODO HACK habilitar interrupciones*/
       (unsigned int)     0,               /* eax;       */
       (unsigned int)     0,               /* ecx;       */

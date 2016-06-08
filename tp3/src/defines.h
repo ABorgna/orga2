@@ -36,7 +36,7 @@
 
 /* Indices en la gdt */
 /* -------------------------------------------------------------------------- */
-#define GDT_COUNT 10
+#define GDT_COUNT 35
 
 #define GDT_NULL_INDEX           0
 #define GDT_RESERVADO_1_INDEX    1
@@ -47,7 +47,11 @@
 #define GDT_DATA_0_INDEX         6
 #define GDT_DATA_3_INDEX         7
 #define GDT_VIDEO_INDEX          8
-#define GDT_TSS_IDLE             9              
+#define GDT_TSS_IDLE             9
+#define GDT_TSS_HS               10
+#define GDT_TSS_AS               25
+#define GDT_TSS_BS               30
+#define GDT_TSS_INICIAL          36           
 
 #define GDT_NULL_DESC            0 << 3
 #define GDT_RESERVADO_1_DESC     1 << 3

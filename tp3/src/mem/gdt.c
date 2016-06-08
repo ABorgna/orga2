@@ -7,9 +7,9 @@
 
 #include "gdt.h"
 #include "../tss.h"
-#include "../defines.h"
 
-gdt_entry gdt[GDT_COUNT-1] = {
+
+gdt_entry gdt[35] = {
 
     /* Descriptor nulo*/
     /* Offset = 0x00 */
@@ -162,22 +162,56 @@ gdt_entry gdt[GDT_COUNT-1] = {
     },
 
   /* TSS de la tarea idle*/
-   // [GDT_TSS_IDLE] = (gdt_entry)  {
-   //   (unsigned short)    0x006B,            /* limit[0:15]  */
-   //   (unsigned short)    BASE1(&tss_idle),  /* base[0:15]   */
-   //   (unsigned char)     BASE2(&tss_idle),  /* base[23:16]  */
-   //   (unsigned char)     0x09,              /* type         */
-   //   (unsigned char)     0x01,              /* s            */
-   //   (unsigned char)     0x00,              /* dpl          */
-   //   (unsigned char)     0x01,              /* p            */
-   //   (unsigned char)     0x00,              /* limit[16:19] */
-   //   (unsigned char)     0x00,              /* avl          */
-   //   (unsigned char)     0x00,              /* l            */
-   //   (unsigned char)     0x00,              /* db           */
-   //   (unsigned char)     0x01,              /* g            */ //CALABAZA
-   //   (unsigned char)     BASE3(&tss_idle),  /* base[31:24]  */
-   // },
+    [GDT_TSS_IDLE] = (gdt_entry)  {
+      (unsigned short)    0x006B,            /* limit[0:15]  */
+      (unsigned short)    0x00,              /* base[0:15]   */
+      (unsigned char)     0x00,              /* base[23:16]  */
+      (unsigned char)     0x09,              /* type         */
+      (unsigned char)     0x01,              /* s            */
+      (unsigned char)     0x00,              /* dpl          */
+      (unsigned char)     0x01,              /* p            */
+      (unsigned char)     0x00,              /* limit[16:19] */
+      (unsigned char)     0x00,              /* avl          */
+      (unsigned char)     0x00,              /* l            */
+      (unsigned char)     0x00,              /* db           */
+      (unsigned char)     0x01,              /* g            */ //CALABAZA
+      (unsigned char)     0x00,              /* base[31:24]  */
+    },
 };
+
+
+void gdt_setear_tss_entry(int offset, tss* tesese){
+  gdt[offset] = (gdt_entry)   {
+    (unsigned short)    0x006B,            /* limit[0:15]  */
+    (unsigned short)    BASE1(tesese),              /* base[0:15]   */
+    (unsigned char)     BASE2(tesese),              /* base[23:16]  */
+    (unsigned char)     0x09,              /* type         */
+    (unsigned char)     0x01,              /* s            */
+    (unsigned char)     0x00,              /* dpl          */
+    (unsigned char)     0x01,              /* p            */
+    (unsigned char)     0x00,              /* limit[16:19] */
+    (unsigned char)     0x00,              /* avl          */
+    (unsigned char)     0x00,              /* l            */
+    (unsigned char)     0x00,              /* db           */
+    (unsigned char)     0x01,              /* g            */ //CALABAZA
+    (unsigned char)     BASE3(tesese),              /* base[31:24]  */
+  };
+}
+
+void teseses_inicializar(){
+  int i;
+  gdt_setear_tss_entry(GDT_TSS_INICIAL, &tss_inicial);
+  gdt_setear_tss_entry(GDT_TSS_IDLE, &tss_idle);
+  for(i = 0; i < 15; i++){
+    gdt_setear_tss_entry(GDT_TSS_HS + i, tss_H + i);
+  }
+  for(i = 0; i < 5; i++){
+    gdt_setear_tss_entry(GDT_TSS_AS + i, tss_A + i);
+  }
+  for(i = 0; i < 5; i++){
+    gdt_setear_tss_entry(GDT_TSS_BS + i, tss_B + i);
+  }
+}
 
 gdt_descriptor GDT_DESC = {
     sizeof(gdt) - 1,

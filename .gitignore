@@ -39,6 +39,7 @@
 
 # Python
 __pycache__
+*.pyc
 
 # Bochs
 bx_enh_dbg.ini
