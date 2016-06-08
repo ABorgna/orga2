@@ -30,9 +30,11 @@ extern keyboard_init
 extern tss_idle_inicializar
 
 %include "imprimir.mac"
-%define GDT_CODE_0_DESC 4 << 3
-%define GDT_DATA_0_DESC 6 << 3
-%define GDT_VIDEO_DESC  8 << 3
+%define GDT_CODE_0_DESC          4 << 3
+%define GDT_DATA_0_DESC          6 << 3
+%define GDT_VIDEO_DESC           8 << 3
+%define GDT_TSS_IDLE_DESC        9 << 3
+%define GDT_TSS_INICIAL_DESC     36<< 3
 
 global start
 
@@ -146,11 +148,14 @@ mp:
     add esp, 4
 
     ; Cargar tarea inicial
+    mov ax, GDT_TSS_INICIAL_DESC
+    ltr ax
 
     ; Habilitar interrupciones
     sti
 
     ; Saltar a la primera tarea: Idle
+    jmp GDT_TSS_IDLE_DESC:0xDEADBEEF
 
     ; Ciclar infinitamente (por si algo sale mal...)
     mov eax, 0xFFFF
