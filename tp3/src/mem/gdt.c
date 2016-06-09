@@ -9,7 +9,7 @@
 #include "../tss.h"
 
 
-gdt_entry gdt[35] = {
+gdt_entry gdt[GDT_COUNT] = {
 
     /* Descriptor nulo*/
     /* Offset = 0x00 */
@@ -183,19 +183,27 @@ gdt_entry gdt[35] = {
 void gdt_setear_tss_entry(int offset, tss* tesese){
   gdt[offset] = (gdt_entry)   {
     (unsigned short)    0x006B,            /* limit[0:15]  */
-    (unsigned short)    BASE1(tesese),              /* base[0:15]   */
-    (unsigned char)     BASE2(tesese),              /* base[23:16]  */
+    (unsigned short)    BASE1(tesese),     /* base[0:15]   */
+    (unsigned char)     BASE2(tesese),     /* base[23:16]  */
     (unsigned char)     0x09,              /* type         */
-    (unsigned char)     0x01,              /* s            */
+    (unsigned char)     0x00,              /* s            */
     (unsigned char)     0x00,              /* dpl          */
     (unsigned char)     0x01,              /* p            */
     (unsigned char)     0x00,              /* limit[16:19] */
-    (unsigned char)     0x00,              /* avl          */
+    (unsigned char)     0x01,              /* avl          */
     (unsigned char)     0x00,              /* l            */
     (unsigned char)     0x00,              /* db           */
     (unsigned char)     0x01,              /* g            */ //CALABAZA
-    (unsigned char)     BASE3(tesese),              /* base[31:24]  */
+    (unsigned char)     BASE3(tesese),     /* base[31:24]  */
   };
+}
+
+void gdt_setear_tss_busy(int offset, char busy){
+  if (busy){
+    gdt[offset].type |= 2;
+  } else {
+    gdt[offset].type &= ~2;
+  }
 }
 
 void teseses_inicializar(){

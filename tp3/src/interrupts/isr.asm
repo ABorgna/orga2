@@ -159,9 +159,7 @@ _isr40:
 
 global _isr0x66
 _isr0x66:
-    pushad
     mov eax, 0x42
-    popad
     iret
 
 %define DONDE  0x124

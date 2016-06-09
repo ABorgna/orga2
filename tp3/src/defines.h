@@ -36,7 +36,7 @@
 
 /* Indices en la gdt */
 /* -------------------------------------------------------------------------- */
-#define GDT_COUNT 35
+#define GDT_COUNT 36
 
 #define GDT_NULL_INDEX           0
 #define GDT_RESERVADO_1_INDEX    1
@@ -51,7 +51,7 @@
 #define GDT_TSS_HS               10
 #define GDT_TSS_AS               25
 #define GDT_TSS_BS               30
-#define GDT_TSS_INICIAL          36
+#define GDT_TSS_INICIAL          35
 
 #define GDT_NULL_DESC            0 << 3
 #define GDT_RESERVADO_1_DESC     1 << 3
@@ -66,7 +66,7 @@
 #define GDT_TSS_HS_DESC          10<< 3
 #define GDT_TSS_AS_DESC          25<< 3
 #define GDT_TSS_BS_DESC          30<< 3
-#define GDT_TSS_INICIAL_DESC     36<< 3
+#define GDT_TSS_INICIAL_DESC     35<< 3
 
 /* MMU */
 /* -------------------------------------------------------------------------- */

@@ -32,7 +32,7 @@ void tss_idle_inicializar() {
       (unsigned short)   0,               /* unused3;   */
       (unsigned int)     KERNEL_PAGE_DIR, /* cr3;       */
       (unsigned int)     0x00010000,      /* eip;       */
-      (unsigned int)     0x002,           /* eflags; TODO HACK habilitar interrupciones*/
+      (unsigned int)     0x202,           /* eflags;    */
       (unsigned int)     0,               /* eax;       */
       (unsigned int)     0,               /* ecx;       */
       (unsigned int)     0,               /* edx;       */

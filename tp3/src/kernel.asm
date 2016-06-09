@@ -34,7 +34,7 @@ extern tss_idle_inicializar
 %define GDT_DATA_0_DESC          6 << 3
 %define GDT_VIDEO_DESC           8 << 3
 %define GDT_TSS_IDLE_DESC        9 << 3
-%define GDT_TSS_INICIAL_DESC     36<< 3
+%define GDT_TSS_INICIAL_DESC     35 << 3
 
 global start
 
@@ -132,6 +132,7 @@ mp:
     call tss_idle_inicializar
 
     ; Inicializar el scheduler
+
 
     ; Inicializar la IDT
     lidt [IDT_DESC]

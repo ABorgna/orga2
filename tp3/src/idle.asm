@@ -21,11 +21,11 @@ idle:
         ; Imprimir 'reloj'
         mov ebx, dword [numero]
         add ebx, message1
-        imprimir_texto_mp ebx, 1, 0x0f, 49, 76
+        imprimir_texto_mp ebx, 1, 0x54, 49, 76
         mov ebx, chirimbolo_open
-        imprimir_texto_mp ebx, 1, 0x0f, 49, 76-1
+        imprimir_texto_mp ebx, 1, 0x54, 49, 76-1
         mov ebx, chirimbolo_close
-        imprimir_texto_mp ebx, 1, 0x0f, 49, 76+1
+        imprimir_texto_mp ebx, 1, 0x54, 49, 76+1
 
     jmp .loopear
 

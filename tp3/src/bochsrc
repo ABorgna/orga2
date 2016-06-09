@@ -872,6 +872,6 @@ plugin_ctrl: usb=0
 #=======================================================================
 # Other things
 #=======================================================================
-sound: driver=alsa
-speaker: enabled=1, mode=sound
+#sound: driver=alsa
+#speaker: enabled=1, mode=sound
 
