@@ -5,10 +5,10 @@
   definicion de funciones del scheduler
 */
 
-#include "defines.h"
-#include "screen.h"
+#include "../defines.h"
+#include "../screen.h"
 #include "tss.h"
-#include "mem/gdt.h"
+#include "../mem/gdt.h"
 
 #include "sched.h"
 

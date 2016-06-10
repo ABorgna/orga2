@@ -9,8 +9,6 @@
 #include "idt.h"
 #include "isr.h"
 
-#include "../tss.h"
-
 idt_entry idt[255] = { };
 
 idt_descriptor IDT_DESC = {

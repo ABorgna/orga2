@@ -8,7 +8,7 @@
 #ifndef __SCHED_H__
 #define __SCHED_H__
 
-#include "defines.h"
+#include "../defines.h"
 
 typedef enum{
     sched_H = 0,

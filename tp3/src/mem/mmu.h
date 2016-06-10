@@ -10,8 +10,6 @@
 
 #include "../defines.h"
 #include "../i386.h"
-#include "../tss.h"
-#include "../game.h"
 
 typedef struct str_pde {
     unsigned char   present:1;

@@ -10,29 +10,48 @@ KERNEL_OBJ=kernel.o
 KERNEL_BIN=kernel.bin
 
 DEPEND = Makefile \
-	kernel.asm interrupts/isr.asm \
-	imprimir.mac \
 	defines.h \
-	mem/gdt.c mem/gdt.h \
-	interrupts/pic.c interrupts/pic.h interrupts/idt.c interrupts/idt.h \
-	interrupts/isr.h tss.c tss.h mem/mmu.c mem/mmu.h \
-	sched.c sched.h screen.c screen.h \
-	game.c game.h syscall.h audio/speaker.c audio/speaker.h \
-	audio/audioplayer.c audio/audioplayer.h audio/tracks.asm \
-	interrupts/pit.c interrupts/pit.h \
+	game.c game.h \
+	imprimir.mac \
+	kernel.asm \
+	screen.c screen.h \
+	audio/audioplayer.c audio/audioplayer.h \
+	audio/speaker.c audio/speaker.h \
+	audio/tracks.asm \
 	interrupts/clock.c interrupts/clock.h \
+	interrupts/idt.c interrupts/idt.h \
+	interrupts/isr.asm interrupts/isr.h \
+	interrupts/keyboard.c interrupts/keyboard.h \
+	interrupts/pic.c interrupts/pic.h \
+	interrupts/pit.c interrupts/pit.h \
 	interrupts/rtc.c interrupts/rtc.h \
-	interrupts/keyboard.c interrupts/keyboard.h
+	mem/mmu.c mem/mmu.h \
+	mem/gdt.c mem/gdt.h \
+	tasks/sched.c tasks/sched.h \
+	tasks/syscall.h \
+	tasks/tss.c tasks/tss.h
 
 AUDIO_TRACKS = audio/tracks/pacman_0.audio \
 	       audio/tracks/spectra_0.audio \
 	       audio/tracks/spectra_1.audio
 
-OBJ=$(KERNEL_OBJ) mem/gdt.o interrupts/pic.o interrupts/idt.o interrupts/isr.o \
-    mem/mmu.o sched.o tss.o screen.o game.o \
-    audio/speaker.o audio/audioplayer.o interrupts/pit.o audio/tracks.o \
-    interrupts/clock.o interrupts/rtc.o \
-    interrupts/keyboard.o
+OBJ=$(KERNEL_OBJ) \
+	game.o \
+	screen.o \
+	audio/audioplayer.o \
+	audio/speaker.o \
+	audio/tracks.o \
+	mem/gdt.o \
+	interrupts/clock.o \
+	interrupts/idt.o \
+	interrupts/isr.o \
+	interrupts/keyboard.o \
+	interrupts/pic.o \
+	interrupts/pit.o \
+	interrupts/rtc.o \
+	mem/mmu.o \
+	tasks/sched.o \
+	tasks/tss.o
 
 DISK_IMG=diskette.img
 DISK_IMG_BZ=diskette.img.bz2
@@ -41,12 +60,12 @@ CFLAGS=-m32 -g -ggdb -Wall -Werror -Wno-char-subscripts -O0 \
   -fno-zero-initialized-in-bss -fno-stack-protector -ffreestanding
 
 
-TASKIDLE=idle.tsk
-TASKA=taskA.ctsk
-TASKB=taskB.ctsk
-TASKH=taskH.ctsk
+TASKIDLE=tasks/idle.tsk
+TASKA=tasks/taskA.ctsk
+TASKB=tasks/taskB.ctsk
+TASKH=tasks/taskH.ctsk
 
-TASKS=tareas.tsk
+TASKS=tasks/tareas.tsk
 
 TASKSBINS=$(TASKIDLE) $(TASKA) $(TASKB) $(TASKH)
 
@@ -104,7 +123,7 @@ image: kernel.bin $(DEPEND) $(DISK_IMG)
 $(DISK_IMG): $(DISK_IMG_BZ)
 	bzip2 -dk $(DISK_IMG_BZ)
 
-idle.tsk: idle.asm
+tasks/idle.tsk: tasks/idle.asm
 	@echo 'Compilando tarea...'
 	$(NASM) -fbin -o $@ $^
 	@echo ''
@@ -115,11 +134,11 @@ idle.tsk: idle.asm
 	rm $@.tmp
 	@echo ''
 
-taskA.tsko: tareaA.c
+tasks/taskA.tsko: tasks/tareaA.c
 	$(CC) $(CFLAGS) -c -o $@ $^
-taskB.tsko: tareaB.c
+tasks/taskB.tsko: tasks/tareaB.c
 	$(CC) $(CFLAGS) -c -o $@ $^
-taskH.tsko: tareaH.c
+tasks/taskH.tsko: tasks/tareaH.c
 	$(CC) $(CFLAGS) -c -o $@ $^
 
 %.ctsk: %.tsko
@@ -157,11 +176,11 @@ clean:
 	rm -f audio/tracks/*.audio
 	rm -f *.bin
 	rm -f *.tmp
-	rm -f *.ctsko
 	rm -f kernel.sym
-	rm -f *.ctsk
-	rm -f *.tsko
-	rm -f *.tsk
+	find . -name '*.ctsko' -type f -exec rm -f "{}" \;
+	find . -name '*.ctsk' -type f -exec rm -f "{}" \;
+	find . -name '*.tsko' -type f -exec rm -f "{}" \;
+	find . -name '*.tsk' -type f -exec rm -f "{}" \;
 	rm -f $(DISK_IMG)
 	rm -rf *~
 	@echo ''

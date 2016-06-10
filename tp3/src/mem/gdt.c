@@ -6,7 +6,7 @@
 */
 
 #include "gdt.h"
-#include "../tss.h"
+#include "../tasks/tss.h"
 
 
 gdt_entry gdt[GDT_COUNT] = {

@@ -4,10 +4,10 @@
 ================================================================================
 */
 
-#include "colors.h"
-#include "defines.h"
-#include "game.h"
-#include "syscall.h" 
+#include "../colors.h"
+#include "../defines.h"
+#include "../game.h"
+#include "syscall.h"
 
 #define RAND_a 1103515245
 #define RAND_c 12345
