@@ -29,6 +29,9 @@ extern keyboard_init
 ; TSS
 extern tss_idle_inicializar
 
+; Scheduler
+extern sched_inicializar
+
 %include "imprimir.mac"
 %define GDT_CODE_0_DESC          4 << 3
 %define GDT_DATA_0_DESC          6 << 3
@@ -132,7 +135,7 @@ mp:
     call tss_idle_inicializar
 
     ; Inicializar el scheduler
-
+    call sched_inicializar
 
     ; Inicializar la IDT
     lidt [IDT_DESC]
@@ -159,6 +162,8 @@ mp:
     jmp GDT_TSS_IDLE_DESC:0xDEADBEEF
 
     ; Ciclar infinitamente (por si algo sale mal...)
+    ; ya no deberia caer aca
+    xchg bx, bx
     mov eax, 0xFFFF
     mov ebx, 0xFFFF
     mov ecx, 0xFFFF

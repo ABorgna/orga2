@@ -37,7 +37,7 @@ OBJ=$(KERNEL_OBJ) mem/gdt.o interrupts/pic.o interrupts/idt.o interrupts/isr.o \
 DISK_IMG=diskette.img
 DISK_IMG_BZ=diskette.img.bz2
 
-CFLAGS=-m32 -g -ggdb -Wall -Werror -O0  \
+CFLAGS=-m32 -g -ggdb -Wall -Werror -Wno-char-subscripts -O0 \
   -fno-zero-initialized-in-bss -fno-stack-protector -ffreestanding
 
 

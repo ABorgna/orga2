@@ -53,20 +53,20 @@
 #define GDT_TSS_BS               30
 #define GDT_TSS_INICIAL          35
 
-#define GDT_NULL_DESC            0 << 3
-#define GDT_RESERVADO_1_DESC     1 << 3
-#define GDT_RESERVADO_2_DESC     2 << 3
-#define GDT_RESERVADO_3_DESC     3 << 3
-#define GDT_CODE_0_DESC          4 << 3
-#define GDT_CODE_3_DESC          5 << 3
-#define GDT_DATA_0_DESC          6 << 3
-#define GDT_DATA_3_DESC          7 << 3
-#define GDT_VIDEO_DESC           8 << 3
-#define GDT_TSS_IDLE_DESC        9 << 3
-#define GDT_TSS_HS_DESC          10<< 3
-#define GDT_TSS_AS_DESC          25<< 3
-#define GDT_TSS_BS_DESC          30<< 3
-#define GDT_TSS_INICIAL_DESC     35<< 3
+#define GDT_NULL_DESC            (0 << 3)
+#define GDT_RESERVADO_1_DESC     (1 << 3)
+#define GDT_RESERVADO_2_DESC     (2 << 3)
+#define GDT_RESERVADO_3_DESC     (3 << 3)
+#define GDT_CODE_0_DESC          (4 << 3)
+#define GDT_CODE_3_DESC          (5 << 3)
+#define GDT_DATA_0_DESC          (6 << 3)
+#define GDT_DATA_3_DESC          (7 << 3)
+#define GDT_VIDEO_DESC           (8 << 3)
+#define GDT_TSS_IDLE_DESC        (9 << 3)
+#define GDT_TSS_HS_DESC          (10<< 3)
+#define GDT_TSS_AS_DESC          (25<< 3)
+#define GDT_TSS_BS_DESC          (30<< 3)
+#define GDT_TSS_INICIAL_DESC     (35<< 3)
 
 /* MMU */
 /* -------------------------------------------------------------------------- */

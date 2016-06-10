@@ -8,11 +8,29 @@
 #ifndef __SCHED_H__
 #define __SCHED_H__
 
-#include "screen.h"
-#include "tss.h"
-#include "mem/gdt.h"
+#include "defines.h"
 
-unsigned short sched_proximo_indice();
+typedef enum{
+    sched_H = 0,
+    sched_A = 1,
+    sched_B = 2,
+    sched_Idle = 0xff
+} sched_group;
 
+void sched_inicializar();
 
-#endif	/* !__SCHED_H__ */
+// Devuelve el offset del nuevo tss_entry,
+// 0 si no hay que cambiar
+short sched_proxima_tarea();
+
+// Devuelve el indice de la nueva tarea,
+// -1 si no puede hacer un carajo
+char sched_run_task(sched_group tipo);
+
+// kill -9
+void sched_kill_task(sched_group tipo, char index);
+
+// Set current task to Idle
+void sched_idle();
+
+#endif  /* !__SCHED_H__ */
