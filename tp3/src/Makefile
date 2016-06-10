@@ -128,7 +128,7 @@ tasks/idle.tsk: tasks/idle.asm
 	$(NASM) -fbin -o $@ $^
 	@echo ''
 	@echo 'Generando imagen de la tarea idle...'
-	mv idle.tsk idle.tsk.tmp
+	mv tasks/idle.tsk tasks/idle.tsk.tmp
 	dd if=/dev/zero bs=1 count=4K of=$@ status=noxfer > /dev/null 2>&1
 	dd if=$@.tmp bs=1 count=4K seek=0 conv=notrunc of=$@ status=noxfer > /dev/null 2>&1
 	rm $@.tmp
@@ -161,21 +161,6 @@ pseudo_clean:
 	find . -name '*.o' -type f -exec rm -f "{}" \;
 	rm -f *.bin
 	rm -f *.tmp
-	rm -f *.ctsko
-	rm -f kernel.sym
-	rm -f *.ctsk
-	rm -f *.tsko
-	rm -f *.tsk
-	rm -f $(DISK_IMG)
-	rm -rf *~
-	@echo ''
-
-clean:
-	@echo 'Limpiando todo...'
-	find . -name '*.o' -type f -exec rm -f "{}" \;
-	rm -f audio/tracks/*.audio
-	rm -f *.bin
-	rm -f *.tmp
 	rm -f kernel.sym
 	find . -name '*.ctsko' -type f -exec rm -f "{}" \;
 	find . -name '*.ctsk' -type f -exec rm -f "{}" \;
@@ -183,4 +168,9 @@ clean:
 	find . -name '*.tsk' -type f -exec rm -f "{}" \;
 	rm -f $(DISK_IMG)
 	rm -rf *~
+	@echo ''
+
+clean: pseudo_clean
+	@echo 'Limpiando mas cosas...'
+	rm -f audio/tracks/*.audio
 	@echo ''
