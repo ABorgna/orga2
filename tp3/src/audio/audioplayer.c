@@ -106,7 +106,7 @@ void audio_step(uint8_t channel) {
 
 void update_current_channel(){
     if(channels[0].playing && channels[1].playing) {
-        if(!(audio_step_counter & 0x3)) {
+        if(!(audio_step_counter & 0xf)) {
             current_channel = 1 - current_channel;
         }
     } else {

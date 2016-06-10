@@ -38,6 +38,8 @@ class Convert:
                         self.addMidiNote(outArray, dTime, 0, 0)
                     dTime %= 0.001
 
+        self.addMidiNote(outArray, dTime, 0, 0)
+
         self.writeFile(outArray, outfile)
 
     def addMidiNote(self, array, time, note, velocity=127):
