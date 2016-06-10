@@ -28,7 +28,7 @@ void task() {
   __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  
   __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");  __asm __volatile("nop\n");    
   unsigned int x, y, i;
-  int pos[2];
+  short int pos[2];
   syscall_donde(pos); 
   unsigned int* yo = (unsigned int*)(0x08000000);
   unsigned int* otro = (unsigned int*)(0x08000000+0x1000);

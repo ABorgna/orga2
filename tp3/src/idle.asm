@@ -2,7 +2,7 @@
 ; TRABAJO PRACTICO 3 - System Programming - ORGANIZACION DE COMPUTADOR II - FCEN
 ; ==============================================================================
 
-ORG 0x00016000 ;; TASK_IDLE_CODE
+ORG 0x00010000 ;; TASK_IDLE_CODE
 
 BITS 32
 
@@ -21,11 +21,11 @@ idle:
         ; Imprimir 'reloj'
         mov ebx, dword [numero]
         add ebx, message1
-        imprimir_texto_mp ebx, 1, 0x54, 49, 76
+        imprimir_texto_mp ebx, 1, 0x0A, 49, 2
         mov ebx, chirimbolo_open
-        imprimir_texto_mp ebx, 1, 0x54, 49, 76-1
+        imprimir_texto_mp ebx, 1, 0x0A, 49, 2-1
         mov ebx, chirimbolo_close
-        imprimir_texto_mp ebx, 1, 0x54, 49, 76+1
+        imprimir_texto_mp ebx, 1, 0x0A, 49, 2+1
 
     jmp .loopear
 
