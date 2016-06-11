@@ -210,6 +210,9 @@ _isr0x66:
         jmp .end
     .not_mapear:
 
+    ; Syscall invalido
+    call game_kill_task
+
     .end:
     popad
     iret
