@@ -28,6 +28,7 @@ extern keyboard_init
 
 ; TSS
 extern tss_idle_inicializar
+extern tss_switch_task
 
 ; Scheduler
 extern sched_inicializar
@@ -159,7 +160,8 @@ mp:
     sti
 
     ; Saltar a la primera tarea: Idle
-    jmp GDT_TSS_IDLE_DESC:0xDEADBEEF
+    push GDT_TSS_IDLE_DESC
+    call tss_switch_task
 
     ; Ciclar infinitamente (por si algo sale mal...)
     ; ya no deberia caer aca

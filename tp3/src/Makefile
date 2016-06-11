@@ -28,7 +28,7 @@ DEPEND = Makefile \
 	mem/gdt.c mem/gdt.h \
 	tasks/sched.c tasks/sched.h \
 	tasks/syscall.h \
-	tasks/tss.c tasks/tss.h
+	tasks/tss.c tasks/tss_asm.asm tasks/tss.h
 
 AUDIO_TRACKS = audio/tracks/pacman_0.audio \
 	       audio/tracks/spectra_0.audio \
@@ -49,7 +49,7 @@ OBJ=$(KERNEL_OBJ) \
 	interrupts/rtc.o \
 	mem/mmu.o \
 	tasks/sched.o \
-	tasks/tss.o
+	tasks/tss.o tasks/tss_asm.o
 
 DISK_IMG=diskette.img
 DISK_IMG_BZ=diskette.img.bz2
