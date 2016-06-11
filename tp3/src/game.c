@@ -7,6 +7,7 @@
 #include "game.h"
 
 #include "defines.h"
+#include "random.h"
 #include "screen.h"
 #include "mem/mmu.h"
 #include "tasks/sched.h"
@@ -40,6 +41,12 @@ struct task_state game_entries[3][15] = {{{0}}};
 char game_max_entries[3] = {15,5,5};
 
 /**********************************
+ * Cosas internas
+ **********************************/
+
+void game_go_idle();
+
+/**********************************
  * Lets play a game
  **********************************/
 
@@ -69,6 +76,14 @@ void game_inicializar() {
         game_entries[player_B][i].tss_desc = GDT_TSS_BS_DESC + (i*8);
     }
 
+    // Lanzar las tareas H
+    for(i=0; i<5; i++) {
+        // Hay un 2.94% de proba que toquen dos iguales
+        // TODO: hacer algo
+        struct pos_t pos = {rand(80), rand(44)};
+        game_lanzar(player_H, pos);
+    }
+
     initialized = 1;
 }
 
@@ -76,10 +91,12 @@ void game_inicializar() {
  * Interaccion con el jugador
  **********************************/
 
-void game_mover_cursor(int jugador, direccion dir) {
+void game_mover_cursor(player_group player, direccion dir) {
+    assert(player == player_A || player == player_B);
 }
 
-void game_lanzar(unsigned int jugador) {
+void game_lanzar(player_group player, struct pos_t pos) {
+    assert(player == player_H || player == player_A || player == player_B);
 }
 
 /**********************************
@@ -89,7 +106,18 @@ void game_lanzar(unsigned int jugador) {
 void game_tick() {
     if(!initialized) return;
 
-    return; // TODO abajo hay basura
+    player_group next_group;
+    char next_index;
+
+    sched_proxima_tarea(&next_group, &next_index);
+
+    // Solo switchear task si estamos en otra
+    if(next_group == current_group &&
+            (next_group == player_idle || next_index == current_index)) {
+        return;
+    }
+    current_group = next_group;
+    current_index = next_index;
 
     if(current_group == player_idle) {
         tss_switch_task(GDT_TSS_IDLE_DESC);
@@ -106,21 +134,21 @@ void game_soy(unsigned int yoSoy) {
     if(current_group == player_idle) return;
 
     current_group = player_idle;
-    tss_switch_task(GDT_TSS_IDLE_DESC);
+    game_go_idle();
 }
 
 void game_donde(unsigned int* pos) {
     if(current_group == player_idle) return;
 
     current_group = player_idle;
-    tss_switch_task(GDT_TSS_IDLE_DESC);
+    game_go_idle();
 }
 
 void game_mapear(int x, int y) {
     if(current_group == player_idle) return;
 
     current_group = player_idle;
-    tss_switch_task(GDT_TSS_IDLE_DESC);
+    game_go_idle();
 }
 
 /**********************************
@@ -131,10 +159,16 @@ void game_kill_task() {
     if(current_group == player_idle) return;
 
     sched_kill_task(current_group, current_index);
-    tss_switch_task(GDT_TSS_IDLE_DESC);
+    game_go_idle();
 }
 
 /**********************************
  * Cosas internas
  **********************************/
+
+void game_go_idle(){
+    current_group = player_idle;
+    current_index = 0;
+    tss_switch_task(GDT_TSS_IDLE_DESC);
+}
 

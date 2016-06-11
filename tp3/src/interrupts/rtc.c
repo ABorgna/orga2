@@ -3,6 +3,7 @@
 #include "../interrupts/pic.h"
 
 #include "../game.h"
+#include "../random.h"
 
 #include "rtc.h"
 
@@ -29,9 +30,17 @@ void init_rtc(bool interruptsEnabled){
 }
 
 void rtc_isr() {
+    static bool prng_is_seeded = 0;
+
     // Read RTC_C to ack the interruption
     outb(RTC_CMD, RTC_MASK_NMI | RTC_C);
     inb(RTC_DATA);
+
+    // Seed the pseudo-random number generator
+    if(!prng_is_seeded) {
+        prng_is_seeded = 1;
+        srand(rdtsc());
+    }
 
     game_tick();
 }

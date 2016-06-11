@@ -14,6 +14,7 @@ DEPEND = Makefile \
 	game.c game.h \
 	imprimir.mac \
 	kernel.asm \
+	random.c random.h \
 	screen.c screen.h \
 	audio/audioplayer.c audio/audioplayer.h \
 	audio/speaker.c audio/speaker.h \
@@ -36,6 +37,7 @@ AUDIO_TRACKS = audio/tracks/pacman_0.audio \
 
 OBJ=$(KERNEL_OBJ) \
 	game.o \
+	random.o \
 	screen.o \
 	audio/audioplayer.o \
 	audio/speaker.o \
