@@ -89,6 +89,18 @@
 #define TAREA_B ((void*) 0x12000)
 #define TAREA_H ((void*) 0x13000)
 
+typedef enum{
+    player_H = 0,
+    player_A = 1,
+    player_B = 2,
+    player_idle = 0xff
+} player_group;
+
+struct pos_t {
+    short x;
+    short y;
+} pos_xy;
+
 /* Base de descriptores en la gdt */
 /* -------------------------------------------------------------------------- */
 #define BASE1(dir)  (((unsigned int) (dir)) & 0xffff)

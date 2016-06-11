@@ -10,13 +10,6 @@
 
 #include "../defines.h"
 
-typedef enum{
-    sched_H = 0,
-    sched_A = 1,
-    sched_B = 2,
-    sched_Idle = 0xff
-} sched_group;
-
 void sched_inicializar();
 
 // Devuelve el offset del nuevo tss_entry,
@@ -25,10 +18,10 @@ short sched_proxima_tarea();
 
 // Devuelve el indice de la nueva tarea,
 // -1 si no puede hacer un carajo
-char sched_run_task(sched_group tipo);
+char sched_run_task(player_group tipo);
 
 // kill -9
-void sched_kill_task(sched_group tipo, char index);
+void sched_kill_task(player_group tipo, char index);
 
 // Set current task to Idle
 void sched_idle();
