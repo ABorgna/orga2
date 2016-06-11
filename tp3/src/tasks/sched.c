@@ -12,17 +12,12 @@
 
 #include "sched.h"
 
-struct sched_entry {
-    short tss_descriptor;
-    bool its_aliveeeeeeeeeeeee;
-};
+player_group curr_scheduled_group = player_idle;
 
-player_group current_group = player_idle;
-
-struct sched_entry sched_entries[3][15] = {{{0}}};
-char sched_vivos[3] = {0};
-char sched_indexes[3] = {0};
-char sched_max_entries[3] = {15,5,5};
+bool dead_or_alive[3][15] = {{0}};
+char vivos_count[3] = {0};
+char indexes[3] = {0};
+char max_entries[3] = {15,5,5};
 
 /**********************************************
  * Funciones internas
@@ -34,7 +29,7 @@ player_group next_group_alive(player_group current) {
 
     for(i = 1; i <= 3; i++) {
         char index = (current + i) % 3;
-        if(sched_vivos[index] > 0) {
+        if(vivos_count[index] > 0) {
             return (player_group) index;
         }
     }
@@ -47,8 +42,8 @@ char next_entry(player_group group, bool alive) {
         return -1;
     }
 
-    char num_alive = sched_vivos[group];
-    char max_alive = sched_max_entries[group];
+    char num_alive = vivos_count[group];
+    char max_alive = max_entries[group];
     char i;
 
     if(alive && num_alive == 0) {
@@ -59,8 +54,8 @@ char next_entry(player_group group, bool alive) {
     }
 
     for(i = 1; i <= max_alive; i++) {
-        char index = (sched_indexes[group] + i) % max_alive;
-        if(sched_entries[group][index].its_aliveeeeeeeeeeeee == alive) {
+        char index = (indexes[group] + i) % max_alive;
+        if(dead_or_alive[group][index] == alive) {
             return index;
         }
     }
@@ -73,79 +68,48 @@ char next_entry(player_group group, bool alive) {
  **********************************************/
 
 void sched_inicializar(){
-    int i;
-
-    for(i=0; i<15; i++) {
-        sched_entries[player_H][i].tss_descriptor = GDT_TSS_HS_DESC + i*8;
-    }
-    for(i=0; i<5; i++) {
-        sched_entries[player_A][i].tss_descriptor = GDT_TSS_AS_DESC + i*8;
-    }
-    for(i=0; i<5; i++) {
-        sched_entries[player_B][i].tss_descriptor = GDT_TSS_BS_DESC + i*8;
-    }
+    // shalala
+    curr_scheduled_group = player_idle;
 }
 
-// Devuelve el offset del nuevo tss_entry,
-// 0 si no hay que cambiar
-short sched_proxima_tarea() {
-    player_group curr_group = current_group;
-    char curr_index = current_group == player_idle ?
-                                  0 : sched_indexes[current_group];
-
-    player_group group = next_group_alive(curr_group);
-    char entry = 0;
-
-    current_group = group;
-    if(group != player_idle) {
-        entry = next_entry(group, true);
-        sched_indexes[group] = entry;
+// Devuelve el proximo grupo e índice a correr
+void sched_proxima_tarea(player_group *group, char *index) {
+    // Indice y grupo actual
+    char curr_index = 0;
+    if(curr_scheduled_group == player_idle) {
+        curr_index = indexes[curr_scheduled_group];
     }
 
-    if(group == curr_group && entry == curr_index) {
-        return 0;
+    // Siguiente grupo
+    curr_scheduled_group = next_group_alive(curr_scheduled_group);
+
+    // Siguiente entrada
+    if(curr_scheduled_group != player_idle) {
+        curr_index = next_entry(curr_scheduled_group, true);
+        indexes[curr_scheduled_group] = curr_index;
     }
 
-    if(group == player_idle) {
-        return GDT_TSS_IDLE_DESC;
-    } else {
-        return sched_entries[group][entry].tss_descriptor;
-    }
+    *group = curr_scheduled_group;
+    *index = curr_index;
 }
 
-// Devuelve el indice de la nueva tarea,
-// -1 si no puede hacer un carajo
-char sched_run_task(player_group tipo) {
-    if(tipo >= 3) {
-        return -1;
+// Marcar una tarea como lista para correr
+void sched_run_task(player_group tipo, char index) {
+    if(tipo >= 3 || index >= max_entries[tipo] || dead_or_alive[tipo][index]) {
+        return;
     }
 
-    char index = next_entry(tipo, false);
-
-    if(index != -1) {
-        sched_entries[tipo][index].its_aliveeeeeeeeeeeee = 1;
-        sched_vivos[tipo]++;
-    }
-
-    return index;
+    dead_or_alive[tipo][index] = 1;
+    vivos_count[tipo]++;
 }
 
 // kill -9
 void sched_kill_task(player_group tipo, char index) {
-    if(tipo >= 3 || index >= sched_max_entries[tipo] ||
-            !sched_entries[tipo][index].its_aliveeeeeeeeeeeee) {
+    if(tipo >= 3 || index >= max_entries[tipo] || !dead_or_alive[tipo][index]) {
         return;
     }
 
-    sched_vivos[tipo]--;
-    sched_entries[tipo][index].its_aliveeeeeeeeeeeee = 0;
-
-    if(current_group == tipo && sched_indexes[tipo] == index) {
-        sched_idle();
-    }
-}
-
-void sched_idle() {
-    current_group = player_idle;
+    vivos_count[tipo]--;
+    dead_or_alive[tipo][index] = 0;
 }
 
