@@ -11,7 +11,6 @@ selector: dw 0
 
 ; void tss_switch_task(short descriptor)
 tss_switch_task:
-    xchg bx,bx
     movzx eax, word [esp+4]
     mov [selector], ax
     jmp far [offset]
