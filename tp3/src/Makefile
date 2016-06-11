@@ -18,7 +18,6 @@ DEPEND = Makefile \
 	audio/audioplayer.c audio/audioplayer.h \
 	audio/speaker.c audio/speaker.h \
 	audio/tracks.asm \
-	interrupts/clock.c interrupts/clock.h \
 	interrupts/idt.c interrupts/idt.h \
 	interrupts/isr.asm interrupts/isr.h \
 	interrupts/keyboard.c interrupts/keyboard.h \
@@ -42,7 +41,6 @@ OBJ=$(KERNEL_OBJ) \
 	audio/speaker.o \
 	audio/tracks.o \
 	mem/gdt.o \
-	interrupts/clock.o \
 	interrupts/idt.o \
 	interrupts/isr.o \
 	interrupts/keyboard.o \

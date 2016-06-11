@@ -15,6 +15,10 @@ typedef enum direccion_e { IZQ = 0xAAA, DER = 0x441, ARB = 0xA33, ABA = 0x883  }
 void game_lanzar(unsigned int jugador);
 void game_mover_cursor(int jugador, direccion dir);
 
+// Actualizar, cambiar de tarea y todo eso
+// Se llama con el RTC cada 1ms
+void game_tick();
+
 // Syscalls
 void game_soy(unsigned int soy);
 void game_donde(unsigned int* pos);

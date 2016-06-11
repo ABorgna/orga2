@@ -2,8 +2,9 @@
 #include "../i386.h"
 #include "../interrupts/pic.h"
 
+#include "../game.h"
+
 #include "rtc.h"
-#include "clock.h"
 
 void init_rtc(bool interruptsEnabled){
     // Initialize the RTC at the default freq (1024 Hz)
@@ -32,6 +33,6 @@ void rtc_isr() {
     outb(RTC_CMD, RTC_MASK_NMI | RTC_C);
     inb(RTC_DATA);
 
-    updateClock();
+    game_tick();
 }
 
