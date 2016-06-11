@@ -133,12 +133,22 @@ void game_tick() {
 void game_soy(unsigned int yoSoy) {
     if(current_group == player_idle) return;
 
+ 	if(yoSoy == 0x841)
+    	game_entries[current_group][current_index].curr_group = player_A;
+    else if (yoSoy == 0x325)
+    	game_entries[current_group][current_index].curr_group = player_B;
+    else
+    	game_entries[current_group][current_index].curr_group = player_H;
+
     current_group = player_idle;
     game_go_idle();
 }
 
-void game_donde(unsigned int* pos) {
+void game_donde(struct pos_t* pos) {
     if(current_group == player_idle) return;
+
+    pos->x = game_entries[current_group][current_index].pos.x;
+    pos->y = game_entries[current_group][current_index].pos.y;
 
     current_group = player_idle;
     game_go_idle();
@@ -146,6 +156,11 @@ void game_donde(unsigned int* pos) {
 
 void game_mapear(int x, int y) {
     if(current_group == player_idle) return;
+
+    game_entries[current_group][current_index].mapped_pos.x = x;
+    game_entries[current_group][current_index].mapped_pos.y = y;
+
+    game_entries[current_group][current_index].has_mapped = true;
 
     current_group = player_idle;
     game_go_idle();
