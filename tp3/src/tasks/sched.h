@@ -14,16 +14,12 @@ void sched_inicializar();
 
 // Devuelve el offset del nuevo tss_entry,
 // 0 si no hay que cambiar
-short sched_proxima_tarea();
+void sched_proxima_tarea(player_group *group, char *index);
 
-// Devuelve el indice de la nueva tarea,
-// -1 si no puede hacer un carajo
-char sched_run_task(player_group tipo);
+// Marcar una tarea como lista para correr
+void sched_run_task(player_group tipo, char index);
 
 // kill -9
 void sched_kill_task(player_group tipo, char index);
-
-// Set current task to Idle
-void sched_idle();
 
 #endif  /* !__SCHED_H__ */

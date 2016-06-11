@@ -11,6 +11,9 @@
 
 typedef enum direccion_e { IZQ = 0xAAA, DER = 0x441, ARB = 0xA33, ABA = 0x883  } direccion;
 
+// Lets play a game
+void game_inicializar();
+
 // Interaccion con el jugador
 void game_lanzar(unsigned int jugador);
 void game_mover_cursor(int jugador, direccion dir);

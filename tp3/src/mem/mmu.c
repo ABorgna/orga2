@@ -6,8 +6,15 @@
 */
 
 #include "mmu.h"
+#include "../defines.h"
 
 void* proxima_pagina_libre;
+
+void* celda_to_pagina(struct pos_t pos);
+
+/**********************************
+ * Funciones exportadas
+ **********************************/
 
 void mmu_inicializar() {
     proxima_pagina_libre = (void*) INICIO_PAGINAS_LIBRES;
@@ -45,9 +52,9 @@ void* mmu_proxima_pagina_fisica_libre() {
     return pagina_libre;
 }
 
-pde* mmu_inicializar_dir_tarea(void* tarea, unsigned char x, unsigned char y) {
-    assert(x < 80);
-    assert(y < 42);
+pde* mmu_inicializar_dir_tarea(void* tarea, struct pos_t pos) {
+    assert(0 <= pos.x && pos.x < 80);
+    assert(0 <= pos.y && pos.y < 44);
     assert(!((int)tarea & 0xfff));
     int i;
 
@@ -58,7 +65,7 @@ pde* mmu_inicializar_dir_tarea(void* tarea, unsigned char x, unsigned char y) {
     }
 
     // Calcular la posicion de memoria de la celda del mapa
-    void* celda = BASE_MAPA + x * MAP_CELL_SIZE + y * 80 * MAP_CELL_SIZE;
+    void* celda = celda_to_pagina(pos);
 
     // Mapear las paginas necesarias en el kernel para poder copiar el contenido
     mmu_mapear_pagina_kernel(celda, celda);
@@ -149,4 +156,13 @@ void mmu_unmapear_pagina(void* virtual, pde* dir){
 
     // Flushear la cache
     tlbflush();
+}
+
+/**********************************
+ * Cosas internas
+ **********************************/
+
+// Calcular la posicion de memoria de la celda del mapa
+void* celda_to_pagina(struct pos_t pos) {
+    return (void*) (BASE_MAPA + pos.x * MAP_CELL_SIZE + pos.y * 80 * MAP_CELL_SIZE);
 }

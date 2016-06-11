@@ -44,7 +44,7 @@ typedef struct str_pte {
 
 void mmu_inicializar();
 void mmu_inicializar_dir_kernel();
-pde* mmu_inicializar_dir_tarea(void* tarea, unsigned char x, unsigned char y);
+pde* mmu_inicializar_dir_tarea(void* tarea, struct pos_t pos);
 
 void mmu_mapear_pagina_kernel(void* virtual, void* fisica);
 void mmu_mapear_pagina_user(void* virtual, void* fisica, pde* dir);
