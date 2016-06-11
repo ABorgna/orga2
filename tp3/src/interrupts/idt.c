@@ -16,23 +16,20 @@ idt_descriptor IDT_DESC = {
     (unsigned int) &idt
 };
 
-#define IDT_ENTRY_TRAP(numero)                                              \
+#define IDT_ENTRY(numero, type, dpl)                                        \
     idt[numero].offset_0_15 = (unsigned short)                              \
         ((unsigned int)(&_isr##numero) & (unsigned int) 0xFFFF);            \
     idt[numero].segsel = (unsigned short) GDT_CODE_0_DESC;                  \
-    idt[numero].attr = (unsigned short) 0x8F00;                             \
+    idt[numero].attr = (unsigned short) (0x8000 | (type) | ((dpl)<<13));    \
     idt[numero].offset_16_31 = (unsigned short)                             \
         ((unsigned int)(&_isr##numero) >> 16 & (unsigned int) 0xFFFF);
 
-#define IDT_ENTRY_INTERRUPT(numero)                                         \
-    idt[numero].offset_0_15 = (unsigned short)                              \
-        ((unsigned int)(&_isr##numero) & (unsigned int) 0xFFFF);            \
-idt[numero].segsel = (unsigned short) GDT_CODE_0_DESC;                      \
-    idt[numero].attr = (unsigned short) 0x8E00;                             \
-    idt[numero].offset_16_31 = (unsigned short)                             \
-        ((unsigned int)(&_isr##numero) >> 16 & (unsigned int) 0xFFFF);
+#define IDT_ENTRY_TRAP(numero) IDT_ENTRY(numero, 0x0F00, 0)
+#define IDT_ENTRY_INTERRUPT(numero) IDT_ENTRY(numero, 0x0E00, 0)
+#define IDT_ENTRY_TRAP_USER(numero) IDT_ENTRY(numero, 0x0F00, 3)
+#define IDT_ENTRY_INTERRUPT_USER(numero) IDT_ENTRY(numero, 0x0E00, 3)
 
-#define IDT_ENTRY_INTERRUPT_DEFAULT(numero)                                 \
+#define IDT_ENTRY_DEFAULT(numero)                                           \
     idt[numero].offset_0_15 = (unsigned short)                              \
         ((unsigned int)(&_isr_default) & (unsigned int) 0xFFFF);            \
 idt[numero].segsel = (unsigned short) GDT_CODE_0_DESC;                      \
@@ -65,14 +62,18 @@ void idt_inicializar() {
     IDT_ENTRY_INTERRUPT(18);
     IDT_ENTRY_INTERRUPT(19);
 
-    for(i = 20; i < 32; i++) {IDT_ENTRY_INTERRUPT_DEFAULT(i);}
+    for(i = 19 + 1; i < 32; i++) {IDT_ENTRY_DEFAULT(i);}
 
     IDT_ENTRY_INTERRUPT(32); // PIT 0
     IDT_ENTRY_INTERRUPT(33);
 
-    for(i = 34; i < 40; i++) {IDT_ENTRY_INTERRUPT_DEFAULT(i);}
+    for(i = 33 + 1; i < 40; i++) {IDT_ENTRY_DEFAULT(i);}
 
     IDT_ENTRY_INTERRUPT(40); // RTC
 
-    for(i = 41; i < 256; i++) {IDT_ENTRY_INTERRUPT_DEFAULT(i);}
+    for(i = 40 + 1; i < 0x66; i++) {IDT_ENTRY_DEFAULT(i);}
+
+    IDT_ENTRY_INTERRUPT_USER(0x66); // RTC
+
+    for(i = 0x66 + 1; i < 256; i++) {IDT_ENTRY_DEFAULT(i);}
 }
