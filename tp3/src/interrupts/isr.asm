@@ -26,6 +26,12 @@ extern audio_isr
 ;; Keyboard
 extern keyboard_isr
 
+;; Game
+extern game_kill
+extern game_soy
+extern game_donde
+extern game_mapear
+
 ;;
 ;; Definición de MACROS
 ;; -------------------------------------------------------------------------- ;;
@@ -157,18 +163,45 @@ _isr40:
 ;; Rutinas de atención de las SYSCALLS
 ;; -------------------------------------------------------------------------- ;;
 
-global _isr0x66
-_isr0x66:
-    mov eax, 0x42
-    iret
-
-%define DONDE  0x124
-%define SOY    0xA6A
-%define MAPEAR 0xFF3
+%define SYSCALL_DONDE  0x124
+%define SYSCALL_SOY    0xA6A
+%define SYSCALL_MAPEAR 0xFF3
 
 %define VIRUS_ROJO 0x841
 %define VIRUS_AZUL 0x325
 
+global _isr0x66
+_isr0x66:
+    pushad
+
+    cmp eax, SYSCALL_DONDE
+    jne .not_donde
+        push ebx
+        call game_donde
+        add esp, 4
+        jmp .end
+    .not_donde:
+
+    cmp eax, SYSCALL_SOY
+    jne .not_soy
+        push ebx
+        call game_soy
+        add esp, 4
+        jmp .end
+    .not_soy:
+
+    cmp eax, SYSCALL_MAPEAR
+    jne .not_mapear
+        push ecx
+        push ebx
+        call game_mapear
+        add esp, 8
+        jmp .end
+    .not_mapear:
+
+    .end:
+    popad
+    iret
 
 ;; Funciones Auxiliares
 ;; -------------------------------------------------------------------------- ;;

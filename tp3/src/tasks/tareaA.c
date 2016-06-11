@@ -6,7 +6,6 @@
 
 #include "../colors.h"
 #include "../defines.h"
-#include "../game.h"
 #include "syscall.h"
 
 void task() {
