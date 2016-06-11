@@ -8,8 +8,6 @@
 #define __GAME_H__
 
 #include "defines.h"
-#include "screen.h"
-#include "mem/mmu.h"
 
 typedef enum direccion_e { IZQ = 0xAAA, DER = 0x441, ARB = 0xA33, ABA = 0x883  } direccion;
 
@@ -21,5 +19,8 @@ void game_mover_cursor(int jugador, direccion dir);
 void game_soy(unsigned int soy);
 void game_donde(unsigned int* pos);
 void game_mapear(int x, int y);
+
+// Otros
+void game_kill_task();
 
 #endif  /* !__GAME_H__ */

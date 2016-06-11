@@ -27,7 +27,7 @@ extern audio_isr
 extern keyboard_isr
 
 ;; Game
-extern game_kill
+extern game_kill_task
 extern game_soy
 extern game_donde
 extern game_mapear
@@ -43,7 +43,10 @@ _isr_default:
     nop
     mov eax, 0xDEADBEEF
     mov eax, 0x0DEFA017
-    nop
+
+    ; Despedite de tu tarea
+    call game_kill_task
+
     popad
     iret
 
@@ -55,6 +58,10 @@ interrupt_msg_%1_len equ    $ - interrupt_msg_%1
 
 _isr%1:
     pushad
+
+    ; Despedite de tu tarea
+    call game_kill_task
+
     imprimir_texto_mp interrupt_msg_%1, interrupt_msg_%1_len, 0x07, 3, 0
     popad
     iret
@@ -70,6 +77,10 @@ interrupt_msg_%1_len equ    $ - interrupt_msg_%1
 _isr%1:
     add esp, 4
     pushad
+
+    ; Despedite de tu tarea
+    call game_kill_task
+
     imprimir_texto_mp interrupt_msg_%1, interrupt_msg_%1_len, 0x07, 3, 0
     popad
     iret

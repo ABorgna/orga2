@@ -32,3 +32,10 @@ void game_donde(unsigned int* pos) {
 void game_mapear(int x, int y) {
 }
 
+/**********************************
+ * Otros
+ **********************************/
+
+void game_kill_task() {
+}
+
