@@ -21,7 +21,7 @@ void game_tick();
 
 // Syscalls
 void game_soy(unsigned int soy);
-void game_donde(unsigned int* pos);
+void game_donde(struct pos_t* pos);
 void game_mapear(int x, int y);
 
 // Otros
