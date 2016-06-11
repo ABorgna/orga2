@@ -28,21 +28,21 @@ TESTS = {
         "filter": "cropflip",
         "imgs": ["img/lena.bmp"],
         "implementations": ["c_O3", "sse","sse_par","avx"],
-        "sizes": [(512,512)],
-        "params": ["128 128 128 128"]
+        "sizes": [(1024, 1024)],
+        "params": ["512 512 0 0"]
     },
     "cropflip-c-implementaciones": {
         "filter": "cropflip",
         "imgs": ["img/lena.bmp"],
         "implementations": ["c_O0","c_O1", "c_O2", "c_O3"],
-        "sizes": [(512,512)],
-        "params": ["128 128 128 128"]
+        "sizes": [(1024, 1024)],
+        "params": ["512 512 0 0"]
     },
     "cropflip-sizes": {
         "filter": "cropflip",
         "imgs": ["img/lena.bmp"],
         "implementations": ["c","sse","sse_par","avx"],
-        "sizes": [(2**w,2**h) for w in range(4, 14) for h in range(4,14)],
+        "sizes": [(2**w,2**h) for w in range(8, 12) for h in range(8,12)],
         "params": ["%w %h 0 0"]     # width and height
     },
     "sepia-implementaciones": {
