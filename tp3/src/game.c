@@ -79,8 +79,13 @@ void game_inicializar() {
 
 void game_mover_cursor(player_group player, direccion dir) {
     assert(player == player_A || player == player_B);
-
-    // TODO
+    player_group jugador = player - 1;			//Esto es porque player_A = 1 y player_B = 2
+    switch(dir){
+    	case DER: if(players_pos[jugador].x < 79) players_pos[jugador].x++; break;
+    	case IZQ: if(players_pos[jugador].x > 0)  players_pos[jugador].x--; break;
+    	case ARB: if(players_pos[jugador].y > 0)  players_pos[jugador].y--; break;
+    	case ABA: if(players_pos[jugador].y < 49) players_pos[jugador].y++; break;
+    }
 }
 
 void game_lanzar(player_group player, struct pos_t pos) {
