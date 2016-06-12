@@ -52,7 +52,6 @@ interrupt_msg_%1_len equ    $ - interrupt_msg_%1
 
 _isr%1:
     pushad
-    xchg bx, bx
 
     mov eax, 0xC01DCAFE
     mov eax, %1
@@ -78,7 +77,6 @@ interrupt_msg_%1_len equ    $ - interrupt_msg_%1
 _isr%1:
     add esp, 4
     pushad
-    xchg bx, bx
 
     mov eax, 0xC01DCAFE
     mov eax, %1
