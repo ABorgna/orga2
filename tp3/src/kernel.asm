@@ -39,9 +39,9 @@ extern game_inicializar
 %include "imprimir.mac"
 %define GDT_CODE_0_DESC          4 << 3
 %define GDT_DATA_0_DESC          6 << 3
-%define GDT_VIDEO_DESC           8 << 3
-%define GDT_TSS_IDLE_DESC        9 << 3
-%define GDT_TSS_INICIAL_DESC     35 << 3
+%define GDT_VIDEO_0_DESC         8 << 3
+%define GDT_TSS_IDLE_DESC        10 << 3
+%define GDT_TSS_INICIAL_DESC     36 << 3
 
 global start
 
@@ -103,7 +103,7 @@ mp:
     mov gs, ax
     mov ss, ax
 
-    mov ax, GDT_VIDEO_DESC
+    mov ax, GDT_VIDEO_0_DESC
     mov fs, ax
 
     ; Establecer la base de la pila

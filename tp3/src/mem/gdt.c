@@ -145,13 +145,29 @@ gdt_entry gdt[GDT_COUNT] = {
     },
 
     /* Seccion de video */
-    [GDT_VIDEO_INDEX] = (gdt_entry) {
+    [GDT_VIDEO_0_INDEX] = (gdt_entry) {
         (unsigned short)    0x0FBF,         /* limit[0:15]  */
         (unsigned short)    0xB800,         /* base[0:15]   */
         (unsigned char)     0x00,           /* base[23:16]  */
         (unsigned char)     0x02,           /* type         */
         (unsigned char)     0x01,           /* s            */
         (unsigned char)     0x00,           /* dpl          */
+        (unsigned char)     0x01,           /* p            */
+        (unsigned char)     0x00,           /* limit[16:19] */
+        (unsigned char)     0x00,           /* avl          */
+        (unsigned char)     0x00,           /* l            */
+        (unsigned char)     0x01,           /* db           */
+        (unsigned char)     0x00,           /* g            */
+        (unsigned char)     0x00,           /* base[31:24]  */
+    },
+
+    [GDT_VIDEO_3_INDEX] = (gdt_entry) {
+        (unsigned short)    0x0FBF,         /* limit[0:15]  */
+        (unsigned short)    0xB800,         /* base[0:15]   */
+        (unsigned char)     0x00,           /* base[23:16]  */
+        (unsigned char)     0x02,           /* type         */
+        (unsigned char)     0x01,           /* s            */
+        (unsigned char)     0x03,           /* dpl          */
         (unsigned char)     0x01,           /* p            */
         (unsigned char)     0x00,           /* limit[16:19] */
         (unsigned char)     0x00,           /* avl          */
@@ -194,7 +210,7 @@ void teseses_inicializar(){
   gdt_setear_tss_entry(GDT_TSS_INICIAL, &tss_inicial, 0);
   gdt_setear_tss_entry(GDT_TSS_IDLE, &tss_idle, 0);
   for(i = 0; i < 15; i++){
-    gdt_setear_tss_entry(GDT_TSS_HS + i, tss_H + i, 0); // TODO: cambiar a ring 3
+    gdt_setear_tss_entry(GDT_TSS_HS + i, tss_H + i, 0);
   }
   for(i = 0; i < 5; i++){
     gdt_setear_tss_entry(GDT_TSS_AS + i, tss_A + i, 0);

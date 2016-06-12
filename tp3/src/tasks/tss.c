@@ -48,7 +48,7 @@ void tss_idle_inicializar() {
         (unsigned short)   0,               /* unused6;   */
         (unsigned short)   GDT_DATA_0_DESC, /* ds;        */
         (unsigned short)   0,               /* unused7;   */
-        (unsigned short)   GDT_VIDEO_DESC,  /* fs;        */
+        (unsigned short)   GDT_VIDEO_0_DESC,/* fs;        */
         (unsigned short)   0,               /* unused8;   */
         (unsigned short)   GDT_DATA_0_DESC, /* gs;        */
         (unsigned short)   0,               /* unused9;   */
@@ -87,17 +87,17 @@ void tss_inicializar_tarea(tss* entrada, pde* cr3) {
         (unsigned int)     TAREA_PAGINA_1-4,/* ebp;       */
         (unsigned int)     0,               /* esi;       */
         (unsigned int)     0,               /* edi;       */
-        (unsigned short)   GDT_DATA_0_DESC, /* es;        */
+        (unsigned short)   GDT_DATA_3_DESC, /* es;        */
         (unsigned short)   0,               /* unused4;   */
-        (unsigned short)   GDT_CODE_0_DESC, /* cs;        */
+        (unsigned short)   GDT_CODE_3_DESC, /* cs;        */
         (unsigned short)   0,               /* unused5;   */
-        (unsigned short)   GDT_DATA_0_DESC, /* ss;        */
+        (unsigned short)   GDT_DATA_3_DESC, /* ss;        */
         (unsigned short)   0,               /* unused6;   */
-        (unsigned short)   GDT_DATA_0_DESC, /* ds;        */
+        (unsigned short)   GDT_DATA_3_DESC, /* ds;        */
         (unsigned short)   0,               /* unused7;   */
-        (unsigned short)   0,               /* fs;        */
+        (unsigned short)   GDT_VIDEO_3_DESC,/* fs;        */
         (unsigned short)   0,               /* unused8;   */
-        (unsigned short)   GDT_DATA_0_DESC, /* gs;        */
+        (unsigned short)   GDT_DATA_3_DESC, /* gs;        */
         (unsigned short)   0,               /* unused9;   */
         (unsigned short)   0,               /* ldt;       */
         (unsigned short)   0,               /* unused10;  */
