@@ -62,6 +62,11 @@ void print_char(unsigned char c, unsigned int x, unsigned int y, unsigned char a
       p[y][x].a = attr;
 }
 
+char get_char(unsigned int x, unsigned int y){
+    ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
+    return p[y][x].c;
+}
+
 void reventar_pantalla(){
     ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
     int i, j;
@@ -334,7 +339,16 @@ void screen_draw_clocks(struct task_state** game_entries, char* game_max_entries
     for(j = 0 ; j < game_max_entries[i] ; j++){
       struct task_state task = game_entries[i][j];      
       if(task.alive){
-        print_char('O', offsets[i]+j,4, colores[i]);
+        char current_char = get_char(offsets[i]+j, 4);
+        char next_char = 0;
+        switch(current_char){
+          case '|': next_char = '/'; break;
+          case '/': next_char = '-'; break;
+          case '-': next_char = '\\'; break;
+          case '\\': next_char = '|'; break;
+          default: next_char = '|';
+        }
+        print_char(next_char, offsets[i]+j,4, colores[i]);
       }else{
         print_char('X', offsets[i]+j,4, colores[i]);
       }

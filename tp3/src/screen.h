@@ -37,6 +37,8 @@ void print_int(unsigned int n, unsigned int x, unsigned int y, unsigned char att
 
 void print_char(unsigned char c, unsigned int x, unsigned int y, unsigned char attr);
 
+char get_char(unsigned int x, unsigned int y);
+
 void reventar_pantalla();
 
 void dibujar_fondo_interfaz();
