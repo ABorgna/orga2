@@ -46,4 +46,6 @@ void screen_show_debug(tss* tss, player_group group);
 
 void screen_draw_map(struct task_state *states, char max_states, struct pos_t* players_pos);
 
+void screen_draw_interface(struct task_state *states, char max_states, char* players_lives);
+
 #endif  /* !__SCREEN_H__ */
