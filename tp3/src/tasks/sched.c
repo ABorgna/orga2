@@ -25,7 +25,7 @@ char max_entries[3] = {15,5,5};
 
 player_group next_group_alive(player_group current) {
     char i;
-    current = current == player_idle ? player_B : player_H;
+    current = current == player_idle ? player_B : current;
 
     for(i = 1; i <= 3; i++) {
         char index = (current + i) % 3;
