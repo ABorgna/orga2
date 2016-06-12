@@ -284,9 +284,23 @@ void screen_draw_interface(struct task_state *states, char max_states, char* pla
   print_int(99,50,0, C_BG_BLACK | C_FG_BLACK ,2);
   print_int(99,50,1, C_BG_BLACK | C_FG_BLACK ,2);
 
+  //Colores predeterminados de jugadores (cambiar a gusto)
+  unsigned char C_PLAYER1 = C_BG_BLACK | C_FG_LIGHT_RED;
+  unsigned char C_PLAYER2 = C_BG_BLACK | C_FG_LIGHT_BLUE;
+
+  unsigned char player2_offset = 50;
+
+  //Textito identificador de players
+
+  print("Player 1",0,0, C_PLAYER1);
+  print("Player 2",player2_offset,0, C_PLAYER2);
+
   //Printear vidas
-  print_int(players_lives[0],1,0, C_BG_BLACK | C_FG_LIGHT_RED ,2);
-  print_int(players_lives[1],1,1, C_BG_BLACK | C_FG_LIGHT_BLUE ,2);
+  print("Vidas: ",0,1, C_PLAYER1);
+  print_int(players_lives[0] , 10 , 1 , C_PLAYER1 , 2);
+
+  print("Vidas: ",player2_offset,1, C_PLAYER2);
+  print_int(players_lives[1], player2_offset+10 , 1 , C_PLAYER2 , 2);
 
   //Printear puntaje
 
@@ -302,6 +316,9 @@ void screen_draw_interface(struct task_state *states, char max_states, char* pla
     }
   }
 
-  print_int(puntos[0],50,0, C_BG_BLACK | C_FG_LIGHT_RED ,2);
-  print_int(puntos[1],50,1, C_BG_BLACK | C_FG_LIGHT_BLUE ,2);
+  print("Puntos: ",0,2, C_PLAYER1);
+  print_int(puntos[0],10,2, C_PLAYER1 ,2);
+
+  print("Puntos: ",player2_offset,2, C_PLAYER2);
+  print_int(puntos[1],player2_offset+10,2, C_PLAYER2 ,2);
 }
