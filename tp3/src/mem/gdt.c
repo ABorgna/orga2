@@ -194,13 +194,13 @@ void teseses_inicializar(){
   gdt_setear_tss_entry(GDT_TSS_INICIAL, &tss_inicial, 0);
   gdt_setear_tss_entry(GDT_TSS_IDLE, &tss_idle, 0);
   for(i = 0; i < 15; i++){
-    gdt_setear_tss_entry(GDT_TSS_HS + i, tss_H + i, 3);
+    gdt_setear_tss_entry(GDT_TSS_HS + i, tss_H + i, 0); // TODO: cambiar a ring 3
   }
   for(i = 0; i < 5; i++){
-    gdt_setear_tss_entry(GDT_TSS_AS + i, tss_A + i, 3);
+    gdt_setear_tss_entry(GDT_TSS_AS + i, tss_A + i, 0);
   }
   for(i = 0; i < 5; i++){
-    gdt_setear_tss_entry(GDT_TSS_BS + i, tss_B + i, 3);
+    gdt_setear_tss_entry(GDT_TSS_BS + i, tss_B + i, 0);
   }
 }
 

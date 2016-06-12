@@ -72,7 +72,7 @@ pde* mmu_inicializar_dir_tarea(void* tarea, struct pos_t pos, pde* current_dir) 
     }
 
     // Mapear la celda para la tarea
-    mmu_mapear_pagina_user((void*) TAREA_PAGINA_0, celda, dir);
+    mmu_mapear_pagina_kernel((void*) TAREA_PAGINA_0, celda, dir); // TODO: cambiar a user
 
     // Mapear las paginas del kernel
     for(i = 0; i < 1024; i++) {

@@ -153,7 +153,7 @@ void game_tick() {
     if(current_group == player_idle) {
         tss_switch_task(GDT_TSS_IDLE_DESC);
     } else {
-        //tss_switch_task(curr_task()->tss_desc);
+        tss_switch_task(curr_task()->tss_desc);
     }
 }
 
