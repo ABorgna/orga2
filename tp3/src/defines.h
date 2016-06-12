@@ -91,8 +91,8 @@
 #define TAREA_H ((void*) 0x13000)
 #define SOY_A 0x841
 #define SOY_B 0x325
-#define TAREA_PAGINA_0 0x08000000
-#define TAREA_PAGINA_1 0x08001000
+#define TAREA_PAGINA_0 ((void*)0x08000000)
+#define TAREA_PAGINA_1 ((void*)0x08001000)
 
 typedef enum{
     player_H = 0,
