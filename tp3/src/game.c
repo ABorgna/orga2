@@ -13,6 +13,9 @@
 #include "tasks/sched.h"
 #include "tasks/tss.h"
 
+// Realentizar los ticks para que sean visibles :P
+uint32_t tick_divisor = 0x100;
+
 bool initialized = 0;
 
 struct pos_t players_pos[2];
@@ -139,9 +142,16 @@ void game_lanzar(player_group player, struct pos_t pos) {
  * Se llama con el RTC cada 1ms
  **********************************/
 void game_tick() {
+    static uint32_t tick_divisor_count = ~0;
+
     if(!initialized) return;
+
     //el debugger para la ejecución del juego
     if (dbg_displayed) return;
+
+    // Bajarle un cambio a la frequencia de actualizacion
+    tick_divisor_count = (tick_divisor_count -1) % tick_divisor;
+    if(tick_divisor_count) return;
 
     player_group next_group;
     char next_index;
