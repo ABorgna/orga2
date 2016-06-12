@@ -72,7 +72,7 @@ pde* mmu_inicializar_dir_tarea(void* tarea, struct pos_t pos, pde* current_dir) 
     }
 
     // Mapear la celda para la tarea
-    mmu_mapear_pagina_kernel((void*) TAREA_PAGINA_0, celda, dir); // TODO: cambiar a user
+    mmu_mapear_pagina_user((void*) TAREA_PAGINA_0, celda, dir);
 
     // Mapear las paginas del kernel
     for(i = 0; i < 1024; i++) {
@@ -112,9 +112,11 @@ void mmu_mapear_pagina(void* virtual, void* fisica, pde* dir, pte atributos){
         }
 
         // Agregar la nueva tabla al directorio
+        // write y user se sobreescriben por el valor de la pte
         dir[PDE_INDEX(virtual)].base = PTE_BASE(tabla);
         dir[PDE_INDEX(virtual)].present = 1;
         dir[PDE_INDEX(virtual)].write = 1;
+        dir[PDE_INDEX(virtual)].user = 1;
     }
     else {
         tabla = (pte*) PTE_BASE_TO_PTR(dir[PDE_INDEX(virtual)].base);

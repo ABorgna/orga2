@@ -36,7 +36,7 @@
 
 /* Indices en la gdt */
 /* -------------------------------------------------------------------------- */
-#define GDT_COUNT 36
+#define GDT_COUNT 37
 
 #define GDT_NULL_INDEX           0
 #define GDT_RESERVADO_1_INDEX    1
@@ -46,26 +46,28 @@
 #define GDT_CODE_3_INDEX         5
 #define GDT_DATA_0_INDEX         6
 #define GDT_DATA_3_INDEX         7
-#define GDT_VIDEO_INDEX          8
-#define GDT_TSS_IDLE             9
-#define GDT_TSS_HS               10
-#define GDT_TSS_AS               25
-#define GDT_TSS_BS               30
-#define GDT_TSS_INICIAL          35
+#define GDT_VIDEO_0_INDEX        8
+#define GDT_VIDEO_3_INDEX        9
+#define GDT_TSS_IDLE             10
+#define GDT_TSS_HS               11
+#define GDT_TSS_AS               26
+#define GDT_TSS_BS               31
+#define GDT_TSS_INICIAL          36
 
 #define GDT_NULL_DESC            (0 << 3)
 #define GDT_RESERVADO_1_DESC     (1 << 3)
 #define GDT_RESERVADO_2_DESC     (2 << 3)
 #define GDT_RESERVADO_3_DESC     (3 << 3)
 #define GDT_CODE_0_DESC          (4 << 3)
-#define GDT_CODE_3_DESC          (5 << 3)
+#define GDT_CODE_3_DESC         ((5 << 3) | 0x3)
 #define GDT_DATA_0_DESC          (6 << 3)
-#define GDT_DATA_3_DESC          (7 << 3)
-#define GDT_VIDEO_DESC           (8 << 3)
-#define GDT_TSS_IDLE_DESC        (9 << 3)
-#define GDT_TSS_HS_DESC          (10<< 3)
-#define GDT_TSS_AS_DESC          (25<< 3)
-#define GDT_TSS_BS_DESC          (30<< 3)
+#define GDT_DATA_3_DESC         ((7 << 3) | 0x3)
+#define GDT_VIDEO_0_DESC         (8 << 3)
+#define GDT_VIDEO_3_DESC        ((9 << 3) | 0x3)
+#define GDT_TSS_IDLE_DESC        (10 << 3)
+#define GDT_TSS_HS_DESC          (11<< 3)
+#define GDT_TSS_AS_DESC          (26<< 3)
+#define GDT_TSS_BS_DESC          (31<< 3)
 #define GDT_TSS_INICIAL_DESC     (35<< 3)
 
 /* MMU */

@@ -62,6 +62,9 @@ interrupt_msg_%1_len equ    $ - interrupt_msg_%1
 _isr%1:
     pushad
 
+    mov eax, 0xC01DCAFE
+    mov eax, %1
+
     ; Si no está habilitado, no hace nada
     call game_show_debug
 
@@ -83,6 +86,9 @@ interrupt_msg_%1_len equ    $ - interrupt_msg_%1
 _isr%1:
     add esp, 4
     pushad
+
+    mov eax, 0xC01DCAFE
+    mov eax, %1
 
     ; Si no está habilitado, no hace nada
     call game_show_debug
