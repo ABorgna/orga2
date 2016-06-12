@@ -19,6 +19,7 @@ uint32_t tick_divisor = 0x100;
 bool initialized = 0;
 
 struct pos_t players_pos[2];
+char players_lives[2] = {20,20};
 
 player_group current_group;
 char current_index;
@@ -74,7 +75,7 @@ void game_inicializar() {
         game_lanzar(player_H, pos);
     }
 
-    screen_draw_map((struct task_state*) game_entries, 45, players_pos);
+    game_update_map();
 
     initialized = 1;
 }
@@ -107,34 +108,39 @@ void game_lanzar_inplace(player_group player) {
 
 void game_lanzar(player_group player, struct pos_t pos) {
     assert(player == player_H || player == player_A || player == player_B);
-    int i;
-    struct task_state *task;
-
-    // Buscar el proximo slot vacio
-    for(i=0; i < game_max_entries[player]; i++) {
-        if(!game_entries[player][i].alive) break;
+    if(player == player_H || players_lives[player - 1] > 0){
+    	int i;
+    	struct task_state *task;
+	
+	    	// Buscar el proximo slot vacio
+	    	for(i=0; i < game_max_entries[player]; i++) {
+	    	    if(!game_entries[player][i].alive) break;
+	    	}
+	
+	    	// No hay slots libres
+	    	if(i == game_max_entries[player]) {
+	    	    return;
+	    	}
+	
+	    	task = &game_entries[player][i];
+	
+	    	task->alive = 1;
+	    	task->pos.x = pos.x;
+	    	task->pos.y = pos.y;
+	    	task->original_group = player;
+	    	task->curr_group = player;
+	    	task->cr3 = mmu_inicializar_dir_tarea(codigo_tarea[player], pos, current_cr3());
+	    	task->has_mapped = false;
+	
+	    	tss_inicializar_tarea(task->tss, task->cr3);
+			
+			if(player != player_H)
+	    		players_lives[player - 1]--;
+	
+	    	sched_run_task(player, i);
+	
+    	game_update_map();
     }
-
-    // No hay slots libres
-    if(i == game_max_entries[player]) {
-        return;
-    }
-
-    task = &game_entries[player][i];
-
-    task->alive = 1;
-    task->pos.x = pos.x;
-    task->pos.y = pos.y;
-    task->original_group = player;
-    task->curr_group = player;
-    task->cr3 = mmu_inicializar_dir_tarea(codigo_tarea[player], pos, current_cr3());
-    task->has_mapped = false;
-
-    tss_inicializar_tarea(task->tss, task->cr3);
-
-    sched_run_task(player, i);
-
-    game_update_map();
 }
 
 /**********************************
@@ -283,6 +289,7 @@ static void game_go_idle(){
 
 static __inline __attribute__((always_inline)) void game_update_map(){
     screen_draw_map((struct task_state*) game_entries, 45, players_pos);
+    screen_draw_interface((struct task_state*) game_entries, 45, players_lives);
 }
 
 static pde* current_cr3() {

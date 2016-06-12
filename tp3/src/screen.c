@@ -276,3 +276,32 @@ void screen_draw_map(struct task_state *states, char max_states, struct pos_t* p
     print_char('X',players_pos[0].x+MAPA_BORDE_IZQ,players_pos[0].y+MAPA_BORDE_ARB, C_BG_BLACK | C_FG_LIGHT_RED);
     print_char('X',players_pos[1].x+MAPA_BORDE_IZQ,players_pos[1].y+MAPA_BORDE_ARB, C_BG_BLACK | C_FG_LIGHT_BLUE);
 }
+
+void screen_draw_interface(struct task_state *states, char max_states, char* players_lives){
+  //Limpiar texto de vidas y puntaje
+  print_int(99,1,0, C_BG_BLACK | C_FG_BLACK ,2);
+  print_int(99,1,1, C_BG_BLACK | C_FG_BLACK ,2);
+  print_int(99,50,0, C_BG_BLACK | C_FG_BLACK ,2);
+  print_int(99,50,1, C_BG_BLACK | C_FG_BLACK ,2);
+
+  //Printear vidas
+  print_int(players_lives[0],1,0, C_BG_BLACK | C_FG_LIGHT_RED ,2);
+  print_int(players_lives[1],1,1, C_BG_BLACK | C_FG_LIGHT_BLUE ,2);
+
+  //Printear puntaje
+
+  char puntos[2] = {0,0};
+  int i;
+  for(i=0; i<max_states; i++) {
+    struct task_state task = states[i];
+    if(!task.alive) continue;
+    switch(task.curr_group){
+      case player_A: puntos[0]++ ; break;
+      case player_B: puntos[1]++ ; break;
+      default:;
+    }
+  }
+
+  print_int(puntos[0],50,0, C_BG_BLACK | C_FG_LIGHT_RED ,2);
+  print_int(puntos[1],50,1, C_BG_BLACK | C_FG_LIGHT_BLUE ,2);
+}
