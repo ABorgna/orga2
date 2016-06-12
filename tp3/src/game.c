@@ -136,6 +136,8 @@ void game_lanzar(player_group player, struct pos_t pos) {
  **********************************/
 void game_tick() {
     if(!initialized) return;
+    //el debugger para la ejecución del juego
+    if (dbg_displayed) return;
 
     player_group next_group;
     char next_index;
@@ -217,6 +219,27 @@ void game_mapear(unsigned int x, unsigned int y) {
 }
 
 /**********************************
+ * Debugger
+ **********************************/
+bool dbg_enabled = false;           // se setea por interrupción de tecla 'Y'
+bool dbg_displayed = false;         // se setea por show_debug
+
+void game_show_debug(){
+  // Si no está seteado, no hacer nada
+  if (!dbg_enabled) return;
+
+  dbg_displayed = true;
+  tss* tsk = curr_task()->tss;
+  screen_show_debug(tsk, current_group);
+}
+
+void game_hide_debug(){
+  dbg_displayed = false;
+  screen_recover_map();
+}
+
+
+/**********************************
  * Otros
  **********************************/
 
@@ -249,4 +272,3 @@ static pde* current_cr3() {
         return curr_task()->cr3;
     }
 }
-

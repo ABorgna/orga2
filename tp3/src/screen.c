@@ -137,7 +137,7 @@ void screen_show_debug(tss* tss, player_group group){
     int j;
     for (i = DBG_FILS_INIT; i < DBG_FILS_END; i++) {
       for (j = DBG_COLS_INIT; j < DBG_COLS_END ; j++){
-        if ((i == DBG_FILS_END) || (i == DBG_FILS_INIT) || (j == DBG_COLS_INIT) || (j == DBG_COLS_END) ){
+        if ((i == DBG_FILS_END - 1) || (i == DBG_FILS_INIT) || (j == DBG_COLS_INIT) || (j == DBG_COLS_END -1) ){
           p[i][j].a = C_BG_LIGHT_GREY;
           p[i][j].c = ' ';
         } else {
@@ -178,25 +178,25 @@ void screen_show_debug(tss* tss, player_group group){
     print("eax", DBG_COLS_INIT + 2, y, C_BG_BLACK | C_FG_GREEN);
     print_hex(tss->eax, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
     print("cr0", DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_GREEN);
-    print_hex(cr0, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    print_hex(cr0, 8, DBG_COLS_INIT + 20, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
     y += 2;
 
     print("ebx", DBG_COLS_INIT + 2, y, C_BG_BLACK | C_FG_GREEN);
     print_hex(tss->ebx, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
     print("cr2", DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_GREEN);
-    print_hex(cr2, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    print_hex(cr2, 8, DBG_COLS_INIT + 20, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
     y += 2;
 
     print("ecx", DBG_COLS_INIT + 2, y, C_BG_BLACK | C_FG_GREEN);
     print_hex(tss->ecx, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
     print("cr3", DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_GREEN);
-    print_hex(tss->cr3, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    print_hex(tss->cr3, 8, DBG_COLS_INIT + 20, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
     y += 2;
 
     print("edx", DBG_COLS_INIT + 2, y, C_BG_BLACK | C_FG_GREEN);
     print_hex(tss->edx, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
     print("cr4", DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_GREEN);
-    print_hex(cr4, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    print_hex(cr4, 8, DBG_COLS_INIT + 20, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
     y += 2;
 
     print("esi", DBG_COLS_INIT + 2, y, C_BG_BLACK | C_FG_GREEN);
@@ -226,32 +226,49 @@ void screen_show_debug(tss* tss, player_group group){
 
     print("ds", DBG_COLS_INIT + 3, y, C_BG_BLACK | C_FG_GREEN);
     print_hex(tss->ds, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
-    print_hex(pila[4], 8, DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
-    y++;
-
-    print_hex(pila[3], 8, DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
-    y++;
+    print_hex(pila[0], 8, DBG_COLS_INIT + 20, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y += 2;
 
     print("es", DBG_COLS_INIT + 3, y, C_BG_BLACK | C_FG_GREEN);
     print_hex(tss->es, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
-    print_hex(pila[2], 8, DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
-    y++;
-
-    print_hex(pila[1], 8, DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
-    y++;
+    print_hex(pila[1], 8, DBG_COLS_INIT + 20, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y += 2;
 
     print("fs", DBG_COLS_INIT + 3, y, C_BG_BLACK | C_FG_GREEN);
     print_hex(tss->fs, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
-    print_hex(pila[0], 8, DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    print_hex(pila[2], 8, DBG_COLS_INIT + 20, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
     y += 2;
 
     print("gs", DBG_COLS_INIT + 3, y, C_BG_BLACK | C_FG_GREEN);
     print_hex(tss->gs, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    print_hex(pila[3], 8, DBG_COLS_INIT + 20, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
     y += 2;
 
     print("ss", DBG_COLS_INIT + 3, y, C_BG_BLACK | C_FG_GREEN);
     print_hex(tss->ss, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    print_hex(pila[4], 8, DBG_COLS_INIT + 20, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
     y += 2;
 
     print("eflags", DBG_COLS_INIT + 3, y, C_BG_BLACK | C_FG_GREEN);
+    y += 2;
+    print_hex(tss->eflags, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+}
+
+void screen_recover_map(){
+
+  dibujar_fondo_interfaz();
+  atar_con_alambre();
+
+  int i;
+  for(i=0; i<15; i++) {
+      //dibujar tipitos
+      //game_entries[player_H][i]...
+  }
+  for(i=0; i<5; i++) {
+      //game_entries[player_A][i]...
+  }
+  for(i=0; i<5; i++) {
+      //game_entries[player_B][i]...
+  }
+  //players_pos[]...
 }

@@ -27,6 +27,12 @@ void game_soy(unsigned int soy);
 void game_donde(struct pos_t* pos);
 void game_mapear(unsigned int x, unsigned int y);
 
+// Debugger
+bool dbg_enabled;
+bool dbg_displayed;
+void game_show_debug();
+void game_hide_debug();
+
 // Otros
 void game_kill_task();
 

@@ -4,18 +4,23 @@
 #include "../i386.h"
 #include "pic.h"
 #include "../audio/audioplayer.h"
+#include "../game.h"
 
 void keyboard_player_keys(unsigned char key);
 void keyboard_sound_keys(unsigned char key);
-
-unsigned int player1 = 0;
-unsigned int player2 = 0;
 
 void keyboard_isr(){
     unsigned char input = inb(0x60);
     unsigned char key = status2ASCII(input);
 
     print_hex(input, 2, 70, 0, C_FG_LIGHT_MAGENTA);
+
+    //Debugger on/off
+    if (key == 'Y'){
+      dbg_enabled = ~dbg_enabled;
+      print_hex(dbg_enabled, 1, 0, 0, C_BG_BLACK | C_FG_GREEN);
+      if (dbg_displayed && !dbg_enabled) screen_recover_map();
+    }
 
     if(11 <= key && key <= 22) {
         keyboard_sound_keys(key);
@@ -31,9 +36,6 @@ void keyboard_init(){
 
 void keyboard_player_keys(unsigned char key) {
     if(key >= 32) print_char(key, 79, 0, C_FG_LIGHT_MAGENTA);
-
-    print_int(player1, 11, 0, C_FG_RED, 10);
-    print_int(player2, 11, 2, C_FG_LIGHT_BLUE, 10);
 }
 
 void keyboard_sound_keys(unsigned char key) {
@@ -55,20 +57,19 @@ unsigned char status2ASCII(unsigned char input){
     switch (input){
         //Player 1
         case 0x1F:
-            output = 'S'; player1++;
+            output = 'S';
             break;
         case 0x1E:
-            output = 'A'; player1++;
+            output = 'A';
             break;
         case 0x20:
-            output = 'D'; player1++;
+            output = 'D';
             break;
         case 0x11:
-            output = 'W'; player1++;
+            output = 'W';
             break;
         case 0x2A:
             output = 1; //shift l
-            player1++;
             break;
         //Debugger
         case 0x15:
@@ -76,20 +77,19 @@ unsigned char status2ASCII(unsigned char input){
             break;
         //Player 2
         case 0x50:
-            output = 'v'; player2++;
+            output = 'v';
             break;
         case 0x4B:
-            output = '<'; player2++;
+            output = '<';
             break;
         case 0x4D:
-            output = '>'; player2++;
+            output = '>';
             break;
         case 0x48:
-            output = '^'; player2++;
+            output = '^';
             break;
         case 0x59:
             output = 2; //shift r
-            player2++;
             break;
         // Audio
         case 0x3B:      // F1

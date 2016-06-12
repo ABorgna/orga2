@@ -38,6 +38,10 @@ void print_char(unsigned char c, unsigned int x, unsigned int y, unsigned char a
 
 void reventar_pantalla();
 
+void dibujar_fondo_interfaz();
+
 void screen_show_debug(tss* tss, player_group group);
+
+void screen_recover_map();
 
 #endif  /* !__SCREEN_H__ */
