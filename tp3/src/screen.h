@@ -48,4 +48,6 @@ void screen_draw_map(struct task_state *states, char max_states, struct pos_t* p
 
 void screen_draw_interface(struct task_state *states, char max_states, char* players_lives);
 
+void screen_draw_clocks(struct task_state** game_entries, char* game_max_entries);
+
 #endif  /* !__SCREEN_H__ */

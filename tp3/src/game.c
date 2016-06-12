@@ -164,6 +164,7 @@ void game_tick() {
 
     sched_proxima_tarea(&next_group, &next_index);
 
+    screen_draw_clocks((struct task_state**) game_entries, game_max_entries);
     // Solo switchear task si estamos en otra
     if(next_group == current_group &&
             (next_group == player_idle || next_index == current_index)) {
