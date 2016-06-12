@@ -5,6 +5,7 @@
   definicion de funciones del scheduler
 */
 
+#include "i386.h"
 #include "screen.h"
 
 #define C_MAPA C_FG_DARK_GREY
@@ -127,4 +128,130 @@ void atar_con_alambre(){
     print("(^.^)-b ... LO ATAMO' CON ALAMBRE ", VIDEO_COLS - 34, VIDEO_FILS -1, C_BG_BLACK | C_FG_LIGHT_GREEN);
     print("^", VIDEO_COLS - 33, VIDEO_FILS -1, C_BG_BLACK | C_FG_LIGHT_GREEN | C_BLINK);
     print("^", VIDEO_COLS - 31, VIDEO_FILS -1, C_BG_BLACK | C_FG_LIGHT_GREEN | C_BLINK);
+}
+
+void screen_show_debug(tss* tss, player_group group){
+    ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
+    /* dibujar ventana */
+    int i;
+    int j;
+    for (i = DBG_FILS_INIT; i < DBG_FILS_END; i++) {
+      for (j = DBG_COLS_INIT; j < DBG_COLS_END ; j++){
+        if ((i == DBG_FILS_END) || (i == DBG_FILS_INIT) || (j == DBG_COLS_INIT) || (j == DBG_COLS_END) ){
+          p[i][j].a = C_BG_LIGHT_GREY;
+          p[i][j].c = ' ';
+        } else {
+          p[i][j].a = C_BG_BLACK ;
+          p[i][j].c = ' ';
+        }
+      }
+    }
+    /* info etiquetas */
+    unsigned char group_char = ' ';
+    switch (group) {
+      case 0:
+        group_char = 'H';
+        break;
+      case 1:
+        group_char = 'A';
+        break;
+      case 2:
+        group_char = 'B';
+        break;
+      default:
+        group_char = ' ';
+    }
+
+    unsigned int cr0 = rcr0();
+    unsigned int cr2 = rcr2();
+    unsigned int cr4 = rcr4();
+
+    unsigned int* pila = (unsigned int*) tss->esp;
+
+    /* valores de registros según tss, POR FILA */
+    unsigned int y = DBG_FILS_INIT + 1;
+
+    print("virus", DBG_COLS_INIT + 2, y, C_BG_BLACK | C_FG_GREEN | C_BLINK);
+    print_char(group_char, DBG_COLS_INIT + 8, y, C_BG_BLACK | C_FG_GREEN | C_BLINK);
+    y += 2;
+
+    print("eax", DBG_COLS_INIT + 2, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(tss->eax, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    print("cr0", DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(cr0, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y += 2;
+
+    print("ebx", DBG_COLS_INIT + 2, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(tss->ebx, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    print("cr2", DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(cr2, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y += 2;
+
+    print("ecx", DBG_COLS_INIT + 2, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(tss->ecx, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    print("cr3", DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(tss->cr3, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y += 2;
+
+    print("edx", DBG_COLS_INIT + 2, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(tss->edx, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    print("cr4", DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(cr4, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y += 2;
+
+    print("esi", DBG_COLS_INIT + 2, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(tss->esi, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y += 2;
+
+    print("edi", DBG_COLS_INIT + 2, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(tss->edi, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y += 2;
+
+    print("ebp", DBG_COLS_INIT + 2, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(tss->ebp, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y += 2;
+
+    print("esp", DBG_COLS_INIT + 2, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(tss->esp, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y += 2;
+
+    print("eip", DBG_COLS_INIT + 2, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(tss->eip, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y += 2;
+
+    print("cs", DBG_COLS_INIT + 3, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(tss->cs, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    print("stack", DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_GREEN);
+    y += 2;
+
+    print("ds", DBG_COLS_INIT + 3, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(tss->ds, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    print_hex(pila[4], 8, DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y++;
+
+    print_hex(pila[3], 8, DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y++;
+
+    print("es", DBG_COLS_INIT + 3, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(tss->es, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    print_hex(pila[2], 8, DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y++;
+
+    print_hex(pila[1], 8, DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y++;
+
+    print("fs", DBG_COLS_INIT + 3, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(tss->fs, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    print_hex(pila[0], 8, DBG_COLS_INIT + 16, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y += 2;
+
+    print("gs", DBG_COLS_INIT + 3, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(tss->gs, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y += 2;
+
+    print("ss", DBG_COLS_INIT + 3, y, C_BG_BLACK | C_FG_GREEN);
+    print_hex(tss->ss, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    y += 2;
+
+    print("eflags", DBG_COLS_INIT + 3, y, C_BG_BLACK | C_FG_GREEN);
 }
