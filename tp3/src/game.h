@@ -8,8 +8,27 @@
 #define __GAME_H__
 
 #include "defines.h"
+#include "tasks/tss.h"
+#include "mem/mmu.h"
 
 typedef enum direccion_e { IZQ = 0xAAA, DER = 0x441, ARB = 0xA33, ABA = 0x883  } direccion;
+
+struct task_state {
+    // Seteadas al inicializar el juego
+    tss* tss;
+    short tss_desc;
+
+    // Cosas de la tarea
+    bool alive;
+    struct pos_t pos;
+    player_group original_group;
+    player_group curr_group;
+    pde* cr3;
+
+    // Paginas mapeadas
+    bool has_mapped;
+    struct pos_t mapped_pos;
+};
 
 // Lets play a game
 void game_inicializar();

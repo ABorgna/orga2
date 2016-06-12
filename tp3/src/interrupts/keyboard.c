@@ -17,9 +17,9 @@ void keyboard_isr(){
 
     //Debugger on/off
     if (key == 'Y'){
-      dbg_enabled = ~dbg_enabled;
-      print_hex(dbg_enabled, 1, 0, 0, C_BG_BLACK | C_FG_GREEN);
-      if (dbg_displayed && !dbg_enabled) screen_recover_map();
+        dbg_enabled = ~dbg_enabled;
+        print_hex(dbg_enabled, 1, 0, 0, C_BG_BLACK | C_FG_GREEN);
+        game_hide_debug();
     }
 
     if(11 <= key && key <= 22) {

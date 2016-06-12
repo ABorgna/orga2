@@ -21,6 +21,7 @@
 #include "colors.h"
 #include "defines.h"
 #include "tasks/tss.h"
+#include "game.h"
 
 /* Estructura de para acceder a memoria de video */
 typedef struct ca_s {
@@ -42,6 +43,6 @@ void dibujar_fondo_interfaz();
 
 void screen_show_debug(tss* tss, player_group group);
 
-void screen_recover_map();
+void screen_draw_map(struct task_state *states, char max_states, struct pos_t* players_pos);
 
 #endif  /* !__SCREEN_H__ */

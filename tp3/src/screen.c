@@ -254,21 +254,18 @@ void screen_show_debug(tss* tss, player_group group){
     print_hex(tss->eflags, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
 }
 
-void screen_recover_map(){
+void screen_draw_map(struct task_state *states, char max_states, struct pos_t* players_pos){
+    // Esto debería actualizar solo la seccion del mapa, no los puntajes ni el footer
 
-  dibujar_fondo_interfaz();
-  atar_con_alambre();
+    dibujar_fondo_interfaz();
 
-  int i;
-  for(i=0; i<15; i++) {
-      //dibujar tipitos
-      //game_entries[player_H][i]...
-  }
-  for(i=0; i<5; i++) {
-      //game_entries[player_A][i]...
-  }
-  for(i=0; i<5; i++) {
-      //game_entries[player_B][i]...
-  }
-  //players_pos[]...
+    int i;
+    for(i=0; i<max_states; i++) {
+        struct task_state task = states[i];
+        if(!task.alive) continue;
+
+        // shalala
+    }
+
+    //players_pos[]...
 }

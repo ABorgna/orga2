@@ -13,23 +13,6 @@
 #include "tasks/sched.h"
 #include "tasks/tss.h"
 
-struct task_state {
-    // Seteadas al inicializar el juego
-    tss* tss;
-    short tss_desc;
-
-    // Cosas de la tarea
-    bool alive;
-    struct pos_t pos;
-    player_group original_group;
-    player_group curr_group;
-    pde* cr3;
-
-    // Paginas mapeadas
-    bool has_mapped;
-    struct pos_t mapped_pos;
-};
-
 bool initialized = 0;
 
 struct pos_t players_pos[2];
@@ -235,7 +218,7 @@ void game_show_debug(){
 
 void game_hide_debug(){
   dbg_displayed = false;
-  screen_recover_map();
+  screen_draw_map((struct task_state*) game_entries, 25, players_pos);
 }
 
 
