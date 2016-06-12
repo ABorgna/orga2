@@ -278,11 +278,9 @@ static __inline __attribute__((always_inline)) struct task_state* curr_task() {
 }
 
 static void game_go_idle(){
-    if(current_group != player_idle) {
-        tss_switch_task(GDT_TSS_IDLE_DESC);
-    }
     current_index = 0;
     current_group = player_idle;
+    tss_switch_task(GDT_TSS_IDLE_DESC);
 }
 
 static __inline __attribute__((always_inline)) void game_update_map(){
