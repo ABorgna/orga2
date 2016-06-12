@@ -78,47 +78,48 @@ void dibujar_fondo_interfaz(){
     int i, j;
     for (i = 0; i < 5; i++) {
         for (j = 0; j < VIDEO_COLS; j++) {
-          p[i][j].c = ' ';
-          p[i][j].a = C_BG_BLACK | C_MAPA ;
-         }
+            p[i][j].c = ' ';
+            p[i][j].a = C_BG_BLACK | C_MAPA ;
+        }
     }
-          p[5][0].c = 218;
-          p[5][0].a = C_BG_BLACK | C_MAPA ;
+    for (j = 0; j < VIDEO_COLS; j++) {
+        p[VIDEO_FILS-1][j].c = ' ';
+        p[VIDEO_FILS-1][j].a = C_BG_BLACK | C_MAPA ;
+    }
+
+    dibujar_fondo_mapa();
+}
+
+void dibujar_fondo_mapa(){
+    ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
+    int i, j;
+    p[5][0].c = 218;
+    p[5][0].a = C_BG_BLACK | C_MAPA ;
     for (j = 1; j < VIDEO_COLS-1; j++) {
-          p[5][j].c = 194;
-          p[5][j].a = C_BG_BLACK | C_MAPA ;
+        p[5][j].c = 194;
+        p[5][j].a = C_BG_BLACK | C_MAPA ;
     }
-          p[5][VIDEO_COLS-1].c = 191;
-          p[5][VIDEO_COLS-1].a = C_BG_BLACK | C_MAPA ;
+    p[5][VIDEO_COLS-1].c = 191;
+    p[5][VIDEO_COLS-1].a = C_BG_BLACK | C_MAPA ;
     for (i = 6; i < VIDEO_FILS-2; i++) {
-          p[i][0].c = 195;
-          p[i][0].a = C_BG_BLACK | C_MAPA ;
+        p[i][0].c = 195;
+        p[i][0].a = C_BG_BLACK | C_MAPA ;
 
         for (j = 1; j < VIDEO_COLS-1; j++) {
-          p[i][j].c = 197;
-          p[i][j].a = C_BG_BLACK | C_MAPA ;
-         }
-          p[i][VIDEO_COLS-1].c = 180;
-          p[i][VIDEO_COLS-1].a = C_BG_BLACK | C_MAPA ;
+            p[i][j].c = 197;
+            p[i][j].a = C_BG_BLACK | C_MAPA ;
+        }
+        p[i][VIDEO_COLS-1].c = 180;
+        p[i][VIDEO_COLS-1].a = C_BG_BLACK | C_MAPA ;
     }
-          p[VIDEO_FILS-2][0].c = 192;
-          p[VIDEO_FILS-2][0].a = C_BG_BLACK | C_MAPA ;
+    p[VIDEO_FILS-2][0].c = 192;
+    p[VIDEO_FILS-2][0].a = C_BG_BLACK | C_MAPA ;
     for (j = 1; j < VIDEO_COLS-1; j++) {
-          p[VIDEO_FILS-2][j].c = 193;
-          p[VIDEO_FILS-2][j].a = C_BG_BLACK | C_MAPA ;
+        p[VIDEO_FILS-2][j].c = 193;
+        p[VIDEO_FILS-2][j].a = C_BG_BLACK | C_MAPA ;
     }
-          p[VIDEO_FILS-2][VIDEO_COLS-1].c = 217;
-          p[VIDEO_FILS-2][VIDEO_COLS-1].a = C_BG_BLACK | C_MAPA ;
-    for (j = 0; j < VIDEO_COLS; j++) {
-          p[VIDEO_FILS-1][j].c = ' ';
-          p[VIDEO_FILS-1][j].a = C_BG_BLACK | C_MAPA ;
-    }
-
-    /*p[34][5].c = 219;
-    p[34][5].a = C_BG_BLACK | C_FG_MAGENTA | C_BLINK;
-
-    p[36][44].c = 219;
-    p[36][44].a = C_BG_BLACK | C_FG_CYAN | C_BLINK ;*/
+    p[VIDEO_FILS-2][VIDEO_COLS-1].c = 217;
+    p[VIDEO_FILS-2][VIDEO_COLS-1].a = C_BG_BLACK | C_MAPA ;
 }
 
 void atar_con_alambre(){
@@ -254,15 +255,15 @@ void screen_show_debug(tss* tss, player_group group){
 void screen_draw_map(struct task_state *states, char max_states, struct pos_t* players_pos){
     // Esto debería actualizar solo la seccion del mapa, no los puntajes ni el footer
 
-    dibujar_fondo_interfaz();
+    dibujar_fondo_mapa();
 
-    /*int i;
+    int i;
     for(i=0; i<max_states; i++) {
         struct task_state task = states[i];
         if(!task.alive) continue;
 
         // shalala
-    }*/
+    }
 
     print_char(219,players_pos[0].x,players_pos[0].y, C_BG_BLACK | C_FG_LIGHT_RED);
     print_char(219,players_pos[1].x,players_pos[1].y, C_BG_BLACK | C_FG_LIGHT_BLUE);

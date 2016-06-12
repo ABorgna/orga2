@@ -70,7 +70,7 @@ void game_inicializar() {
         game_lanzar(player_H, pos);
     }
 
-    screen_draw_map((struct task_state*) game_entries, 25, players_pos);
+    screen_draw_map((struct task_state*) game_entries, 45, players_pos);
 
     initialized = 1;
 }
@@ -88,7 +88,7 @@ void game_mover_cursor(player_group player, direccion dir) {
     	case ARB: if(players_pos[jugador].y > MAPA_BORDE_ARB) players_pos[jugador].y--; break;
     	case ABA: if(players_pos[jugador].y < MAPA_BORDE_ABA) players_pos[jugador].y++; break;
     }
-    screen_draw_map((struct task_state*) game_entries, 25, players_pos);
+    screen_draw_map((struct task_state*) game_entries, 45, players_pos);
 }
 
 void game_lanzar(player_group player, struct pos_t pos) {
@@ -226,7 +226,7 @@ void game_show_debug(){
 
 void game_hide_debug(){
   dbg_displayed = false;
-  screen_draw_map((struct task_state*) game_entries, 25, players_pos);
+  screen_draw_map((struct task_state*) game_entries, 45, players_pos);
 }
 
 

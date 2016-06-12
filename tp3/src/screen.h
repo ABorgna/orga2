@@ -40,6 +40,7 @@ void print_char(unsigned char c, unsigned int x, unsigned int y, unsigned char a
 void reventar_pantalla();
 
 void dibujar_fondo_interfaz();
+void dibujar_fondo_mapa();
 
 void screen_show_debug(tss* tss, player_group group);
 
