@@ -37,14 +37,42 @@ void keyboard_init(){
 void keyboard_player_keys(unsigned char key) {
     if(key >= 32) print_char(key, 79, 0, C_FG_LIGHT_MAGENTA);
     switch(key){
-        case 'W': game_mover_cursor(player_A, ARB); break;
-        case 'S': game_mover_cursor(player_A, ABA); break;
-        case 'A': game_mover_cursor(player_A, IZQ); break;
-        case 'D': game_mover_cursor(player_A, DER); break;
-        case '^': game_mover_cursor(player_B, ARB); break;
-        case 'v': game_mover_cursor(player_B, ABA); break;
-        case '<': game_mover_cursor(player_B, IZQ); break;
-        case '>': game_mover_cursor(player_B, DER); break;
+        // Movimiento
+        case 'W':
+        case ',': // dvorak
+            game_mover_cursor(player_A, ARB);
+            break;
+        case 'S':
+        case 'O': // dvorak
+            game_mover_cursor(player_A, ABA);
+            break;
+        case 'A':
+            game_mover_cursor(player_A, IZQ);
+            break;
+        case 'D':
+        case 'E': // dvorak
+            game_mover_cursor(player_A, DER);
+            break;
+        case '^':
+            game_mover_cursor(player_B, ARB);
+            break;
+        case 'v':
+            game_mover_cursor(player_B, ABA);
+            break;
+        case '<':
+            game_mover_cursor(player_B, IZQ);
+            break;
+        case '>':
+            game_mover_cursor(player_B, DER);
+            break;
+
+        // Disparar
+        case 1: // shift l
+            game_lanzar_inplace(player_A);
+            break;
+        case 2: // shift r
+            game_lanzar_inplace(player_B);
+            break;
     }
 }
 
@@ -66,20 +94,29 @@ unsigned char status2ASCII(unsigned char input){
     unsigned char output = 0;
     switch (input){
         //Player 1
-        case 0x1F:
-            output = 'S';
+        case 0x11:
+            output = 'W';
+            break;
+        case 0x12:
+            output = 'E';
+            break;
+        case 0x18:
+            output = 'O';
             break;
         case 0x1E:
             output = 'A';
             break;
+        case 0x1F:
+            output = 'S';
+            break;
         case 0x20:
             output = 'D';
             break;
-        case 0x11:
-            output = 'W';
-            break;
         case 0x2A:
             output = 1; //shift l
+            break;
+        case 0x33:
+            output = ',';
             break;
         //Debugger
         case 0x15:
@@ -98,7 +135,7 @@ unsigned char status2ASCII(unsigned char input){
         case 0x48:
             output = '^';
             break;
-        case 0x59:
+        case 0x36:
             output = 2; //shift r
             break;
         // Audio

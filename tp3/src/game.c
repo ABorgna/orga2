@@ -29,6 +29,7 @@ void* codigo_tarea[3] = {TAREA_H, TAREA_A, TAREA_B};
  **********************************/
 
 static struct task_state* curr_task();
+static void game_update_map();
 static void game_go_idle();
 static pde* current_cr3();
 
@@ -81,14 +82,24 @@ void game_inicializar() {
 
 void game_mover_cursor(player_group player, direccion dir) {
     assert(player == player_A || player == player_B);
-    player_group jugador = player - 1;			//Esto es porque player_A = 1 y player_B = 2
+
+    //Esto es porque player_A = 1 y player_B = 2
+    struct pos_t* pos = &players_pos[player-1];
+
     switch(dir){
-    	case DER: if(players_pos[jugador].x < 79) players_pos[jugador].x++; break;
-    	case IZQ: if(players_pos[jugador].x > 0 ) players_pos[jugador].x--; break;
-    	case ARB: if(players_pos[jugador].y > 0 ) players_pos[jugador].y--; break;
-    	case ABA: if(players_pos[jugador].y < 43) players_pos[jugador].y++; break;
+        case DER: if(pos->x < 79) pos->x++; break;
+        case IZQ: if(pos->x > 0 ) pos->x--; break;
+        case ARB: if(pos->y > 0 ) pos->y--; break;
+        case ABA: if(pos->y < 43) pos->y++; break;
     }
-    screen_draw_map((struct task_state*) game_entries, 45, players_pos);
+
+    game_update_map();
+}
+
+void game_lanzar_inplace(player_group player) {
+    assert(player == player_A || player == player_B);
+
+    game_lanzar(player, players_pos[player-1]);
 }
 
 void game_lanzar(player_group player, struct pos_t pos) {
@@ -120,7 +131,7 @@ void game_lanzar(player_group player, struct pos_t pos) {
 
     sched_run_task(player, i);
 
-    screen_draw_map((struct task_state*) game_entries, 25, players_pos);
+    game_update_map();
 }
 
 /**********************************
@@ -167,6 +178,7 @@ void game_soy(unsigned int yoSoy) {
         curr_task()->curr_group = player_H;
     }
 
+    game_update_map();
     game_go_idle();
 }
 
@@ -208,6 +220,7 @@ void game_mapear(unsigned int x, unsigned int y) {
 
     curr_task()->has_mapped = true;
 
+    game_update_map();
     game_go_idle();
 }
 
@@ -218,17 +231,17 @@ bool dbg_enabled = false;           // se setea por interrupción de tecla 'Y'
 bool dbg_displayed = false;         // se setea por show_debug
 
 void game_show_debug(){
-  // Si no está seteado, no hacer nada
-  if (!dbg_enabled) return;
+    // Si no está seteado, no hacer nada
+    if (!dbg_enabled) return;
 
-  dbg_displayed = true;
-  tss* tsk = curr_task()->tss;
-  screen_show_debug(tsk, current_group);
+    dbg_displayed = true;
+    tss* tsk = curr_task()->tss;
+    screen_show_debug(tsk, current_group);
 }
 
 void game_hide_debug(){
-  dbg_displayed = false;
-  screen_draw_map((struct task_state*) game_entries, 45, players_pos);
+    dbg_displayed = false;
+    game_update_map();
 }
 
 
@@ -256,6 +269,10 @@ static void game_go_idle(){
     current_group = player_idle;
     current_index = 0;
     tss_switch_task(GDT_TSS_IDLE_DESC);
+}
+
+static __inline __attribute__((always_inline)) void game_update_map(){
+    screen_draw_map((struct task_state*) game_entries, 45, players_pos);
 }
 
 static pde* current_cr3() {

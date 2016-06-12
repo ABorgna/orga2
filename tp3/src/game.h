@@ -35,6 +35,7 @@ void game_inicializar();
 
 // Interaccion con el jugador
 void game_mover_cursor(player_group player, direccion dir);
+void game_lanzar_inplace(player_group player);
 void game_lanzar(player_group player, struct pos_t pos);
 
 // Actualizar, cambiar de tarea y todo eso
