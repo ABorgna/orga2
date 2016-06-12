@@ -247,6 +247,8 @@ void game_show_debug(){
     dbg_displayed = true;
     tss* tsk = curr_task()->tss;
     screen_show_debug(tsk, current_group);
+
+    game_go_idle();
 }
 
 void game_hide_debug(){
@@ -276,9 +278,11 @@ static __inline __attribute__((always_inline)) struct task_state* curr_task() {
 }
 
 static void game_go_idle(){
-    current_group = player_idle;
+    if(current_group != player_idle) {
+        tss_switch_task(GDT_TSS_IDLE_DESC);
+    }
     current_index = 0;
-    tss_switch_task(GDT_TSS_IDLE_DESC);
+    current_group = player_idle;
 }
 
 static __inline __attribute__((always_inline)) void game_update_map(){
