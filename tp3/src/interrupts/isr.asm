@@ -31,7 +31,6 @@ extern game_kill_task
 extern game_soy
 extern game_donde
 extern game_mapear
-extern game_show_debug
 ;;
 ;; Definición de MACROS
 ;; -------------------------------------------------------------------------- ;;
@@ -56,9 +55,6 @@ _isr%1:
     mov eax, 0xC01DCAFE
     mov eax, %1
 
-    ; Si no está habilitado, no hace nada
-    call game_show_debug
-
     ; Despedite de tu tarea
     call game_kill_task
 
@@ -80,9 +76,6 @@ _isr%1:
 
     mov eax, 0xC01DCAFE
     mov eax, %1
-
-    ; Si no está habilitado, no hace nada
-    call game_show_debug
 
     ; Despedite de tu tarea
     call game_kill_task
@@ -217,8 +210,6 @@ _isr0x66:
     .not_mapear:
 
     ; Syscall invalido
-
-    call game_show_debug
     call game_kill_task
 
     .end:

@@ -247,8 +247,6 @@ void game_show_debug(){
     dbg_displayed = true;
     tss* tsk = curr_task()->tss;
     screen_show_debug(tsk, current_group);
-
-    game_go_idle();
 }
 
 void game_hide_debug(){
@@ -263,6 +261,8 @@ void game_hide_debug(){
 
 void game_kill_task() {
     if(current_group == player_idle) return;
+
+    game_show_debug();
 
     sched_kill_task(current_group, current_index);
     curr_task()->alive = 0;
