@@ -160,40 +160,23 @@ gdt_entry gdt[GDT_COUNT] = {
         (unsigned char)     0x00,           /* g            */
         (unsigned char)     0x00,           /* base[31:24]  */
     },
-
-  /* TSS de la tarea idle*/
-    [GDT_TSS_IDLE] = (gdt_entry)  {
-      (unsigned short)    0x006B,            /* limit[0:15]  */
-      (unsigned short)    0x00,              /* base[0:15]   */
-      (unsigned char)     0x00,              /* base[23:16]  */
-      (unsigned char)     0x09,              /* type         */
-      (unsigned char)     0x01,              /* s            */
-      (unsigned char)     0x00,              /* dpl          */
-      (unsigned char)     0x01,              /* p            */
-      (unsigned char)     0x00,              /* limit[16:19] */
-      (unsigned char)     0x00,              /* avl          */
-      (unsigned char)     0x00,              /* l            */
-      (unsigned char)     0x00,              /* db           */
-      (unsigned char)     0x01,              /* g            */ //CALABAZA
-      (unsigned char)     0x00,              /* base[31:24]  */
-    },
 };
 
 
-void gdt_setear_tss_entry(int offset, tss* tesese){
+void gdt_setear_tss_entry(int offset, tss* tesese, unsigned char dpl){
   gdt[offset] = (gdt_entry)   {
     (unsigned short)    0x006B,            /* limit[0:15]  */
     (unsigned short)    BASE1(tesese),     /* base[0:15]   */
     (unsigned char)     BASE2(tesese),     /* base[23:16]  */
     (unsigned char)     0x09,              /* type         */
     (unsigned char)     0x00,              /* s            */
-    (unsigned char)     0x00,              /* dpl          */
+    (unsigned char)     dpl,               /* dpl          */
     (unsigned char)     0x01,              /* p            */
     (unsigned char)     0x00,              /* limit[16:19] */
     (unsigned char)     0x01,              /* avl          */
     (unsigned char)     0x00,              /* l            */
     (unsigned char)     0x00,              /* db           */
-    (unsigned char)     0x01,              /* g            */ //CALABAZA
+    (unsigned char)     0x01,              /* g            */
     (unsigned char)     BASE3(tesese),     /* base[31:24]  */
   };
 }
@@ -208,16 +191,16 @@ void gdt_setear_tss_busy(int offset, char busy){
 
 void teseses_inicializar(){
   int i;
-  gdt_setear_tss_entry(GDT_TSS_INICIAL, &tss_inicial);
-  gdt_setear_tss_entry(GDT_TSS_IDLE, &tss_idle);
+  gdt_setear_tss_entry(GDT_TSS_INICIAL, &tss_inicial, 0);
+  gdt_setear_tss_entry(GDT_TSS_IDLE, &tss_idle, 0);
   for(i = 0; i < 15; i++){
-    gdt_setear_tss_entry(GDT_TSS_HS + i, tss_H + i);
+    gdt_setear_tss_entry(GDT_TSS_HS + i, tss_H + i, 3);
   }
   for(i = 0; i < 5; i++){
-    gdt_setear_tss_entry(GDT_TSS_AS + i, tss_A + i);
+    gdt_setear_tss_entry(GDT_TSS_AS + i, tss_A + i, 3);
   }
   for(i = 0; i < 5; i++){
-    gdt_setear_tss_entry(GDT_TSS_BS + i, tss_B + i);
+    gdt_setear_tss_entry(GDT_TSS_BS + i, tss_B + i, 3);
   }
 }
 

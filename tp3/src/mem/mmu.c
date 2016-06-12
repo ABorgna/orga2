@@ -76,7 +76,7 @@ pde* mmu_inicializar_dir_tarea(void* tarea, struct pos_t pos, pde* current_dir) 
 
     // Mapear las paginas del kernel
     for(i = 0; i < 1024; i++) {
-      mmu_mapear_pagina_kernel((void*) (i * (1 << 12)), (void*) (i * (1 << 12)), dir);
+        mmu_mapear_pagina_kernel((void*) (i << 12), (void*) (i << 12), dir);
     }
 
     return dir;
@@ -85,7 +85,7 @@ pde* mmu_inicializar_dir_tarea(void* tarea, struct pos_t pos, pde* current_dir) 
 void mmu_mapear_pagina_kernel(void* virtual, void* fisica, pde* dir){
     pte attr = {0};
     attr.write = 1;
-    mmu_mapear_pagina(virtual, fisica, KERNEL_PAGE_DIR, attr);
+    mmu_mapear_pagina(virtual, fisica, dir, attr);
 }
 
 void mmu_mapear_pagina_user(void* virtual, void* fisica, pde* dir){

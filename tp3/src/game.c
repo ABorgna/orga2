@@ -79,8 +79,6 @@ void game_inicializar() {
         game_entries[player_B][i].tss_desc = GDT_TSS_BS_DESC + (i*8);
     }
 
-    breakpoint();
-
     // Lanzar las tareas H
     for(i=0; i<5; i++) {
         // Hay un 2.94% de proba que toquen dos iguales
@@ -137,7 +135,6 @@ void game_lanzar(player_group player, struct pos_t pos) {
  * Se llama con el RTC cada 1ms
  **********************************/
 void game_tick() {
-    breakpoint();
     if(!initialized) return;
 
     player_group next_group;
