@@ -39,13 +39,15 @@ char current_index;
 
 struct task_state game_entries[3][15] = {{{0}}};
 char game_max_entries[3] = {15,5,5};
+void* codigo_tarea[3] = {TAREA_H, TAREA_A, TAREA_B};
 
 /**********************************
  * Cosas internas
  **********************************/
 
-struct task_state* curr_task();
-void game_go_idle();
+static struct task_state* curr_task();
+static void game_go_idle();
+static pde* current_cr3();
 
 /**********************************
  * Lets play a game
@@ -77,6 +79,8 @@ void game_inicializar() {
         game_entries[player_B][i].tss_desc = GDT_TSS_BS_DESC + (i*8);
     }
 
+    breakpoint();
+
     // Lanzar las tareas H
     for(i=0; i<5; i++) {
         // Hay un 2.94% de proba que toquen dos iguales
@@ -100,8 +104,32 @@ void game_mover_cursor(player_group player, direccion dir) {
 
 void game_lanzar(player_group player, struct pos_t pos) {
     assert(player == player_H || player == player_A || player == player_B);
+    int i;
+    struct task_state *task;
 
-    // TODO
+    // Buscar el proximo slot vacio
+    for(i=0; i < game_max_entries[player]; i++) {
+        if(!game_entries[player][i].alive) break;
+    }
+
+    // No hay slots libres
+    if(i == game_max_entries[player]) {
+        return;
+    }
+
+    task = &game_entries[player][i];
+
+    task->alive = 1;
+    task->pos.x = pos.x;
+    task->pos.y = pos.y;
+    task->original_group = player;
+    task->curr_group = player;
+    task->cr3 = mmu_inicializar_dir_tarea(codigo_tarea[player], pos, current_cr3());
+    task->has_mapped = false;
+
+    tss_inicializar_tarea(task->tss, task->cr3);
+
+    sched_run_task(player, i);
 }
 
 /**********************************
@@ -109,6 +137,7 @@ void game_lanzar(player_group player, struct pos_t pos) {
  * Se llama con el RTC cada 1ms
  **********************************/
 void game_tick() {
+    breakpoint();
     if(!initialized) return;
 
     player_group next_group;
@@ -127,7 +156,7 @@ void game_tick() {
     if(current_group == player_idle) {
         tss_switch_task(GDT_TSS_IDLE_DESC);
     } else {
-        tss_switch_task(curr_task()->tss_desc);
+        //tss_switch_task(curr_task()->tss_desc);
     }
 }
 
@@ -198,6 +227,7 @@ void game_kill_task() {
     if(current_group == player_idle) return;
 
     sched_kill_task(current_group, current_index);
+    curr_task()->alive = 0;
     game_go_idle();
 }
 
@@ -205,13 +235,21 @@ void game_kill_task() {
  * Cosas internas
  **********************************/
 
-struct task_state* curr_task() {
+static __inline __attribute__((always_inline)) struct task_state* curr_task() {
     return &game_entries[current_group][current_index];
 }
 
-void game_go_idle(){
+static void game_go_idle(){
     current_group = player_idle;
     current_index = 0;
     tss_switch_task(GDT_TSS_IDLE_DESC);
+}
+
+static pde* current_cr3() {
+    if(current_group == player_idle) {
+        return KERNEL_PAGE_DIR;
+    } else {
+        return curr_task()->cr3;
+    }
 }
 

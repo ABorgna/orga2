@@ -10,8 +10,8 @@
 
 #include "../defines.h"
 #include "../i386.h"
-#include "../mem/gdt.h"
 #include "sched.h"
+#include "../mem/mmu.h"
 
 typedef struct str_tss {
     unsigned short  ptl;
@@ -61,6 +61,7 @@ tss tss_A[5];
 tss tss_B[5];
 
 void tss_idle_inicializar();
+void tss_inicializar_tarea(tss* entrada, pde* cr3);
 void tss_switch_task(short descriptor);
 
 #endif  /* !__TSS_H__ */

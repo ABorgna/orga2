@@ -33,6 +33,9 @@ extern tss_switch_task
 ; Scheduler
 extern sched_inicializar
 
+; Game
+extern game_inicializar
+
 %include "imprimir.mac"
 %define GDT_CODE_0_DESC          4 << 3
 %define GDT_DATA_0_DESC          6 << 3
@@ -155,6 +158,9 @@ mp:
     ; Cargar tarea inicial
     mov ax, GDT_TSS_INICIAL_DESC
     ltr ax
+
+    ; Iniciar el juego
+    call game_inicializar
 
     ; Habilitar interrupciones
     sti

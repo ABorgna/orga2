@@ -73,7 +73,7 @@
 #define PAGE_SIZE (1<<12)
 #define INICIO_PAGINAS_LIBRES 0x100000
 #define PDE_INDEX(virtual) ((unsigned int)(virtual) >> 22)
-#define PTE_INDEX(virtual) (((unsigned int)(virtual) & 0x3ff000) >> 10)
+#define PTE_INDEX(virtual) (((unsigned int)(virtual) & 0x3ff000) >> 12)
 #define PTE_BASE(dir) ((unsigned int)(dir) >> 12)
 #define PTE_BASE_TO_PTR(dir) ((void*)((unsigned int)(dir) << 12))
 #define CR3_PD(cr3) ((cr3) & ~0xfff)

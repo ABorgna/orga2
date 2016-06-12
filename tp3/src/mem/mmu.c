@@ -38,10 +38,7 @@ void mmu_inicializar_dir_kernel(){
         tabla[i].write = 1;
     }
 
-    mmu_mapear_pagina_kernel(TAREA_IDLE,TAREA_IDLE);
-    mmu_mapear_pagina_kernel(TAREA_A,TAREA_A);
-    mmu_mapear_pagina_kernel(TAREA_B,TAREA_B);
-    mmu_mapear_pagina_kernel(TAREA_H,TAREA_H);
+    mmu_mapear_pagina_kernel(TAREA_IDLE,TAREA_IDLE,dir);
 }
 
 void* mmu_proxima_pagina_fisica_libre() {
@@ -50,7 +47,7 @@ void* mmu_proxima_pagina_fisica_libre() {
     return pagina_libre;
 }
 
-pde* mmu_inicializar_dir_tarea(void* tarea, struct pos_t pos) {
+pde* mmu_inicializar_dir_tarea(void* tarea, struct pos_t pos, pde* current_dir) {
     assert(0 <= pos.x && pos.x < 80);
     assert(0 <= pos.y && pos.y < 44);
     assert(!((int)tarea & 0xfff));
@@ -66,7 +63,8 @@ pde* mmu_inicializar_dir_tarea(void* tarea, struct pos_t pos) {
     void* celda = mmu_celda_to_pagina(pos);
 
     // Mapear las paginas necesarias en el kernel para poder copiar el contenido
-    mmu_mapear_pagina_kernel(celda, celda);
+    mmu_mapear_pagina_kernel(tarea, tarea, current_dir);
+    mmu_mapear_pagina_kernel(celda, celda, current_dir);
 
     // Copiar la tarea
     for(i = 0; i < 1024 ; i++) {
@@ -74,26 +72,24 @@ pde* mmu_inicializar_dir_tarea(void* tarea, struct pos_t pos) {
     }
 
     // Mapear la celda para la tarea
-    mmu_mapear_pagina_user((void*) 0x08000000, celda, dir);
+    mmu_mapear_pagina_user((void*) TAREA_PAGINA_0, celda, dir);
 
     // Mapear las paginas del kernel
-    for(i = 0; i < 1024; i++){
-      mmu_mapear_pagina_kernel((void*) (i * (1 << 12)), (void*) (i * (1 << 12)));
+    for(i = 0; i < 1024; i++) {
+      mmu_mapear_pagina_kernel((void*) (i * (1 << 12)), (void*) (i * (1 << 12)), dir);
     }
 
     return dir;
 }
 
-void mmu_mapear_pagina_kernel(void* virtual, void* fisica){
+void mmu_mapear_pagina_kernel(void* virtual, void* fisica, pde* dir){
     pte attr = {0};
-    attr.present = 1;
     attr.write = 1;
     mmu_mapear_pagina(virtual, fisica, KERNEL_PAGE_DIR, attr);
 }
 
 void mmu_mapear_pagina_user(void* virtual, void* fisica, pde* dir){
     pte attr = {0};
-    attr.present = 1;
     attr.write = 1;
     attr.user = 1;
     mmu_mapear_pagina(virtual, fisica, dir, attr);

@@ -44,9 +44,10 @@ typedef struct str_pte {
 
 void mmu_inicializar();
 void mmu_inicializar_dir_kernel();
-pde* mmu_inicializar_dir_tarea(void* tarea, struct pos_t pos);
+pde* mmu_inicializar_dir_tarea(void* tarea, struct pos_t pos, pde* current_dir);
 
-void mmu_mapear_pagina_kernel(void* virtual, void* fisica);
+void* mmu_proxima_pagina_fisica_libre();
+void mmu_mapear_pagina_kernel(void* virtual, void* fisica, pde* dir);
 void mmu_mapear_pagina_user(void* virtual, void* fisica, pde* dir);
 void mmu_mapear_pagina(void* virtual, void* fisica, pde* dir, pte attributos);
 void mmu_unmapear_pagina(void* virtual, pde* dir);

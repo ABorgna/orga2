@@ -6,9 +6,12 @@
 
 #include "../colors.h"
 #include "../defines.h"
+#include "../i386.h"
 #include "syscall.h"
 
 void task() {
-//   breakpoint();
-  while(1) { __asm __volatile("mov $2, %%eax":::"eax"); }
+  breakpoint();
+  while(1) {
+      __asm __volatile("mov $2, %%eax":::"eax");
+  }
 }
