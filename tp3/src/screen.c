@@ -256,14 +256,22 @@ void screen_draw_map(struct task_state *states, char max_states, struct pos_t* p
 
     dibujar_fondo_interfaz();
 
-    /*int i;
+    int i;
     for(i=0; i<max_states; i++) {
         struct task_state task = states[i];
         if(!task.alive) continue;
+        unsigned char color;
+        switch(task.curr_group){
+          case player_H: color = C_BG_BLACK | C_FG_LIGHT_BROWN; break;
+          case player_A: color = C_BG_BLACK | C_FG_RED; break;
+          case player_B: color = C_BG_BLACK | C_FG_BLUE; break;
+          default: color = C_BG_BLACK | C_FG_BLACK;
+        }
+        print_char(219,task.pos.x+MAPA_BORDE_IZQ,task.pos.y+MAPA_BORDE_ARB, color);
+        print_char(254,task.mapped_pos.x+MAPA_BORDE_IZQ,task.mapped_pos.y+MAPA_BORDE_ARB, color);
 
-        // shalala
-    }*/
+    }
 
-    print_char(219,players_pos[0].x,players_pos[0].y, C_BG_BLACK | C_FG_LIGHT_RED);
-    print_char(219,players_pos[1].x,players_pos[1].y, C_BG_BLACK | C_FG_LIGHT_BLUE);
+    print_char('X',players_pos[0].x+MAPA_BORDE_IZQ,players_pos[0].y+MAPA_BORDE_ARB, C_BG_BLACK | C_FG_LIGHT_RED);
+    print_char('X',players_pos[1].x+MAPA_BORDE_IZQ,players_pos[1].y+MAPA_BORDE_ARB, C_BG_BLACK | C_FG_LIGHT_BLUE);
 }

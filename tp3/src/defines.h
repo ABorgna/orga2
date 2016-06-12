@@ -95,10 +95,10 @@
 #define SOY_B 0x325
 #define TAREA_PAGINA_0 ((void*)0x08000000)
 #define TAREA_PAGINA_1 ((void*)0x08001000)
-#define MAPA_BORDE_IZQ 1
-#define MAPA_BORDE_ARB 6
-#define MAPA_BORDE_DER 78
-#define MAPA_BORDE_ABA 47
+#define MAPA_BORDE_IZQ 0
+#define MAPA_BORDE_ARB 5
+#define MAPA_BORDE_DER 79
+#define MAPA_BORDE_ABA 48
 
 typedef enum{
     player_H = 0,
