@@ -268,6 +268,8 @@ void game_hide_debug(){
 void game_kill_task() {
     if(current_group == player_idle) return;
 
+    game_show_debug();
+
     sched_kill_task(current_group, current_index);
     curr_task()->alive = 0;
     game_go_idle();
@@ -282,9 +284,11 @@ static __inline __attribute__((always_inline)) struct task_state* curr_task() {
 }
 
 static void game_go_idle(){
-    current_group = player_idle;
+    if(current_group != player_idle) {
+        tss_switch_task(GDT_TSS_IDLE_DESC);
+    }
     current_index = 0;
-    tss_switch_task(GDT_TSS_IDLE_DESC);
+    current_group = player_idle;
 }
 
 static __inline __attribute__((always_inline)) void game_update_map(){

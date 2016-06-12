@@ -24,23 +24,47 @@ void init_rtc(bool interruptsEnabled){
     // Enable RTC interrupts
     IRQ_clear_mask(8);
 
+    rtc_seed_prng(0);
+
+    if(interruptsEnabled) {
+        enable_interrupts();
+    }
+}
+
+void rtc_seed_prng(bool interruptsEnabled) {
+    // Seed the prng with a ````````random```````` seed (not)
+    char sec, min, hour;
+    int seed = rdtsc();
+
+    // Prevent interruptions while working
+    disable_interrupts();
+
+    // Read the current time
+    outb(RTC_CMD, RTC_MASK_NMI | RTC_SECONDS);
+    sec = inb(RTC_DATA);
+
+    outb(RTC_CMD, RTC_MASK_NMI | RTC_MINUTES);
+    min = inb(RTC_DATA);
+
+    outb(RTC_CMD, RTC_MASK_NMI | RTC_HOURS);
+    hour = inb(RTC_DATA);
+
+    seed ^= (uint32_t) sec;
+    seed ^= (uint32_t) min << 8;
+    seed ^= (uint32_t) hour << 16;
+
+    srand(seed);
+    rand(1);
+
     if(interruptsEnabled) {
         enable_interrupts();
     }
 }
 
 void rtc_isr() {
-    static bool prng_is_seeded = 0;
-
     // Read RTC_C to ack the interruption
     outb(RTC_CMD, RTC_MASK_NMI | RTC_C);
     inb(RTC_DATA);
-
-    // Seed the pseudo-random number generator
-    if(!prng_is_seeded) {
-        prng_is_seeded = 1;
-        srand(rdtsc());
-    }
 
     game_tick();
 }
