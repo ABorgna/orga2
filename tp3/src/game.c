@@ -168,10 +168,19 @@ void game_donde(struct pos_t* pos) {
     game_go_idle();
 }
 
-void game_mapear(int x, int y) {
+void game_mapear(unsigned int x, unsigned int y) {
     if(current_group == player_idle) return;
 
-    // TODO: mapear lo que mapea :P
+    if(80 <= x || 44 <= y) {
+        // Vo so loco
+        game_kill_task();
+        return;
+    }
+
+    struct pos_t pos = {x,y};
+    void* pagina = mmu_celda_to_pagina(pos);
+
+    mmu_mapear_pagina_user(TAREA_PAGINA_1, pagina, curr_task()->cr3);
 
     curr_task()->mapped_pos.x = x;
     curr_task()->mapped_pos.y = y;
