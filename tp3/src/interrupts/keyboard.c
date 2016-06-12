@@ -36,6 +36,16 @@ void keyboard_init(){
 
 void keyboard_player_keys(unsigned char key) {
     if(key >= 32) print_char(key, 79, 0, C_FG_LIGHT_MAGENTA);
+    switch(key){
+        case 'W': game_mover_cursor(player_A, ARB); break;
+        case 'S': game_mover_cursor(player_A, ABA); break;
+        case 'A': game_mover_cursor(player_A, IZQ); break;
+        case 'D': game_mover_cursor(player_A, DER); break;
+        case '^': game_mover_cursor(player_B, ARB); break;
+        case 'v': game_mover_cursor(player_B, ABA); break;
+        case '<': game_mover_cursor(player_B, IZQ); break;
+        case '>': game_mover_cursor(player_B, DER); break;
+    }
 }
 
 void keyboard_sound_keys(unsigned char key) {

@@ -43,10 +43,10 @@ void game_inicializar() {
     current_group = player_idle;
     current_index = 0;
 
-    players_pos[0].x = 0;
-    players_pos[0].y = 0;
-    players_pos[1].x = 79;
-    players_pos[1].y = 0;
+    players_pos[0].x = 4;
+    players_pos[0].y = 30;
+    players_pos[1].x = 75;
+    players_pos[1].y = 30;
 
     // Iniciar las cosas de las tareas
     for(i=0; i<15; i++) {
@@ -70,6 +70,8 @@ void game_inicializar() {
         game_lanzar(player_H, pos);
     }
 
+    screen_draw_map((struct task_state*) game_entries, 25, players_pos);
+
     initialized = 1;
 }
 
@@ -81,11 +83,12 @@ void game_mover_cursor(player_group player, direccion dir) {
     assert(player == player_A || player == player_B);
     player_group jugador = player - 1;			//Esto es porque player_A = 1 y player_B = 2
     switch(dir){
-    	case DER: if(players_pos[jugador].x < 79) players_pos[jugador].x++; break;
-    	case IZQ: if(players_pos[jugador].x > 0)  players_pos[jugador].x--; break;
-    	case ARB: if(players_pos[jugador].y > 0)  players_pos[jugador].y--; break;
-    	case ABA: if(players_pos[jugador].y < 49) players_pos[jugador].y++; break;
+    	case DER: if(players_pos[jugador].x < MAPA_BORDE_DER) players_pos[jugador].x++; break;
+    	case IZQ: if(players_pos[jugador].x > MAPA_BORDE_IZQ) players_pos[jugador].x--; break;
+    	case ARB: if(players_pos[jugador].y > MAPA_BORDE_ARB) players_pos[jugador].y--; break;
+    	case ABA: if(players_pos[jugador].y < MAPA_BORDE_ABA) players_pos[jugador].y++; break;
     }
+    screen_draw_map((struct task_state*) game_entries, 25, players_pos);
 }
 
 void game_lanzar(player_group player, struct pos_t pos) {

@@ -68,10 +68,7 @@ void reventar_pantalla(){
     for (i = 0; i < VIDEO_FILS; i++) {
         for (j = 0; j < VIDEO_COLS; j++) {
             p[i][j].c = 197;
-            p[i][j].a = (i + j) % 2 ?
-                      C_BG_BLACK | C_FG_GREEN :
-                      C_BG_BLACK | C_FG_GREEN ;
-
+            p[i][j].a = C_BG_BLACK | C_FG_GREEN;
         }
     }
 }
@@ -117,11 +114,11 @@ void dibujar_fondo_interfaz(){
           p[VIDEO_FILS-1][j].a = C_BG_BLACK | C_MAPA ;
     }
 
-    p[34][5].c = 219;
+    /*p[34][5].c = 219;
     p[34][5].a = C_BG_BLACK | C_FG_MAGENTA | C_BLINK;
 
     p[36][44].c = 219;
-    p[36][44].a = C_BG_BLACK | C_FG_CYAN | C_BLINK ;
+    p[36][44].a = C_BG_BLACK | C_FG_CYAN | C_BLINK ;*/
 }
 
 void atar_con_alambre(){
@@ -259,13 +256,14 @@ void screen_draw_map(struct task_state *states, char max_states, struct pos_t* p
 
     dibujar_fondo_interfaz();
 
-    int i;
+    /*int i;
     for(i=0; i<max_states; i++) {
         struct task_state task = states[i];
         if(!task.alive) continue;
 
         // shalala
-    }
+    }*/
 
-    //players_pos[]...
+    print_char(219,players_pos[0].x,players_pos[0].y, C_BG_BLACK | C_FG_LIGHT_RED);
+    print_char(219,players_pos[1].x,players_pos[1].y, C_BG_BLACK | C_FG_LIGHT_BLUE);
 }
