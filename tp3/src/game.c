@@ -152,30 +152,15 @@ void game_soy(unsigned int yoSoy) {
 void game_donde(struct pos_t* pos) {
     if(current_group == player_idle) return;
 
-    // Checkear que no nos quieran hacer escribir en cualquier lado
-    if(!mmu_es_dir_mapa(pos)) {
-        game_kill_task();
-        return;
-    }
-
-    struct pos_t celda_resultado;
-    mmu_pagina_to_celda(pos, &celda_resultado);
-
     // Checkear que no nos quieran hacer escribir
-    // en una celda que no tienen mapeada
-    if(celda_resultado.x != curr_task()->pos.x ||
-            celda_resultado.y != curr_task()->pos.y) {
-        if(!curr_task()->has_mapped ||
-            celda_resultado.x != curr_task()->mapped_pos.x ||
-            celda_resultado.y != curr_task()->mapped_pos.y) {
+    // en cualquier lado
+    if(TO_PAGINA(pos) != TAREA_PAGINA_0 &&
+            (!curr_task()->has_mapped || TO_PAGINA(pos) != TAREA_PAGINA_1)) {
 
             // Winners don't use drugs
             game_kill_task();
             return;
-        }
     }
-
-    mmu_mapear_pagina_kernel(TO_PAGINA(pos), TO_PAGINA(pos));
 
     pos->x = curr_task()->pos.x;
     pos->y = curr_task()->pos.y;
