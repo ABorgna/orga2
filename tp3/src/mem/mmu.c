@@ -10,8 +10,6 @@
 
 void* proxima_pagina_libre;
 
-void* celda_to_pagina(struct pos_t pos);
-
 /**********************************
  * Funciones exportadas
  **********************************/
@@ -65,7 +63,7 @@ pde* mmu_inicializar_dir_tarea(void* tarea, struct pos_t pos) {
     }
 
     // Calcular la posicion de memoria de la celda del mapa
-    void* celda = celda_to_pagina(pos);
+    void* celda = mmu_celda_to_pagina(pos);
 
     // Mapear las paginas necesarias en el kernel para poder copiar el contenido
     mmu_mapear_pagina_kernel(celda, celda);
@@ -159,10 +157,27 @@ void mmu_unmapear_pagina(void* virtual, pde* dir){
 }
 
 /**********************************
- * Cosas internas
+ * Otras
  **********************************/
 
+bool mmu_es_dir_mapa(void* dir) {
+    return BASE_MAPA <= dir && dir < BASE_MAPA + MAP_CELL_SIZE * 80 * 44;
+}
+
 // Calcular la posicion de memoria de la celda del mapa
-void* celda_to_pagina(struct pos_t pos) {
+void* mmu_celda_to_pagina(struct pos_t pos) {
     return (void*) (BASE_MAPA + pos.x * MAP_CELL_SIZE + pos.y * 80 * MAP_CELL_SIZE);
 }
+
+void mmu_pagina_to_celda(void* dir, struct pos_t* out) {
+    if(!mmu_es_dir_mapa(dir)) {
+        out->x = 0;
+        out->y = 0;
+        return;
+    }
+
+    int offset = (unsigned int) (dir - BASE_MAPA) / MAP_CELL_SIZE;
+    out->x = offset % 80;
+    out->y = offset / 80;
+}
+

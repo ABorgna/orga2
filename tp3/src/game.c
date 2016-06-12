@@ -44,6 +44,7 @@ char game_max_entries[3] = {15,5,5};
  * Cosas internas
  **********************************/
 
+struct task_state* curr_task();
 void game_go_idle();
 
 /**********************************
@@ -93,10 +94,14 @@ void game_inicializar() {
 
 void game_mover_cursor(player_group player, direccion dir) {
     assert(player == player_A || player == player_B);
+
+    // TODO
 }
 
 void game_lanzar(player_group player, struct pos_t pos) {
     assert(player == player_H || player == player_A || player == player_B);
+
+    // TODO
 }
 
 /**********************************
@@ -122,7 +127,7 @@ void game_tick() {
     if(current_group == player_idle) {
         tss_switch_task(GDT_TSS_IDLE_DESC);
     } else {
-        tss_switch_task(game_entries[current_group][current_index].tss_desc);
+        tss_switch_task(curr_task()->tss_desc);
     }
 }
 
@@ -133,36 +138,55 @@ void game_tick() {
 void game_soy(unsigned int yoSoy) {
     if(current_group == player_idle) return;
 
- 	if(yoSoy == 0x841)
-    	game_entries[current_group][current_index].curr_group = player_A;
-    else if (yoSoy == 0x325)
-    	game_entries[current_group][current_index].curr_group = player_B;
-    else
-    	game_entries[current_group][current_index].curr_group = player_H;
+    if(yoSoy == SOY_A) {
+        curr_task()->curr_group = player_A;
+    } else if (yoSoy == SOY_B) {
+        curr_task()->curr_group = player_B;
+    } else {
+        curr_task()->curr_group = player_H;
+    }
 
-    current_group = player_idle;
     game_go_idle();
 }
 
 void game_donde(struct pos_t* pos) {
     if(current_group == player_idle) return;
 
-    pos->x = game_entries[current_group][current_index].pos.x;
-    pos->y = game_entries[current_group][current_index].pos.y;
+    // Checkear que no nos quieran hacer escribir
+    // en cualquier lado
+    if(TO_PAGINA(pos) != TAREA_PAGINA_0 &&
+            (!curr_task()->has_mapped || TO_PAGINA(pos) != TAREA_PAGINA_1)) {
 
-    current_group = player_idle;
+            // Winners don't use drugs
+            game_kill_task();
+            return;
+    }
+
+    pos->x = curr_task()->pos.x;
+    pos->y = curr_task()->pos.y;
+
     game_go_idle();
 }
 
-void game_mapear(int x, int y) {
+void game_mapear(unsigned int x, unsigned int y) {
     if(current_group == player_idle) return;
 
-    game_entries[current_group][current_index].mapped_pos.x = x;
-    game_entries[current_group][current_index].mapped_pos.y = y;
+    if(80 <= x || 44 <= y) {
+        // Vo so loco
+        game_kill_task();
+        return;
+    }
 
-    game_entries[current_group][current_index].has_mapped = true;
+    struct pos_t pos = {x,y};
+    void* pagina = mmu_celda_to_pagina(pos);
 
-    current_group = player_idle;
+    mmu_mapear_pagina_user(TAREA_PAGINA_1, pagina, curr_task()->cr3);
+
+    curr_task()->mapped_pos.x = x;
+    curr_task()->mapped_pos.y = y;
+
+    curr_task()->has_mapped = true;
+
     game_go_idle();
 }
 
@@ -180,6 +204,10 @@ void game_kill_task() {
 /**********************************
  * Cosas internas
  **********************************/
+
+struct task_state* curr_task() {
+    return &game_entries[current_group][current_index];
+}
 
 void game_go_idle(){
     current_group = player_idle;
