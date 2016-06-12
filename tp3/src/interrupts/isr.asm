@@ -39,17 +39,8 @@ extern game_show_debug
 global _isr_default
 _isr_default:
     pushad
-    xchg bx, bx
-    nop
     mov eax, 0xDEADBEEF
     mov eax, 0x0DEFA017
-
-    ; Si no está habilitado, no hace nada
-    call game_show_debug
-
-    ; Despedite de tu tarea
-    call game_kill_task
-
     popad
     iret
 
@@ -61,6 +52,7 @@ interrupt_msg_%1_len equ    $ - interrupt_msg_%1
 
 _isr%1:
     pushad
+    xchg bx, bx
 
     mov eax, 0xC01DCAFE
     mov eax, %1
@@ -86,6 +78,7 @@ interrupt_msg_%1_len equ    $ - interrupt_msg_%1
 _isr%1:
     add esp, 4
     pushad
+    xchg bx, bx
 
     mov eax, 0xC01DCAFE
     mov eax, %1
