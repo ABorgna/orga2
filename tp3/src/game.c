@@ -109,37 +109,37 @@ void game_lanzar_inplace(player_group player) {
 void game_lanzar(player_group player, struct pos_t pos) {
     assert(player == player_H || player == player_A || player == player_B);
     if(player == player_H || players_lives[player - 1] > 0){
-    	int i;
-    	struct task_state *task;
-	
-	    	// Buscar el proximo slot vacio
-	    	for(i=0; i < game_max_entries[player]; i++) {
-	    	    if(!game_entries[player][i].alive) break;
-	    	}
-	
-	    	// No hay slots libres
-	    	if(i == game_max_entries[player]) {
-	    	    return;
-	    	}
-	
-	    	task = &game_entries[player][i];
-	
-	    	task->alive = 1;
-	    	task->pos.x = pos.x;
-	    	task->pos.y = pos.y;
-	    	task->original_group = player;
-	    	task->curr_group = player;
-	    	task->cr3 = mmu_inicializar_dir_tarea(codigo_tarea[player], pos, current_cr3());
-	    	task->has_mapped = false;
-	
-	    	tss_inicializar_tarea(task->tss, task->cr3);
-			
-			if(player != player_H)
-	    		players_lives[player - 1]--;
-	
-	    	sched_run_task(player, i);
-	
-    	game_update_map();
+        int i;
+        struct task_state *task;
+
+        // Buscar el proximo slot vacio
+        for(i=0; i < game_max_entries[player]; i++) {
+            if(!game_entries[player][i].alive) break;
+        }
+
+        // No hay slots libres
+        if(i == game_max_entries[player]) {
+            return;
+        }
+
+        task = &game_entries[player][i];
+
+        task->alive = 1;
+        task->pos.x = pos.x;
+        task->pos.y = pos.y;
+        task->original_group = player;
+        task->curr_group = player;
+        task->cr3 = mmu_inicializar_dir_tarea(codigo_tarea[player], pos, current_cr3());
+        task->has_mapped = false;
+
+        tss_inicializar_tarea(task->tss, task->cr3);
+
+        if(player != player_H)
+            players_lives[player - 1]--;
+
+        sched_run_task(player, i);
+
+        game_update_map();
     }
 }
 
@@ -284,11 +284,9 @@ static __inline __attribute__((always_inline)) struct task_state* curr_task() {
 }
 
 static void game_go_idle(){
-    if(current_group != player_idle) {
-        tss_switch_task(GDT_TSS_IDLE_DESC);
-    }
     current_index = 0;
     current_group = player_idle;
+    tss_switch_task(GDT_TSS_IDLE_DESC);
 }
 
 static __inline __attribute__((always_inline)) void game_update_map(){
