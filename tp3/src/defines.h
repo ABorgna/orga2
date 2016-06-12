@@ -78,6 +78,7 @@
 #define PTE_BASE_TO_PTR(dir) ((void*)((unsigned int)(dir) << 12))
 #define CR3_PD(cr3) ((cr3) & ~0xfff)
 #define PTE_OFFSET(virtual) ((unsigned int)(virtual) & 0xfff)
+#define TO_PAGINA(ptr) ((void*) ((unsigned int)(ptr) & ~0xfff))
 
 
 /* Mapa y tareas */
@@ -88,6 +89,8 @@
 #define TAREA_A ((void*) 0x11000)
 #define TAREA_B ((void*) 0x12000)
 #define TAREA_H ((void*) 0x13000)
+#define SOY_A 0x841
+#define SOY_B 0x325
 
 typedef enum{
     player_H = 0,

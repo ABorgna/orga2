@@ -44,6 +44,7 @@ char game_max_entries[3] = {15,5,5};
  * Cosas internas
  **********************************/
 
+struct task_state* curr_task();
 void game_go_idle();
 
 /**********************************
@@ -93,10 +94,14 @@ void game_inicializar() {
 
 void game_mover_cursor(player_group player, direccion dir) {
     assert(player == player_A || player == player_B);
+
+    // TODO
 }
 
 void game_lanzar(player_group player, struct pos_t pos) {
     assert(player == player_H || player == player_A || player == player_B);
+
+    // TODO
 }
 
 /**********************************
@@ -122,7 +127,7 @@ void game_tick() {
     if(current_group == player_idle) {
         tss_switch_task(GDT_TSS_IDLE_DESC);
     } else {
-        tss_switch_task(game_entries[current_group][current_index].tss_desc);
+        tss_switch_task(curr_task()->tss_desc);
     }
 }
 
@@ -133,36 +138,61 @@ void game_tick() {
 void game_soy(unsigned int yoSoy) {
     if(current_group == player_idle) return;
 
- 	if(yoSoy == 0x841)
-    	game_entries[current_group][current_index].curr_group = player_A;
-    else if (yoSoy == 0x325)
-    	game_entries[current_group][current_index].curr_group = player_B;
-    else
-    	game_entries[current_group][current_index].curr_group = player_H;
+    if(yoSoy == SOY_A) {
+        curr_task()->curr_group = player_A;
+    } else if (yoSoy == SOY_B) {
+        curr_task()->curr_group = player_B;
+    } else {
+        curr_task()->curr_group = player_H;
+    }
 
-    current_group = player_idle;
     game_go_idle();
 }
 
 void game_donde(struct pos_t* pos) {
     if(current_group == player_idle) return;
 
-    pos->x = game_entries[current_group][current_index].pos.x;
-    pos->y = game_entries[current_group][current_index].pos.y;
+    // Checkear que no nos quieran hacer escribir en cualquier lado
+    if(!mmu_es_dir_mapa(pos)) {
+        game_kill_task();
+        return;
+    }
 
-    current_group = player_idle;
+    struct pos_t celda_resultado;
+    mmu_pagina_to_celda(pos, &celda_resultado);
+
+    // Checkear que no nos quieran hacer escribir
+    // en una celda que no tienen mapeada
+    if(celda_resultado.x != curr_task()->pos.x ||
+            celda_resultado.y != curr_task()->pos.y) {
+        if(!curr_task()->has_mapped ||
+            celda_resultado.x != curr_task()->mapped_pos.x ||
+            celda_resultado.y != curr_task()->mapped_pos.y) {
+
+            // Winners don't use drugs
+            game_kill_task();
+            return;
+        }
+    }
+
+    mmu_mapear_pagina_kernel(TO_PAGINA(pos), TO_PAGINA(pos));
+
+    pos->x = curr_task()->pos.x;
+    pos->y = curr_task()->pos.y;
+
     game_go_idle();
 }
 
 void game_mapear(int x, int y) {
     if(current_group == player_idle) return;
 
-    game_entries[current_group][current_index].mapped_pos.x = x;
-    game_entries[current_group][current_index].mapped_pos.y = y;
+    // TODO: mapear lo que mapea :P
 
-    game_entries[current_group][current_index].has_mapped = true;
+    curr_task()->mapped_pos.x = x;
+    curr_task()->mapped_pos.y = y;
 
-    current_group = player_idle;
+    curr_task()->has_mapped = true;
+
     game_go_idle();
 }
 
@@ -180,6 +210,10 @@ void game_kill_task() {
 /**********************************
  * Cosas internas
  **********************************/
+
+struct task_state* curr_task() {
+    return &game_entries[current_group][current_index];
+}
 
 void game_go_idle(){
     current_group = player_idle;

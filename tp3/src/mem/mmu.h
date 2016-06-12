@@ -51,4 +51,8 @@ void mmu_mapear_pagina_user(void* virtual, void* fisica, pde* dir);
 void mmu_mapear_pagina(void* virtual, void* fisica, pde* dir, pte attributos);
 void mmu_unmapear_pagina(void* virtual, pde* dir);
 
-#endif	/* !__MMU_H__ */
+bool mmu_es_dir_mapa(void* dir);
+void* mmu_celda_to_pagina(struct pos_t pos);
+void mmu_pagina_to_celda(void* dir, struct pos_t* out);
+
+#endif  /* !__MMU_H__ */
