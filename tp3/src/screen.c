@@ -62,6 +62,11 @@ void print_char(unsigned char c, unsigned int x, unsigned int y, unsigned char a
       p[y][x].a = attr;
 }
 
+char get_char(unsigned int x, unsigned int y){
+    ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
+    return p[y][x].c;
+}
+
 void reventar_pantalla(){
     ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
     int i, j;
@@ -284,23 +289,25 @@ void screen_draw_interface(struct task_state *states, char max_states, char* pla
   print_int(99,50,0, C_BG_BLACK | C_FG_BLACK ,2);
   print_int(99,50,1, C_BG_BLACK | C_FG_BLACK ,2);
 
-  //Colores predeterminados de jugadores (cambiar a gusto)
+  //Valores predeterminados de jugadores (cambiar a gusto)
   unsigned char C_PLAYER1 = C_BG_BLACK | C_FG_LIGHT_RED;
   unsigned char C_PLAYER2 = C_BG_BLACK | C_FG_LIGHT_BLUE;
 
-  unsigned char player2_offset = 50;
+  unsigned char player1_xoffset = 1;
+  unsigned char player2_xoffset = 69;
+  unsigned char yoffset = 1;
 
   //Textito identificador de players
 
-  print("Player 1",0,0, C_PLAYER1);
-  print("Player 2",player2_offset,0, C_PLAYER2);
+  print("Player 1", player1_xoffset, yoffset, C_PLAYER1);
+  print("Player 2", player2_xoffset, yoffset, C_PLAYER2);
 
   //Printear vidas
-  print("Vidas: ",0,1, C_PLAYER1);
-  print_int(players_lives[0] , 10 , 1 , C_PLAYER1 , 2);
+  print("Vidas: ", player1_xoffset, yoffset+1, C_PLAYER1);
+  print_int(players_lives[0], player1_xoffset + 10, yoffset+1, C_PLAYER1, 2);
 
-  print("Vidas: ",player2_offset,1, C_PLAYER2);
-  print_int(players_lives[1], player2_offset+10 , 1 , C_PLAYER2 , 2);
+  print("Vidas: ", player2_xoffset, yoffset+1, C_PLAYER2);
+  print_int(players_lives[1], player2_xoffset+10, yoffset+1, C_PLAYER2, 2);
 
   //Printear puntaje
 
@@ -316,11 +323,11 @@ void screen_draw_interface(struct task_state *states, char max_states, char* pla
     }
   }
 
-  print("Puntos: ",0,2, C_PLAYER1);
-  print_int(puntos[0],10,2, C_PLAYER1 ,2);
+  print("Puntos: ", player1_xoffset, yoffset+2, C_PLAYER1);
+  print_int(puntos[0], player1_xoffset+10, yoffset+2, C_PLAYER1, 2);
 
-  print("Puntos: ",player2_offset,2, C_PLAYER2);
-  print_int(puntos[1],player2_offset+10,2, C_PLAYER2 ,2);
+  print("Puntos: ",player2_xoffset, yoffset+2, C_PLAYER2);
+  print_int(puntos[1], player2_xoffset+10, yoffset+2, C_PLAYER2,2);
 }
 
 void screen_show_restart_msg() {
@@ -361,5 +368,31 @@ void screen_show_restart_msg() {
 
     print("Reiniciar juego?", RESTART_COL_TEXT, RESTART_FILA_TEXT, C_FG_LIGHT_GREEN);
     print("(y/N)", RESTART_COLS_END - 7, RESTART_FILS_END, C_FG_LIGHT_GREEN);
+}
+
+void screen_draw_clocks(struct task_state** game_entries, char* game_max_entries){
+  int i;
+  int j;
+  char offsets[3] = {30,1,69};
+  char colores[3] = {C_BG_BLACK | C_FG_LIGHT_BROWN, C_BG_BLACK | C_FG_LIGHT_RED, C_BG_BLACK | C_FG_LIGHT_BLUE};
+  for(i = 0 ; i < 3 ; i++){
+    for(j = 0 ; j < game_max_entries[i] ; j++){
+      struct task_state task = game_entries[i][j];      
+      if(task.alive){
+        char current_char = get_char(offsets[i]+j, 4);
+        char next_char = 0;
+        switch(current_char){
+          case '|': next_char = '/'; break;
+          case '/': next_char = '-'; break;
+          case '-': next_char = '\\'; break;
+          case '\\': next_char = '|'; break;
+          default: next_char = '|';
+        }
+        print_char(next_char, offsets[i]+j,4, colores[i]);
+      }else{
+        print_char('X', offsets[i]+j,4, colores[i]);
+      }
+    }
+  }
 }
 

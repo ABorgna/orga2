@@ -44,6 +44,8 @@ void print_int(unsigned int n, unsigned int x, unsigned int y, unsigned char att
 
 void print_char(unsigned char c, unsigned int x, unsigned int y, unsigned char attr);
 
+char get_char(unsigned int x, unsigned int y);
+
 void reventar_pantalla();
 
 void dibujar_fondo_interfaz();
@@ -56,5 +58,7 @@ void screen_draw_map(struct task_state *states, char max_states, struct pos_t* p
 void screen_draw_interface(struct task_state *states, char max_states, char* players_lives);
 
 void screen_show_restart_msg();
+
+void screen_draw_clocks(struct task_state** game_entries, char* game_max_entries);
 
 #endif  /* !__SCREEN_H__ */
