@@ -7,10 +7,18 @@
 
 #include "i386.h"
 #include "screen.h"
+#include "random.h"
 
 #define C_MAPA C_FG_DARK_GREY
 
-char clocks[25] = {0};
+struct clock_state {
+    uint8_t state;
+    bool alive;
+    player_group group;
+};
+
+char clock_states[4] = "|/-\\";
+struct clock_state clocks[3][15] = {{{0}}};
 
 void print(const char * text, unsigned int x, unsigned int y, unsigned char attr) {
     ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
@@ -372,41 +380,62 @@ void screen_show_restart_msg() {
     print("(y/N)", RESTART_COLS_END - 7, RESTART_FILS_END, C_FG_LIGHT_GREEN);
 }
 
-void screen_avanzar_clock(player_group group, char index, player_group curr_group){
-    assert(index < 5 || (group == player_H && index < 15));
+void screen_draw_clocks() {
     char offsets[3] = {30,1,69};
+    char max_i[3] = {15,5,5};
     char colores[3] = {C_BG_BLACK | C_FG_LIGHT_BROWN, C_BG_BLACK | C_FG_LIGHT_RED, C_BG_BLACK | C_FG_LIGHT_BLUE};
-    char offset = 0;
-    switch(group){
-      case player_H: offset = 0 ; break;
-      case player_A: offset = 15; break;
-      case player_B: offset = 20 ; break;
-      default: offset = 0;
+    char color_off = C_FG_LIGHT_GREY;
+
+    char current_char, color;
+    int group, i;
+
+    for(group=0; group<3; group++) {
+        for(i=0; i<max_i[group]; i++) {
+            struct clock_state* clock = &clocks[group][i];
+
+            if(clock->alive) {
+                color = colores[clock->group];
+                current_char = clock_states[clock->state];
+            } else {
+                color = color_off;
+                current_char = 'x';
+            }
+
+            print_char(current_char, offsets[group] + i, 4, color);
+        }
     }
-    char current_char = clocks[offset + index];
-    char next_char = 0;
-    switch(current_char){
-      case '|': next_char = '/'; break;
-      case '/': next_char = '-'; break;
-      case '-': next_char = '\\'; break;
-      case '\\': next_char = '|'; break;
-      case 'X': break;
-      default: next_char = '|';
+}
+
+void screen_actualizar_grupo_clock(player_group group, char index, player_group curr_group){
+    assert(index < 5 || (group == player_H && index < 15));
+
+    struct clock_state* clock = &clocks[group][index];
+    clock->group = curr_group;
+
+    screen_draw_clocks();
+}
+
+void screen_avanzar_clock(player_group group, char index){
+    assert(index < 5 || (group == player_H && index < 15));
+
+    struct clock_state* clock = &clocks[group][index];
+
+    if(!clock->alive) {
+        clock->alive = 1;
+        clock->state = rand(4);
     }
-    clocks[offset + index] = next_char;
-    print_char(clocks[offset + index], offsets[group] + index, 4, colores[curr_group]);
+    clock->state = (clock->state + 1) % 4;
+
+    screen_draw_clocks();
 }
 
 void screen_kill_clock(player_group group, char index){
-  char offsets[3] = {30,1,69};
-  char colores[3] = {C_BG_BLACK | C_FG_LIGHT_BROWN, C_BG_BLACK | C_FG_LIGHT_RED, C_BG_BLACK | C_FG_LIGHT_BLUE};
-  char offset = 0;
-  switch(group){
-    case player_H: offset = 0 ; break;
-    case player_A: offset = 15; break;
-    case player_B: offset = 20 ; break;
-    default: offset = 0;
-  }
-  clocks[offset + index] = 'X';
-  print_char(clocks[offset + index], offsets[group] + index, 4, colores[group]);
+    assert(index < 5 || (group == player_H && index < 15));
+
+    struct clock_state* clock = &clocks[group][index];
+
+    clock->alive = 0;
+    clock->state = 0;
+
+    screen_draw_clocks();
 }

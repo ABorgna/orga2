@@ -209,6 +209,8 @@ void game_lanzar(player_group player, struct pos_t pos) {
 
         sched_run_task(player, i);
 
+        screen_actualizar_grupo_clock(player,i,player);
+
         game_update_map();
     }
 }
@@ -231,8 +233,8 @@ void game_tick() {
 
     sched_proxima_tarea(&next_group, &next_index);
 
-    screen_avanzar_clock(next_group,next_index,game_entries[next_group][next_index].curr_group);
-    
+    screen_avanzar_clock(next_group,next_index);
+
     // Solo switchear task si estamos en otra
     if(next_group == current_group &&
             (next_group == player_idle || next_index == current_index)) {
@@ -263,6 +265,8 @@ void game_soy(unsigned int yoSoy) {
         curr_task()->curr_group = player_H;
     }
 
+    screen_actualizar_grupo_clock(current_group,current_index,
+            curr_task()->curr_group);
     game_update_map();
     game_go_idle();
 }
