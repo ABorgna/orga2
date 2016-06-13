@@ -19,10 +19,12 @@ struct audio_status {
     struct audio_note* file_end;
 };
 
-void audio_step(uint8_t channel);
+void audio_step(struct audio_status* status);
 void update_current_channel();
 
-struct audio_status channels[2] = {{0},{0}};
+// 2 background channels, 2 foreground channels
+struct audio_status channels[2][2] = {{{0}}};
+
 uint8_t current_channel = 0;
 uint32_t audio_step_counter = 0;
 
@@ -34,27 +36,32 @@ void init_audioplayer(){
     IRQ_clear_mask(0);
 }
 
-void play_audio(uint8_t channel,
+void play_audio(uint8_t channel, bool foreground,
         struct audio_note* file, struct audio_note* end, bool loop){
-    channels[channel].playing = 0;
+    assert(channel < 2);
 
-    channels[channel].loop = loop;
-    channels[channel].curr_cycles = 0;
-    channels[channel].curr_freq = 0;
-    channels[channel].file_ptr = file;
-    channels[channel].file_start = file;
-    channels[channel].file_end = end;
+    struct audio_status *status = &channels[foreground][channel];
+    status->playing = 0;
 
-    channels[channel].playing = 1;
+    status->loop = loop;
+    status->curr_cycles = 0;
+    status->curr_freq = 0;
+    status->file_ptr = file;
+    status->file_start = file;
+    status->file_end = end;
+
+    status->playing = 1;
 }
 
 void stop_audio(void) {
-    stop_audio_ch(0);
-    stop_audio_ch(1);
+    stop_audio_ch(0, true);
+    stop_audio_ch(0, false);
+    stop_audio_ch(1, true);
+    stop_audio_ch(1, false);
 }
 
-void stop_audio_ch(uint8_t channel) {
-    channels[channel].playing = 0;
+void stop_audio_ch(uint8_t channel, bool foreground) {
+    channels[foreground][channel].playing = 0;
 
     if(current_channel == channel) {
         nosound();
@@ -62,72 +69,78 @@ void stop_audio_ch(uint8_t channel) {
 }
 
 void audio_isr() {
+    int i;
+
     audio_step_counter++;
 
-    audio_step(0);
-    audio_step(1);
+    for(i=0; i<4; i++) {
+        audio_step(((struct audio_status*) channels)+i);
+    }
 
     update_current_channel();
 
-    if(channels[current_channel].playing) {
-        play_sound(channels[current_channel].curr_freq);
+    if(channels[1][current_channel].playing) {
+        play_sound(channels[1][current_channel].curr_freq);
+    } else if(channels[0][current_channel].playing) {
+        play_sound(channels[0][current_channel].curr_freq);
     } else {
         nosound();
     }
 }
 
-void audio_step(uint8_t channel) {
-    if(channels[channel].playing) {
-        if(!channels[channel].curr_cycles) {
+void audio_step(struct audio_status* status) {
+    if(status->playing) {
+        if(!status->curr_cycles) {
 
-            if(channels[channel].file_ptr == channels[channel].file_end){
+            if(status->file_ptr == status->file_end){
                 // Termino el archivo
-                if(channels[channel].loop) {
-                    channels[channel].file_ptr = channels[channel].file_start;
+                if(status->loop) {
+                    status->file_ptr = status->file_start;
                 } else {
-                    channels[channel].playing = 0;
+                    status->playing = 0;
                 }
             } else {
                 // Cargar siguiente nota
-                channels[channel].curr_cycles = (*channels[channel].file_ptr).millis;
+                status->curr_cycles = (*status->file_ptr).millis;
 
-                uint8_t note = (*channels[channel].file_ptr).note;
-                channels[channel].curr_freq = midiNoteToFreq(note);
+                uint8_t note = (*status->file_ptr).note;
+                status->curr_freq = midiNoteToFreq(note);
 
-                channels[channel].file_ptr++;
+                status->file_ptr++;
             }
 
         } else {
             // Seguir con la misma nota
-            channels[channel].curr_cycles--;
+            status->curr_cycles--;
         }
     }
 }
 
 void update_current_channel(){
-    if(channels[0].playing && channels[1].playing) {
+    if((channels[0][0].playing || channels[1][0].playing) &&
+       (channels[0][1].playing || channels[1][1].playing)) {
         if(!(audio_step_counter & 0xf)) {
             current_channel = 1 - current_channel;
         }
     } else {
-        current_channel = channels[1].playing ? 1 : 0;
+        current_channel = channels[0][1].playing || channels[1][1].playing ? 1 : 0;
     }
 }
 
 void play_spectra() {
-    play_audio(0,
+    play_audio(0, false,
             (struct audio_note*) &audio_track_spectra0,
             (struct audio_note*) &audio_track_end_spectra0,
             true );
-    play_audio(1,
+    play_audio(1, false,
             (struct audio_note*) &audio_track_spectra1,
             (struct audio_note*) &audio_track_end_spectra1,
             true );
 }
 
 void play_pacman() {
-    stop_audio_ch(0);
-    play_audio(1,
+    stop_audio_ch(0, false);
+    play_audio(1, false,
             (struct audio_note*) &audio_track_pacman,
             (struct audio_note*) &audio_track_end_pacman,
             true );

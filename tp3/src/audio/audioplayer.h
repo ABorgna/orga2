@@ -8,11 +8,11 @@ struct audio_note {
 };
 
 void init_audioplayer();
-void play_audio(uint8_t channel,
+void play_audio(uint8_t channel, bool foreground,
                 struct audio_note* file, struct audio_note* end,
                 bool loop);
 void stop_audio();
-void stop_audio_ch(uint8_t channel);
+void stop_audio_ch(uint8_t channel, bool foreground);
 void audio_isr();
 uint16_t midiNoteToFreq(uint8_t note);
 
