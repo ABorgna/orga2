@@ -34,7 +34,7 @@ void keyboard_isr(){
 
     // Otros
     keyboard_sound_keys(key);
-    keyboard_player_keys(key);
+    if (!dbg_displayed) keyboard_player_keys(key);
 }
 
 void keyboard_init(){
