@@ -26,6 +26,8 @@ bool restart_msg_displayed = false;
 struct pos_t players_pos[2];
 char players_lives[2];
 
+char clocks[3][15] = {{0}};
+
 player_group current_group = player_idle;
 char current_index;
 
@@ -214,7 +216,8 @@ void game_tick() {
 
     sched_proxima_tarea(&next_group, &next_index);
 
-    screen_draw_clocks((struct task_state**) game_entries, game_max_entries);
+    game_update_clocks((struct task_state**) game_entries, game_max_entries, (char**) clocks);
+    
     // Solo switchear task si estamos en otra
     if(next_group == current_group &&
             (next_group == player_idle || next_index == current_index)) {
@@ -228,6 +231,31 @@ void game_tick() {
     } else {
         tss_switch_task(curr_task()->tss_desc);
     }
+}
+
+void game_update_clocks(struct task_state** game_entries, char* game_max_entries, char** clocks){
+	int i;
+  int j;
+  for(i = 0 ; i < 3 ; i++){
+    for(j = 0 ; j < game_max_entries[i] ; j++){
+      struct task_state task = game_entries[i][j];      
+      if(task.alive){
+        char current_char = clocks[i][j];
+        char next_char = 0;
+        switch(current_char){
+          case '|': next_char = '/'; break;
+          case '/': next_char = '-'; break;
+          case '-': next_char = '\\'; break;
+          case '\\': next_char = '|'; break;
+          default: next_char = '|';
+        }
+        clocks[i][j] = next_char;
+      }else{
+        clocks[i][j] = 'X';
+      }
+    }
+  }
+  screen_draw_clocks(game_entries, game_max_entries, clocks);
 }
 
 /**********************************
@@ -360,3 +388,4 @@ static pde* current_cr3() {
         return curr_task()->cr3;
     }
 }
+

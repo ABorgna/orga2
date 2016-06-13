@@ -370,29 +370,17 @@ void screen_show_restart_msg() {
     print("(y/N)", RESTART_COLS_END - 7, RESTART_FILS_END, C_FG_LIGHT_GREEN);
 }
 
-void screen_draw_clocks(struct task_state** game_entries, char* game_max_entries){
-  int i;
-  int j;
+void screen_draw_clocks(struct task_state** game_entries, char* game_max_entries, char** clocks){
   char offsets[3] = {30,1,69};
   char colores[3] = {C_BG_BLACK | C_FG_LIGHT_BROWN, C_BG_BLACK | C_FG_LIGHT_RED, C_BG_BLACK | C_FG_LIGHT_BLUE};
+  int i;
+  int j;
   for(i = 0 ; i < 3 ; i++){
     for(j = 0 ; j < game_max_entries[i] ; j++){
       struct task_state task = game_entries[i][j];      
-      if(task.alive){
-        char current_char = get_char(offsets[i]+j, 4);
-        char next_char = 0;
-        switch(current_char){
-          case '|': next_char = '/'; break;
-          case '/': next_char = '-'; break;
-          case '-': next_char = '\\'; break;
-          case '\\': next_char = '|'; break;
-          default: next_char = '|';
-        }
-        print_char(next_char, offsets[i]+j,4, colores[i]);
-      }else{
-        print_char('X', offsets[i]+j,4, colores[i]);
-      }
+      print_char(clocks[i][j], offsets[i]+j, 4, colores[task.alive]);
     }
   }
 }
 
+//colores[task.curr_group]
