@@ -322,3 +322,44 @@ void screen_draw_interface(struct task_state *states, char max_states, char* pla
   print("Puntos: ",player2_offset,2, C_PLAYER2);
   print_int(puntos[1],player2_offset+10,2, C_PLAYER2 ,2);
 }
+
+void screen_show_restart_msg() {
+    /* dibujar ventana */
+    int i, j;
+    ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
+
+    j = RESTART_FILS_INIT;
+    for (i = RESTART_COLS_INIT; i <= RESTART_COLS_END ; i++){
+        char c = 196; // -
+        if(i == RESTART_COLS_INIT) c = 218; // ,-
+        if(i == RESTART_COLS_END) c = 191; // -,
+
+        p[j][i].a = C_FG_DARK_GREY;
+        p[j][i].c = c;
+    }
+
+    for (j = RESTART_FILS_INIT+1; j < RESTART_FILS_END; j++) {
+        for (i = RESTART_COLS_INIT; i <= RESTART_COLS_END ; i++){
+            char c = ' ';
+            if(i == RESTART_COLS_INIT) c = 179; // |
+            if(i == RESTART_COLS_END) c = 179; // |
+
+            p[j][i].a = C_FG_DARK_GREY;
+            p[j][i].c = c;
+        }
+    }
+
+    j = RESTART_FILS_END;
+    for (i = RESTART_COLS_INIT; i <= RESTART_COLS_END ; i++){
+        char c = 196; // -
+        if(i == RESTART_COLS_INIT) c = 192; // '-
+        if(i == RESTART_COLS_END) c = 217; // -'
+
+        p[j][i].a = C_FG_DARK_GREY;
+        p[j][i].c = c;
+    }
+
+    print("Reiniciar juego?", RESTART_COL_TEXT, RESTART_FILA_TEXT, C_FG_LIGHT_GREEN);
+    print("(y/N)", RESTART_COLS_END - 7, RESTART_FILS_END, C_FG_LIGHT_GREEN);
+}
+

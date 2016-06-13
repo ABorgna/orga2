@@ -8,6 +8,7 @@
 
 void keyboard_player_keys(unsigned char key);
 void keyboard_sound_keys(unsigned char key);
+void keyboard_restart_msg_keys(unsigned char key);
 
 void keyboard_isr(){
     unsigned char input = inb(0x60);
@@ -15,23 +16,44 @@ void keyboard_isr(){
 
     print_hex(input, 2, 70, 0, C_FG_LIGHT_MAGENTA);
 
-    //Debugger on/off
+    // Si se esta mostrando el mensaje de reiniciar, no hacer nada mas
+    if(game_restart_msg_shown()) {
+        keyboard_restart_msg_keys(key);
+        return;
+    }
+    if(key == 3) { // Esc
+        game_show_restart_msg();
+    }
+
+    // Debugger on/off
     if (key == 'Y'){
         dbg_enabled = ~dbg_enabled;
         print_hex(dbg_enabled, 1, 0, 0, C_BG_BLACK | C_FG_GREEN);
         game_hide_debug();
     }
 
-    if(11 <= key && key <= 22) {
-        keyboard_sound_keys(key);
-    } else {
-        keyboard_player_keys(key);
-    }
+    // Otros
+    keyboard_sound_keys(key);
+    keyboard_player_keys(key);
 }
 
 void keyboard_init(){
     // Enable keyboard interrupts
     IRQ_clear_mask(1);
+}
+
+void keyboard_restart_msg_keys(unsigned char key) {
+    switch (key){
+        case 'Y':
+            // Reiniciar juego
+            game_restart();
+            break;
+        case 'N':
+        case '\n': // Enter
+        case 3: // Esc
+            game_hide_restart_msg();
+            break;
+    }
 }
 
 void keyboard_player_keys(unsigned char key) {
@@ -93,6 +115,9 @@ void keyboard_sound_keys(unsigned char key) {
 unsigned char status2ASCII(unsigned char input){
     unsigned char output = 0;
     switch (input){
+        case 0x01: // Esc
+            output = 3;
+            break;
         //Player 1
         case 0x11:
             output = 'W';
@@ -102,6 +127,9 @@ unsigned char status2ASCII(unsigned char input){
             break;
         case 0x18:
             output = 'O';
+            break;
+        case 0x1C:
+            output = '\n';
             break;
         case 0x1E:
             output = 'A';
@@ -114,6 +142,9 @@ unsigned char status2ASCII(unsigned char input){
             break;
         case 0x2A:
             output = 1; //shift l
+            break;
+        case 0x31:
+            output = 'N';
             break;
         case 0x33:
             output = ',';

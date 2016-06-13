@@ -16,12 +16,17 @@
 // Realentizar los ticks para que sean visibles :P
 uint32_t tick_divisor = 0x100;
 
-bool initialized = 0;
+bool initialized = false;
+
+bool dbg_enabled = false;           // se setea por interrupción de tecla 'Y'
+bool dbg_displayed = false;         // se setea por show_debug
+
+bool restart_msg_displayed = false;
 
 struct pos_t players_pos[2];
-char players_lives[2] = {20,20};
+char players_lives[2];
 
-player_group current_group;
+player_group current_group = player_idle;
 char current_index;
 
 struct task_state game_entries[3][15] = {{{0}}};
@@ -35,6 +40,7 @@ void* codigo_tarea[3] = {TAREA_H, TAREA_A, TAREA_B};
 static struct task_state* curr_task();
 static void game_update_map();
 static void game_go_idle();
+static bool game_is_stopped();
 static pde* current_cr3();
 
 /**********************************
@@ -43,28 +49,43 @@ static pde* current_cr3();
 
 void game_inicializar() {
     int i;
+    initialized = 0;
 
     // Cosas
     current_group = player_idle;
     current_index = 0;
+
+    players_lives[0] = 20;
+    players_lives[1] = 20;
 
     players_pos[0].x = 4;
     players_pos[0].y = 25;
     players_pos[1].x = 75;
     players_pos[1].y = 25;
 
+    restart_msg_displayed = false;
+
     // Iniciar las cosas de las tareas
     for(i=0; i<15; i++) {
+        game_entries[player_H][i].alive = 0;
         game_entries[player_H][i].tss = tss_H + i;
         game_entries[player_H][i].tss_desc = GDT_TSS_HS_DESC + (i*8);
+
+        sched_kill_task(player_H,i);
     }
     for(i=0; i<5; i++) {
+        game_entries[player_A][i].alive = 0;
         game_entries[player_A][i].tss = tss_A + i;
         game_entries[player_A][i].tss_desc = GDT_TSS_AS_DESC + (i*8);
+
+        sched_kill_task(player_A,i);
     }
     for(i=0; i<5; i++) {
+        game_entries[player_B][i].alive = 0;
         game_entries[player_B][i].tss = tss_B + i;
         game_entries[player_B][i].tss_desc = GDT_TSS_BS_DESC + (i*8);
+
+        sched_kill_task(player_B,i);
     }
 
     // Lanzar las tareas H
@@ -78,6 +99,38 @@ void game_inicializar() {
     game_update_map();
 
     initialized = 1;
+}
+
+/**********************************
+ * Reiniciar el juego
+ **********************************/
+
+void game_show_restart_msg() {
+    restart_msg_displayed = 1;
+    game_update_map();
+
+    game_go_idle();
+}
+
+void game_hide_restart_msg() {
+    restart_msg_displayed = 0;
+    game_update_map();
+}
+
+bool game_restart_msg_shown() {
+    return restart_msg_displayed;
+}
+
+void game_restart() {
+    restart_msg_displayed = 0;
+    game_inicializar();
+
+    // Si la rutina actual no era la idle, descartarla
+    if(rtr() != GDT_TSS_IDLE_DESC) {
+        ltr(GDT_TSS_INICIAL);
+    }
+
+    game_go_idle();
 }
 
 /**********************************
@@ -150,10 +203,7 @@ void game_lanzar(player_group player, struct pos_t pos) {
 void game_tick() {
     static uint32_t tick_divisor_count = ~0;
 
-    if(!initialized) return;
-
-    //el debugger para la ejecución del juego
-    if (dbg_displayed) return;
+    if(game_is_stopped()) return;
 
     // Bajarle un cambio a la frequencia de actualizacion
     tick_divisor_count = (tick_divisor_count -1) % tick_divisor;
@@ -243,9 +293,6 @@ void game_mapear(unsigned int x, unsigned int y) {
 /**********************************
  * Debugger
  **********************************/
-bool dbg_enabled = false;           // se setea por interrupción de tecla 'Y'
-bool dbg_displayed = false;         // se setea por show_debug
-
 void game_show_debug(){
     // Si no está seteado, no hacer nada
     if (!dbg_enabled) return;
@@ -286,12 +333,23 @@ static __inline __attribute__((always_inline)) struct task_state* curr_task() {
 static void game_go_idle(){
     current_index = 0;
     current_group = player_idle;
-    tss_switch_task(GDT_TSS_IDLE_DESC);
+
+    if(rtr() != GDT_TSS_IDLE_DESC) {
+        tss_switch_task(GDT_TSS_IDLE_DESC);
+    }
 }
 
-static __inline __attribute__((always_inline)) void game_update_map(){
+static void game_update_map(){
     screen_draw_map((struct task_state*) game_entries, 45, players_pos);
     screen_draw_interface((struct task_state*) game_entries, 45, players_lives);
+
+    if(game_restart_msg_shown()) {
+        screen_show_restart_msg();
+    }
+}
+
+static __inline __attribute__((always_inline)) bool game_is_stopped() {
+    return !initialized || restart_msg_displayed || dbg_displayed;
 }
 
 static pde* current_cr3() {

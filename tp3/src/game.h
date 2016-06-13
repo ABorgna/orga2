@@ -33,6 +33,12 @@ struct task_state {
 // Lets play a game
 void game_inicializar();
 
+// Restart
+void game_show_restart_msg();
+void game_hide_restart_msg();
+bool game_restart_msg_shown();
+void game_restart();
+
 // Interaccion con el jugador
 void game_mover_cursor(player_group player, direccion dir);
 void game_lanzar_inplace(player_group player);

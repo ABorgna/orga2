@@ -18,6 +18,13 @@
 #define DBG_FILS_INIT 7
 #define DBG_FILS_END 48
 
+#define RESTART_COLS_INIT 27
+#define RESTART_COLS_END 53
+#define RESTART_FILS_INIT 23
+#define RESTART_FILS_END 27
+#define RESTART_COL_TEXT 29
+#define RESTART_FILA_TEXT 25
+
 #include "colors.h"
 #include "defines.h"
 #include "tasks/tss.h"
@@ -47,5 +54,7 @@ void screen_show_debug(tss* tss, player_group group);
 void screen_draw_map(struct task_state *states, char max_states, struct pos_t* players_pos);
 
 void screen_draw_interface(struct task_state *states, char max_states, char* players_lives);
+
+void screen_show_restart_msg();
 
 #endif  /* !__SCREEN_H__ */
