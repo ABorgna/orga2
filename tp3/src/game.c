@@ -48,7 +48,7 @@ static pde* current_cr3();
  **********************************/
 
 void game_inicializar() {
-    int i;
+    int i,j;
     initialized = 0;
 
     // Cosas
@@ -89,10 +89,24 @@ void game_inicializar() {
     }
 
     // Lanzar las tareas H
-    for(i=0; i<5; i++) {
-        // Hay un 2.94% de proba que toquen dos iguales
-        // TODO: hacer algo
-        struct pos_t pos = {rand(80), rand(44)};
+    for(i=0; i<15; i++) {
+        bool any_equal = false;
+        struct pos_t pos;
+        do {
+            pos.x = rand(80);
+            pos.y = rand(44);
+
+            // Si no checkeamos, hay un 2.94% de proba que toquen dos iguales
+            any_equal = false;
+            for(j=0; j<i; j++) {
+                struct pos_t *otra_pos = &game_entries[player_H][j].pos;
+                if(pos.x == otra_pos->x && pos.y == otra_pos->y) {
+                    any_equal = true;
+                    break;
+                }
+            }
+        } while(any_equal);
+
         game_lanzar(player_H, pos);
     }
 
