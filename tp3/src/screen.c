@@ -10,6 +10,8 @@
 
 #define C_MAPA C_FG_DARK_GREY
 
+char clocks[25] = {0};
+
 void print(const char * text, unsigned int x, unsigned int y, unsigned char attr) {
     ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
     int i;
@@ -370,17 +372,41 @@ void screen_show_restart_msg() {
     print("(y/N)", RESTART_COLS_END - 7, RESTART_FILS_END, C_FG_LIGHT_GREEN);
 }
 
-void screen_draw_clocks(struct task_state** game_entries, char* game_max_entries, char** clocks){
-  char offsets[3] = {30,1,69};
-  char colores[3] = {C_BG_BLACK | C_FG_LIGHT_BROWN, C_BG_BLACK | C_FG_LIGHT_RED, C_BG_BLACK | C_FG_LIGHT_BLUE};
-  int i;
-  int j;
-  for(i = 0 ; i < 3 ; i++){
-    for(j = 0 ; j < game_max_entries[i] ; j++){
-      struct task_state task = game_entries[i][j];      
-      print_char(clocks[i][j], offsets[i]+j, 4, colores[task.alive]);
+void screen_avanzar_clock(player_group group, char index, player_group curr_group){
+    assert(index < 5 || (group == player_H && index < 15));
+    char offsets[3] = {30,1,69};
+    char colores[3] = {C_BG_BLACK | C_FG_LIGHT_BROWN, C_BG_BLACK | C_FG_LIGHT_RED, C_BG_BLACK | C_FG_LIGHT_BLUE};
+    char offset = 0;
+    switch(group){
+      case player_H: offset = 0 ; break;
+      case player_A: offset = 15; break;
+      case player_B: offset = 20 ; break;
+      default: offset = 0;
     }
-  }
+    char current_char = clocks[offset + index];
+    char next_char = 0;
+    switch(current_char){
+      case '|': next_char = '/'; break;
+      case '/': next_char = '-'; break;
+      case '-': next_char = '\\'; break;
+      case '\\': next_char = '|'; break;
+      case 'X': break;
+      default: next_char = '|';
+    }
+    clocks[offset + index] = next_char;
+    print_char(clocks[offset + index], offsets[group] + index, 4, colores[curr_group]);
 }
 
-//colores[task.curr_group]
+void screen_kill_clock(player_group group, char index){
+  char offsets[3] = {30,1,69};
+  char colores[3] = {C_BG_BLACK | C_FG_LIGHT_BROWN, C_BG_BLACK | C_FG_LIGHT_RED, C_BG_BLACK | C_FG_LIGHT_BLUE};
+  char offset = 0;
+  switch(group){
+    case player_H: offset = 0 ; break;
+    case player_A: offset = 15; break;
+    case player_B: offset = 20 ; break;
+    default: offset = 0;
+  }
+  clocks[offset + index] = 'X';
+  print_char(clocks[offset + index], offsets[group] + index, 4, colores[group]);
+}
