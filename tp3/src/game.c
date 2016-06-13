@@ -26,8 +26,6 @@ bool restart_msg_displayed = false;
 struct pos_t players_pos[2];
 char players_lives[2];
 
-char clocks[3][15] = {{0}};
-
 player_group current_group = player_idle;
 char current_index;
 
@@ -73,6 +71,7 @@ void game_inicializar() {
         game_entries[player_H][i].tss = tss_H + i;
         game_entries[player_H][i].tss_desc = GDT_TSS_HS_DESC + (i*8);
 
+        screen_kill_clock(player_H,i);
         sched_kill_task(player_H,i);
     }
     for(i=0; i<5; i++) {
@@ -80,6 +79,7 @@ void game_inicializar() {
         game_entries[player_A][i].tss = tss_A + i;
         game_entries[player_A][i].tss_desc = GDT_TSS_AS_DESC + (i*8);
 
+        screen_kill_clock(player_A,i);
         sched_kill_task(player_A,i);
     }
     for(i=0; i<5; i++) {
@@ -87,6 +87,7 @@ void game_inicializar() {
         game_entries[player_B][i].tss = tss_B + i;
         game_entries[player_B][i].tss_desc = GDT_TSS_BS_DESC + (i*8);
 
+        screen_kill_clock(player_B,i);
         sched_kill_task(player_B,i);
     }
 
@@ -230,7 +231,7 @@ void game_tick() {
 
     sched_proxima_tarea(&next_group, &next_index);
 
-    game_update_clocks((struct task_state**) game_entries, game_max_entries, (char**) clocks);
+    screen_avanzar_clock(next_group,next_index,game_entries[next_group][next_index].curr_group);
     
     // Solo switchear task si estamos en otra
     if(next_group == current_group &&
@@ -245,31 +246,6 @@ void game_tick() {
     } else {
         tss_switch_task(curr_task()->tss_desc);
     }
-}
-
-void game_update_clocks(struct task_state** game_entries, char* game_max_entries, char** clocks){
-	int i;
-  int j;
-  for(i = 0 ; i < 3 ; i++){
-    for(j = 0 ; j < game_max_entries[i] ; j++){
-      struct task_state task = game_entries[i][j];      
-      if(task.alive){
-        char current_char = clocks[i][j];
-        char next_char = 0;
-        switch(current_char){
-          case '|': next_char = '/'; break;
-          case '/': next_char = '-'; break;
-          case '-': next_char = '\\'; break;
-          case '\\': next_char = '|'; break;
-          default: next_char = '|';
-        }
-        clocks[i][j] = next_char;
-      }else{
-        clocks[i][j] = 'X';
-      }
-    }
-  }
-  screen_draw_clocks(game_entries, game_max_entries, clocks);
 }
 
 /**********************************
@@ -360,6 +336,7 @@ void game_kill_task() {
 
     game_show_debug();
 
+    screen_kill_clock(current_group, current_index);
     sched_kill_task(current_group, current_index);
     curr_task()->alive = 0;
     game_go_idle();

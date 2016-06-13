@@ -47,7 +47,6 @@ void game_lanzar(player_group player, struct pos_t pos);
 // Actualizar, cambiar de tarea y todo eso
 // Se llama con el RTC cada 1ms
 void game_tick();
-void game_update_clocks(struct task_state** game_entries, char* game_max_entries, char** clocks);
 
 // Syscalls
 void game_soy(unsigned int soy);

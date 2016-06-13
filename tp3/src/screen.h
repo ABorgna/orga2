@@ -59,6 +59,8 @@ void screen_draw_interface(struct task_state *states, char max_states, char* pla
 
 void screen_show_restart_msg();
 
-void screen_draw_clocks(struct task_state** game_entries, char* game_max_entries, char** clocks);
+void screen_avanzar_clock(player_group group, char index, player_group curr_group);
+
+void screen_kill_clock(player_group group, char index);
 
 #endif  /* !__SCREEN_H__ */
