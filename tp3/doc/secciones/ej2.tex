@@ -31,7 +31,15 @@ Los atributos corresponden a nivel de privilegio 0, bit de present en 1 y tipo =
 \item [IDT_ENTRY_INTERRUPT_USER] para syscalls int 0x66 con privilegios de nivel usuario para llamar a SOY, DONDE y MAPEAR.
 \end{description} 
 
-Originalmente las interrupciones no-default se encargan de imprimir por pantalla 
+Originalmente las interrupciones no-default se encargan de imprimir por pantalla su número de interrupción con un define que se hace dentro del macro de la isr.
+\begin{lstlisting} [caption={Mensaje en el macro de isr},label=macro-msg]
+%macro ISR 2
+global _isr%1
+
+interrupt_msg_%1 db         %2
+interrupt_msg_%1_len equ    $ - interrupt_msg_%1
+
+\end{lstlisting}
 
 Todo esto quedó encapsulado en una función llamada idt_inicializar() que es ejecutada luego de cargar en IDTR un descriptor con la dirección donde se encuentra la IDT y su límite.
 
