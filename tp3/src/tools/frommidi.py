@@ -9,7 +9,9 @@ Usage: ./frommidi.py input.midi output_#.audio
 Converts only channel #
 """
 
+import array
 import sys
+import mido
 import numpy as np
 from mido import MidiFile
 
@@ -18,25 +20,24 @@ class Convert:
     def frommidi(self, infile, outfile, channel=0):
         self.timeOffsets = {}
 
-        outArray = [0,1]
+        outArray = array.array("B",[0,1])
         dTime = 0.
 
-        for m in MidiFile(infile).play():
-            if m.type == 'note_on':
-                dTime += m.time
+        for m in MidiFile(infile):
+            if isinstance(m, mido.messages.Message):
+                if m.type == 'note_on':
+                    dTime += m.time
 
-                if m.channel == channel:
-                    outArray = \
+                    if m.channel == channel:
                         self.addMidiNote(outArray, dTime, m.note, m.velocity)
-                    dTime %= 0.001
+                        dTime %= 0.001
 
-            if m.type == 'note_off':
-                dTime += m.time
+                if m.type == 'note_off':
+                    dTime += m.time
 
-                if m.channel == channel:
-                    outArray = \
+                    if m.channel == channel:
                         self.addMidiNote(outArray, dTime, 0, 0)
-                    dTime %= 0.001
+                        dTime %= 0.001
 
         self.addMidiNote(outArray, dTime, 0, 0)
 
@@ -50,15 +51,18 @@ class Convert:
 
         while millis >= 256:
             array[-1] = 255
-            array += [array[-2], 1]
+            array.append(array[-2])
+            array.append(1)
             millis -= 255
 
         if millis > 1:
             array[-1] = millis
         else:
-            array = array[:-2]
+            array.pop()
+            array.pop()
 
-        return array + [note, 100]
+        array.append(note)
+        array.append(100)
 
     def writeFile(self, array, outfile):
         narray = np.array(array, dtype=np.uint8)
