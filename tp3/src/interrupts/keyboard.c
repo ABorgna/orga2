@@ -128,6 +128,27 @@ void keyboard_sound_keys(unsigned char key) {
         case 13: // F3
             play_spectra();
             break;
+        case 14: // F4
+            play_kirby();
+            break;
+        case 15: // F5
+            play_mario();
+            break;
+        case 16: // F6
+            play_megaman();
+            break;
+        case 17: // F7
+            play_pokemon_gsc();
+            break;
+        case 18: // F8
+            play_pokemon_rby();
+            break;
+        case 19: // F9
+            play_sonic();
+            break;
+        case 20: // F10
+            play_superfantasy();
+            break;
     }
 }
 

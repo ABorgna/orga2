@@ -16,9 +16,15 @@ void stop_audio_ch(uint8_t channel, bool foreground);
 void audio_isr();
 uint16_t midiNoteToFreq(uint8_t note);
 
-void play_spectra();
-void play_pacman();
 void play_kirby();
+void play_mario();
+void play_megaman();
+void play_pacman();
+void play_pokemon_gsc();
+void play_pokemon_rby();
+void play_sonic();
+void play_spectra();
+void play_superfantasy();
 
 void play_mov_A();
 void play_mov_B();

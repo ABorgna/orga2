@@ -169,9 +169,9 @@ void game_mover_cursor(player_group player, direccion dir) {
     }
 
     if(player == player_A) {
-        play_mov_A();
+      //play_mov_A();
     } else {
-        play_mov_B();
+      //play_mov_B();
     }
 
     game_update_map();

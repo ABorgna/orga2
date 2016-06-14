@@ -132,25 +132,6 @@ void update_current_channel(){
     }
 }
 
-void play_spectra() {
-    play_audio(0, false,
-            (struct audio_note*) &audio_track_spectra0,
-            (struct audio_note*) &audio_track_end_spectra0,
-            true );
-    play_audio(1, false,
-            (struct audio_note*) &audio_track_spectra1,
-            (struct audio_note*) &audio_track_end_spectra1,
-            true );
-}
-
-void play_pacman() {
-    stop_audio_ch(0, false);
-    play_audio(1, false,
-            (struct audio_note*) &audio_track_pacman,
-            (struct audio_note*) &audio_track_end_pacman,
-            true );
-}
-
 void play_kirby() {
     play_audio(0, false,
             (struct audio_note*) &audio_track_kirby0,
@@ -162,18 +143,103 @@ void play_kirby() {
             true );
 }
 
+void play_mario() {
+    play_audio(0, false,
+            (struct audio_note*) &audio_track_mario0,
+            (struct audio_note*) &audio_track_end_mario0,
+            true );
+    play_audio(1, false,
+            (struct audio_note*) &audio_track_mario1,
+            (struct audio_note*) &audio_track_end_mario1,
+            true );
+}
+
+void play_megaman() {
+    play_audio(0, false,
+            (struct audio_note*) &audio_track_megaman0,
+            (struct audio_note*) &audio_track_end_megaman0,
+            true );
+    play_audio(1, false,
+            (struct audio_note*) &audio_track_megaman1,
+            (struct audio_note*) &audio_track_end_megaman1,
+            true );
+}
+
+void play_pacman() {
+    stop_audio_ch(0, false);
+    play_audio(1, false,
+            (struct audio_note*) &audio_track_pacman,
+            (struct audio_note*) &audio_track_end_pacman,
+            true );
+}
+
+void play_pokemon_gsc() {
+    play_audio(0, false,
+            (struct audio_note*) &audio_track_pokemon_gsc0,
+            (struct audio_note*) &audio_track_end_pokemon_gsc0,
+            true );
+    play_audio(1, false,
+            (struct audio_note*) &audio_track_pokemon_gsc1,
+            (struct audio_note*) &audio_track_end_pokemon_gsc1,
+            true );
+}
+
+void play_pokemon_rby() {
+    play_audio(0, false,
+            (struct audio_note*) &audio_track_pokemon_rby0,
+            (struct audio_note*) &audio_track_end_pokemon_rby0,
+            true );
+    play_audio(1, false,
+            (struct audio_note*) &audio_track_pokemon_rby1,
+            (struct audio_note*) &audio_track_end_pokemon_rby1,
+            true );
+}
+
+void play_sonic() {
+    play_audio(0, false,
+            (struct audio_note*) &audio_track_sonic0,
+            (struct audio_note*) &audio_track_end_sonic0,
+            true );
+    play_audio(1, false,
+            (struct audio_note*) &audio_track_sonic1,
+            (struct audio_note*) &audio_track_end_sonic1,
+            true );
+}
+
+void play_spectra() {
+    play_audio(0, false,
+            (struct audio_note*) &audio_track_spectra0,
+            (struct audio_note*) &audio_track_end_spectra0,
+            true );
+    play_audio(1, false,
+            (struct audio_note*) &audio_track_spectra1,
+            (struct audio_note*) &audio_track_end_spectra1,
+            true );
+}
+
+void play_superfantasy() {
+    play_audio(0, false,
+            (struct audio_note*) &audio_track_superfantasy0,
+            (struct audio_note*) &audio_track_end_superfantasy0,
+            true );
+    play_audio(1, false,
+            (struct audio_note*) &audio_track_superfantasy1,
+            (struct audio_note*) &audio_track_end_superfantasy1,
+            true );
+}
+
 void play_mov_A() {
-    play_audio(0, true,
-            (struct audio_note*) &audio_track_mov_A,
-            (struct audio_note*) &audio_track_end_mov_A,
-            false );
+//  play_audio(0, true,
+//          (struct audio_note*) &audio_track_mov_A,
+//          (struct audio_note*) &audio_track_end_mov_A,
+//          false );
 }
 
 void play_mov_B() {
-    play_audio(0, true,
-            (struct audio_note*) &audio_track_mov_B,
-            (struct audio_note*) &audio_track_end_mov_B,
-            false );
+//  play_audio(0, true,
+//          (struct audio_note*) &audio_track_mov_B,
+//          (struct audio_note*) &audio_track_end_mov_B,
+//          false );
 }
 
 uint16_t midiNoteToFreq(uint8_t note) {
