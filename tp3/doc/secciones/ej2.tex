@@ -2,5 +2,7 @@
 
 \subsubsection{Inicializar la IDT}
 
+Para inicializar la IDT creamos una serie de macros tanto en C como en ASM para facilitar la definición de los mismos. Llenamos la tabla con los valores que corresponden según la rutina diferenciando según su número, sus atributos y su data privilege level. Todo esto quedó encapsulado en una función llamada idt_inicializar() que es ejecutada luego de cargar la dirección donde se encuentra la IDT.
+
 \subsubsection{Habilitar la IDT}
 
