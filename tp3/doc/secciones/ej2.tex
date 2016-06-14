@@ -1,30 +1,43 @@
 \subsection{Ejercicio 2}
 
-La IDT se corresponde con un arreglo de tamaño 255 de idt_entry. Un idt_entry que un struct que representará cada descriptor dentro de la tabla indicando: 
-\begin{itemize}
-    \item Límite y dirección base de la ISR \footnote{Interrupt Service Routine} correspondiente si se trata de una Interrupt Gate.
-    \item Selector de segmento (de código y nivel de privilegio kernel, por supuesto) para dicha dirección. En nuestro modelo flat corresponde al único segmento con tales atributos. 
-    \item Atributos = P/DPL/S/GateType \\
-    \ -P (Present) si es una interrupción sin utilidad, se setea en 0 \\
-    \ -DPL (Descriptor priviledge level) especifica el nivel mínimo de privilegio que debe tener el descriptor \\
-    \ -S (Storage Segment) se setea em 0 para Interrupt Gates \\
-    \ -Type, corresponde al tipo de gate: \\
-    \begin{itemize}
-    	\item	0x5 $\gets$ Task Gate
-    	\item	0xE $\gets$ Interrupt Gate
-    	\item	0xF $\gets$ Trap Gate
-    \end{itemize}
-    
-\end{itemize}
+La IDT se corresponde con un arreglo de tamaño 255 de idt_entry. Un idt_entry es un struct que representará cada gate dentro de la tabla indicando selector de segmento de código donde se almacena la ISR, offset en dicho segmento y atributos del descriptor (present gate, tipo de gate y dpl). 
+
+\begin{lstlisting} [caption={Struct de las gates},label=gate-struct]
+typedef struct str_idt_entry_fld {
+    unsigned short offset_0_15;
+    unsigned short segsel;
+    unsigned short attr;
+    unsigned short offset_16_31;
+} __attribute__((__packed__, aligned (8))) idt_entry;
+\end{lstlisting}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{gates}
+    \caption{Formato de las gates en IDT}
+    \label{fig:gates}
+\end{figure}
+
 
 
 \subsubsection{Inicializar la IDT}
 
+Para inicializar la IDT usamos una serie de macros tanto en C (para las gates) como en ASM (para las ISR) para facilitar la definición de las mismas.
+De los macros generados usamos particularmente 3 de estos.
+\begin{description}
+\item [IDT_ENTRY_INTERRUPT] para las interrupciones de tipo 0-19, 32,33 y 40. Se setea con el descriptor de nuestro segmento flat de código de nivel 0, y offset (dividido de 0 a 15 y 16 a 31 bits por cuestiones de arquitectura) con puntero a una rutina genérica del 0-19, y específica para reloj (PIT y RTC) y teclado en interrupiones 32, 40 y 33 respectivamente. \\
+Los atributos corresponden a nivel de privilegio 0, bit de present en 1 y tipo = 0xE >> 2
+\item [IDT_ENTRY_DEFAULT] para las interrupciones reservadas por Intel según manual (20-31) y aquellas "libres" para el usuaro que no definimos (por lo tanto, no deberían ser accedidas durante la ejecución del sistema). 
+\item [IDT_ENTRY_INTERRUPT_USER] para syscalls int 0x66 con privilegios de nivel usuario para llamar a SOY, DONDE y MAPEAR.
+\end{description} 
 
+Originalmente las interrupciones no-default se encargan de imprimir por pantalla 
 
-Para inicializar la IDT creamos una serie de macros tanto en C como en ASM para facilitar la definición de los mismos.
-Llenamos la tabla con los valores que corresponden según la rutina diferenciando según su número, sus atributos y su data privilege level.
-Todo esto quedó encapsulado en una función llamada idt_inicializar() que es ejecutada luego de cargar la dirección donde se encuentra la IDT.
+Todo esto quedó encapsulado en una función llamada idt_inicializar() que es ejecutada luego de cargar en IDTR un descriptor con la dirección donde se encuentra la IDT y su límite.
+
+\subsubsection{Rutinas posteriores}
+\begin{description}
+\end{description}
 
 
 
