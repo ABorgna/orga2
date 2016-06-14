@@ -1,8 +1,31 @@
 \subsection{Ejercicio 2}
 
+La IDT se corresponde con un arreglo de tamaño 255 de idt_entry. Un idt_entry que un struct que representará cada descriptor dentro de la tabla indicando: 
+\begin{itemize}
+    \item Límite y dirección base de la ISR \footnote{Interrupt Service Routine} correspondiente si se trata de una Interrupt Gate.
+    \item Selector de segmento (de código y nivel de privilegio kernel, por supuesto) para dicha dirección. En nuestro modelo flat corresponde al único segmento con tales atributos. 
+    \item Atributos = P/DPL/S/GateType \\
+    \ -P (Present) si es una interrupción sin utilidad, se setea en 0 \\
+    \ -DPL (Descriptor priviledge level) especifica el nivel mínimo de privilegio que debe tener el descriptor \\
+    \ -S (Storage Segment) se setea em 0 para Interrupt Gates \\
+    \ -Type, corresponde al tipo de gate: \\
+    \begin{itemize}
+    	\item	0x5 $\gets$ Task Gate
+    	\item	0xE $\gets$ Interrupt Gate
+    	\item	0xF $\gets$ Trap Gate
+    \end{itemize}
+    
+\end{itemize}
+
+
 \subsubsection{Inicializar la IDT}
 
-Para inicializar la IDT creamos una serie de macros tanto en C como en ASM para facilitar la definición de los mismos. Llenamos la tabla con los valores que corresponden según la rutina diferenciando según su número, sus atributos y su data privilege level. Todo esto quedó encapsulado en una función llamada idt_inicializar() que es ejecutada luego de cargar la dirección donde se encuentra la IDT.
+
+
+Para inicializar la IDT creamos una serie de macros tanto en C como en ASM para facilitar la definición de los mismos.
+Llenamos la tabla con los valores que corresponden según la rutina diferenciando según su número, sus atributos y su data privilege level.
+Todo esto quedó encapsulado en una función llamada idt_inicializar() que es ejecutada luego de cargar la dirección donde se encuentra la IDT.
+
+
 
 \subsubsection{Habilitar la IDT}
-
