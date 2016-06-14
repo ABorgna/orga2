@@ -18,5 +18,9 @@ uint16_t midiNoteToFreq(uint8_t note);
 
 void play_spectra();
 void play_pacman();
+void play_kirby();
+
+void play_mov_A();
+void play_mov_B();
 
 #endif // __AUDIO_PLAYER_H__

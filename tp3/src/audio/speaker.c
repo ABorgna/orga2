@@ -11,7 +11,7 @@ void play_sound(uint32_t frequence) {
     uint8_t tmp;
 
     if(!frequence) {
-        nosound();
+        setupPIT(2, 1);
         return;
     }
 
