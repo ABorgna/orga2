@@ -330,6 +330,18 @@ void game_hide_debug(){
     game_update_map();
 }
 
+void game_enable_debugger(bool enable){
+    dbg_enabled = enable;
+    screen_draw_debugger_enabled();
+}
+
+bool game_debugger_enabled(){
+    return dbg_enabled;
+}
+
+bool game_debugger_displayed(){
+    return dbg_displayed;
+}
 
 /**********************************
  * Otros
@@ -366,6 +378,7 @@ static void game_go_idle(){
 static void game_update_map(){
     screen_draw_map((struct task_state*) game_entries, 45, players_pos);
     screen_draw_interface((struct task_state*) game_entries, 45, players_lives);
+    screen_draw_debugger_enabled();
 
     if(game_restart_msg_shown()) {
         screen_show_restart_msg();

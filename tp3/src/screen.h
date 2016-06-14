@@ -48,6 +48,7 @@ void dibujar_fondo_interfaz();
 void dibujar_fondo_mapa();
 
 void screen_show_debug(tss* tss, player_group group);
+void screen_draw_debugger_enabled();
 
 void screen_draw_map(struct task_state *states, char max_states, struct pos_t* players_pos);
 void screen_draw_interface(struct task_state *states, char max_states, char* players_lives);

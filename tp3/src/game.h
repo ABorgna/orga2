@@ -54,10 +54,11 @@ void game_donde(struct pos_t* pos);
 void game_mapear(unsigned int x, unsigned int y);
 
 // Debugger
-bool dbg_enabled;
-bool dbg_displayed;
 void game_show_debug();
 void game_hide_debug();
+void game_enable_debugger(bool enable);
+bool game_debugger_enabled();
+bool game_debugger_displayed();
 
 // Otros
 void game_kill_task();

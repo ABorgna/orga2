@@ -267,6 +267,14 @@ void screen_show_debug(tss* tss, player_group group){
     print_hex(tss->eflags, 8, DBG_COLS_INIT + 6, y, C_BG_BLACK | C_FG_LIGHT_GREEN);
 }
 
+void screen_draw_debugger_enabled(){
+    if(game_debugger_enabled()){
+        print("DEBUG MODE", 10, 49, C_FG_LIGHT_GREEN);
+    } else {
+        print("          ", 10, 49, 0);
+    }
+}
+
 void screen_draw_map(struct task_state *states, char max_states, struct pos_t* players_pos){
     // Esto debería actualizar solo la seccion del mapa, no los puntajes ni el footer
 
@@ -439,3 +447,4 @@ void screen_kill_clock(player_group group, char index){
 
     screen_draw_clocks();
 }
+

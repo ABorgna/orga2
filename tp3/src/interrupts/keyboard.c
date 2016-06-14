@@ -9,6 +9,7 @@
 void keyboard_player_keys(unsigned char key);
 void keyboard_sound_keys(unsigned char key);
 void keyboard_restart_msg_keys(unsigned char key);
+void keyboard_debugger_keys(unsigned char key);
 
 void keyboard_isr(){
     unsigned char input = inb(0x60);
@@ -21,20 +22,26 @@ void keyboard_isr(){
         keyboard_restart_msg_keys(key);
         return;
     }
+
+    // Si se está mostrando el debugger, no hacer nada mas
+    if (game_debugger_displayed()){
+        keyboard_debugger_keys(key);
+        return;
+    }
+
+    // Mensaje de reiniciar
     if(key == 3) { // Esc
         game_show_restart_msg();
     }
 
-    // Debugger on/off
+    // Debugger on
     if (key == 'Y'){
-        dbg_enabled = ~dbg_enabled;
-        print_hex(dbg_enabled, 1, 0, 0, C_BG_BLACK | C_FG_GREEN);
-        game_hide_debug();
+        game_enable_debugger(true);
     }
 
     // Otros
     keyboard_sound_keys(key);
-    if (!dbg_displayed) keyboard_player_keys(key);
+    keyboard_player_keys(key);
 }
 
 void keyboard_init(){
@@ -52,6 +59,18 @@ void keyboard_restart_msg_keys(unsigned char key) {
         case '\n': // Enter
         case 3: // Esc
             game_hide_restart_msg();
+            break;
+    }
+}
+
+void keyboard_debugger_keys(unsigned char key) {
+    switch (key){
+        case 'Y':
+            game_enable_debugger(false);
+        case '\n': // Enter
+        case 3: // Esc
+            // Cerrar el debugger
+            game_hide_debug();
             break;
     }
 }
