@@ -26,4 +26,7 @@ void play_sonic();
 void play_spectra();
 void play_superfantasy();
 
+void play_mov_A();
+void play_mov_B();
+
 #endif // __AUDIO_PLAYER_H__

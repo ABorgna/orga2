@@ -117,13 +117,18 @@ void audio_step(struct audio_status* status) {
 }
 
 void update_current_channel(){
-    if((channels[0][0].playing || channels[1][0].playing) &&
-       (channels[0][1].playing || channels[1][1].playing)) {
+    if(((channels[0][0].playing && channels[0][0].curr_freq) ||
+        (channels[1][0].playing && channels[1][0].curr_freq)) &&
+       ((channels[0][1].playing && channels[0][1].curr_freq) ||
+        (channels[1][1].playing && channels[1][1].curr_freq))) {
         if(!(audio_step_counter & 0xf)) {
             current_channel = 1 - current_channel;
         }
     } else {
-        current_channel = channels[0][1].playing || channels[1][1].playing ? 1 : 0;
+        current_channel = (channels[0][1].playing &&
+                           channels[0][1].curr_freq) ||
+                          (channels[1][1].playing &&
+                           channels[1][1].curr_freq) ? 1 : 0;
     }
 }
 
@@ -221,6 +226,20 @@ void play_superfantasy() {
             (struct audio_note*) &audio_track_superfantasy1,
             (struct audio_note*) &audio_track_end_superfantasy1,
             true );
+}
+
+void play_mov_A() {
+//  play_audio(0, true,
+//          (struct audio_note*) &audio_track_mov_A,
+//          (struct audio_note*) &audio_track_end_mov_A,
+//          false );
+}
+
+void play_mov_B() {
+//  play_audio(0, true,
+//          (struct audio_note*) &audio_track_mov_B,
+//          (struct audio_note*) &audio_track_end_mov_B,
+//          false );
 }
 
 uint16_t midiNoteToFreq(uint8_t note) {
