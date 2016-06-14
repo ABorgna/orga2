@@ -72,9 +72,13 @@ void print_char(unsigned char c, unsigned int x, unsigned int y, unsigned char a
       p[y][x].a = attr;
 }
 
-char get_char(unsigned int x, unsigned int y){
+ca get_ca(unsigned int x, unsigned int y){
     ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
-    return p[y][x].c;
+    return p[y][x];
+}
+
+char get_char(unsigned int x, unsigned int y){
+    return get_ca(x,y).c;
 }
 
 void reventar_pantalla(){
@@ -277,27 +281,77 @@ void screen_draw_debugger_enabled(){
 
 void screen_draw_map(struct task_state *states, char max_states, struct pos_t* players_pos){
     // Esto debería actualizar solo la seccion del mapa, no los puntajes ni el footer
+    unsigned char colores[3] = {C_BG_BLACK | C_FG_LIGHT_BROWN,
+                                C_BG_BLACK | C_FG_LIGHT_RED,
+                                C_BG_BLACK | C_FG_LIGHT_BLUE};
 
     dibujar_fondo_mapa();
 
+    // Dibujar tareas y lugares mapeados
     int i;
     for(i=0; i<max_states; i++) {
-        struct task_state task = states[i];
-        if(!task.alive) continue;
-        unsigned char color;
-        switch(task.curr_group){
-          case player_H: color = C_BG_BLACK | C_FG_LIGHT_BROWN; break;
-          case player_A: color = C_BG_BLACK | C_FG_LIGHT_RED; break;
-          case player_B: color = C_BG_BLACK | C_FG_LIGHT_BLUE; break;
-          default: color = C_BG_BLACK | C_FG_BLACK;
+        struct task_state *task = &states[i];
+        if(!task->alive) continue;
+
+        unsigned char color = colores[task->curr_group];
+        unsigned char x = task->pos.x+MAPA_BORDE_IZQ;
+        unsigned char y = task->pos.y+MAPA_BORDE_ARB;
+        unsigned char caracter = 219; // cuadrado grande
+
+        ca actual = get_ca(x,y);
+        if(actual.c == 254) {
+            // Una tarea mapeo esta posicion
+            // pintar el fondo de nuestro color
+            color = ((color << 4) & 0x70) | (actual.a & 0xf);
+            caracter = 254;
         }
-        if(task.has_mapped)
-          print_char(254,task.mapped_pos.x+MAPA_BORDE_IZQ,task.mapped_pos.y+MAPA_BORDE_ARB, color);
-        print_char(219,task.pos.x+MAPA_BORDE_IZQ,task.pos.y+MAPA_BORDE_ARB, color);
+        print_char(caracter,x,y,color);
+
+        if(task->has_mapped) {
+            color = colores[task->curr_group];
+            x = task->mapped_pos.x+MAPA_BORDE_IZQ;
+            y = task->mapped_pos.y+MAPA_BORDE_ARB;
+            caracter = 254; // cuadrado chico
+
+            actual = get_ca(x,y);
+            if(actual.c == 219) {
+                // Hay una tarea en donde estamos parados
+                // pintar el fondo del color de la tarea
+                color = color | ((actual.a << 4) & 0x70);
+            }
+            print_char(caracter,x,y, color);
+        }
     }
 
-    print_char('X',players_pos[0].x+MAPA_BORDE_IZQ,players_pos[0].y+MAPA_BORDE_ARB, C_BG_BLACK | C_FG_LIGHT_RED);
-    print_char('X',players_pos[1].x+MAPA_BORDE_IZQ,players_pos[1].y+MAPA_BORDE_ARB, C_BG_BLACK | C_FG_LIGHT_BLUE);
+    // Dibujar cursores
+    unsigned char xA = players_pos[0].x+MAPA_BORDE_IZQ;
+    unsigned char yA = players_pos[0].y+MAPA_BORDE_ARB;
+    unsigned char xB = players_pos[1].x+MAPA_BORDE_IZQ;
+    unsigned char yB = players_pos[1].y+MAPA_BORDE_ARB;
+    unsigned char colorA = C_BG_BLACK | C_FG_LIGHT_RED;
+    unsigned char colorB = C_BG_BLACK | C_FG_LIGHT_BLUE;
+
+    if(xA == xB && yA == yB) {
+        colorA = colorB = C_FG_LIGHT_MAGENTA;
+    }
+
+    // Si hay una tarea en la posicion, mostrarla como fondo
+    ca actual = get_ca(xA,yA);
+    if(actual.c == 219) { // Cuadrado grande
+        colorA = colorA | ((actual.a << 4) & 0x70);
+    } else if(actual.c == 256) { // Cuadrado chico
+        colorA = colorA | (actual.a & 0x70);
+    }
+
+    actual = get_ca(xB,yB);
+    if(actual.c == 219) { // Cuadrado grande
+        colorB = colorB | ((actual.a << 4) & 0x70);
+    } else if(actual.c == 256) { // Cuadrado chico
+        colorB = colorB | (actual.a & 0x70);
+    }
+
+    print_char('X',xB,yB, colorB);
+    print_char('X',xA,yA, colorA);
 }
 
 void screen_draw_interface(struct task_state *states, char max_states, char* players_lives){
