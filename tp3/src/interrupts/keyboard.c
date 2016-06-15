@@ -10,6 +10,7 @@ void keyboard_player_keys(unsigned char key);
 void keyboard_sound_keys(unsigned char key);
 void keyboard_restart_msg_keys(unsigned char key);
 void keyboard_debugger_keys(unsigned char key);
+void keyboard_help_keys(unsigned char key);
 
 void keyboard_isr(){
     unsigned char input = inb(0x60);
@@ -29,6 +30,12 @@ void keyboard_isr(){
         return;
     }
 
+    // Si se está mostrando la ayuda, no hacer nada mas
+    if (game_help_displayed()){
+        keyboard_help_keys(key);
+        return;
+    }
+
     // Mensaje de reiniciar
     if(key == 3) { // Esc
         game_show_restart_msg();
@@ -37,6 +44,11 @@ void keyboard_isr(){
     // Debugger on
     if (key == 'Y'){
         game_enable_debugger(!game_debugger_enabled());
+    }
+
+    // Debugger on
+    if (key == '?'){
+        game_show_help();
     }
 
     // Otros
@@ -71,6 +83,16 @@ void keyboard_debugger_keys(unsigned char key) {
         case 3: // Esc
             // Cerrar el debugger
             game_hide_debug();
+            break;
+    }
+}
+
+void keyboard_help_keys(unsigned char key) {
+    switch (key){
+        case '?':
+        case '\n': // Enter
+        case 3: // Esc
+            game_hide_help();
             break;
     }
 }
@@ -188,6 +210,9 @@ unsigned char status2ASCII(unsigned char input){
             break;
         case 0x33:
             output = ',';
+            break;
+        case 0x35:
+            output = '?';
             break;
         //Debugger
         case 0x15:

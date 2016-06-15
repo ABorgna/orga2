@@ -60,6 +60,11 @@ void game_enable_debugger(bool enable);
 bool game_debugger_enabled();
 bool game_debugger_displayed();
 
+// Help
+void game_show_help();
+void game_hide_help();
+bool game_help_displayed();
+
 // Otros
 void game_kill_task();
 

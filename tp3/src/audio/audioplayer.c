@@ -121,7 +121,7 @@ void update_current_channel(){
         (channels[1][0].playing && channels[1][0].curr_freq)) &&
        ((channels[0][1].playing && channels[0][1].curr_freq) ||
         (channels[1][1].playing && channels[1][1].curr_freq))) {
-        if(!(audio_step_counter & 0xf)) {
+        if(!(audio_step_counter & 0x1f)) {
             current_channel = 1 - current_channel;
         }
     } else {
@@ -144,10 +144,11 @@ void play_kirby() {
 }
 
 void play_mario() {
-    play_audio(0, false,
-            (struct audio_note*) &audio_track_mario0,
-            (struct audio_note*) &audio_track_end_mario0,
-            true );
+  //play_audio(0, false,
+  //        (struct audio_note*) &audio_track_mario0,
+  //        (struct audio_note*) &audio_track_end_mario0,
+  //        true );
+    stop_audio_ch(0, false);
     play_audio(1, false,
             (struct audio_note*) &audio_track_mario1,
             (struct audio_note*) &audio_track_end_mario1,
