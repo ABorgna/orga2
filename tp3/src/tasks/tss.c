@@ -60,7 +60,6 @@ void tss_idle_inicializar() {
 }
 
 void tss_inicializar_tarea(tss* entrada, pde* cr3) {
-    // TODO: cambiar segmentos a ring 3
     void* pagina_stack_kernel = mmu_proxima_pagina_fisica_libre();
     void* stack_kernel = pagina_stack_kernel + 0x1000 - 4;
 
