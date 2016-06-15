@@ -36,7 +36,7 @@ void keyboard_isr(){
 
     // Debugger on
     if (key == 'Y'){
-        game_enable_debugger(true);
+        game_enable_debugger(!game_debugger_enabled());
     }
 
     // Otros
