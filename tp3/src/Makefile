@@ -33,7 +33,21 @@ DEPEND = Makefile \
 
 AUDIO_TRACKS = audio/tracks/pacman_0.audio \
 	       audio/tracks/spectra_0.audio \
-	       audio/tracks/spectra_1.audio
+	       audio/tracks/spectra_1.audio \
+	       audio/tracks/kirby_0.audio \
+	       audio/tracks/kirby_1.audio \
+	       audio/tracks/mario_0.audio \
+	       audio/tracks/mario_1.audio \
+	       audio/tracks/megaman_0.audio \
+	       audio/tracks/megaman_1.audio \
+	       audio/tracks/pokemon_gsc_0.audio \
+	       audio/tracks/pokemon_gsc_1.audio \
+	       audio/tracks/pokemon_rby_0.audio \
+	       audio/tracks/pokemon_rby_1.audio \
+	       audio/tracks/sonic_0.audio \
+		   audio/tracks/sonic_1.audio \
+		   audio/tracks/superfantasy_0.audio \
+	       audio/tracks/superfantasy_1.audio
 
 OBJ=$(KERNEL_OBJ) \
 	game.o \

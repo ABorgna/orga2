@@ -12,6 +12,7 @@
 #include "mem/mmu.h"
 #include "tasks/sched.h"
 #include "tasks/tss.h"
+#include "audio/audioplayer.h"
 
 // Realentizar los ticks para que sean visibles :P
 uint32_t tick_divisor = 0x100;
@@ -165,6 +166,12 @@ void game_mover_cursor(player_group player, direccion dir) {
         case IZQ: if(pos->x > 0 ) pos->x--; break;
         case ARB: if(pos->y > 0 ) pos->y--; break;
         case ABA: if(pos->y < 43) pos->y++; break;
+    }
+
+    if(player == player_A) {
+      //play_mov_A();
+    } else {
+      //play_mov_B();
     }
 
     game_update_map();
