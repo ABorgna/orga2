@@ -2,4 +2,18 @@
 
 \subsubsection{Definir entradas en la GDT para las TSS}
 
-Para definir las entradas de la GDT para las TSS creamos una función gdt_setear_tss_entry que toma el offset de la gdt 
+Para definir las entradas de la GDT para las TSS creamos una función gdt_setear_tss_entry que toma el offset dentro la gdt, un puntero a una TSS, y un valor de Data Privilege Level (de 0 a 3) y completa una entrada nueva en la GDT (determinada por offset) con los datos pertinentes a una tarea.
+
+Usamos esa misma función para completar las entradas de las tareas Inicial y Idle, así como luego utilizamos lo mismo para llenar las entradas de las 25 tareas que pertenecen al juego.
+
+\subsubsection{Completar la entrada TSS de la tarea Idle}
+
+Completamos la información de la tarea Idle en su entrada correspondiente con los datos que se requirieron en el enunciado:
+
+\begin{itemize}
+	\item La tarea Idle se encuentra en la dirección 0x00010000
+	\item Su pila se encuentra en la misma dirección que la del kernel y fue mapeada con identity mapping
+	\item La tarea misma ocupa una página de 4KB y se encuentra mapeada con identity mapping
+	\item Su CR3 es el mismo que el del Kernel
+	\item En los EFLAGS habilitamos el flag de interrupciones (ya que de otro modo no podría ser interrumpida para poder cambiar de tarea)
+\end{itemize}
