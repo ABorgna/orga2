@@ -24,6 +24,8 @@ bool dbg_displayed = false;         // se setea por show_debug
 
 bool restart_msg_displayed = false;
 
+bool help_displayed = false;
+
 struct pos_t players_pos[2];
 char players_lives[2];
 
@@ -351,6 +353,23 @@ bool game_debugger_displayed(){
 }
 
 /**********************************
+ * Help
+ **********************************/
+void game_show_help(){
+    help_displayed = true;
+    screen_show_help();
+}
+
+void game_hide_help(){
+    help_displayed = false;
+    game_update_map();
+}
+
+bool game_help_displayed(){
+    return help_displayed;
+}
+
+/**********************************
  * Otros
  **********************************/
 
@@ -390,10 +409,14 @@ static void game_update_map(){
     if(game_restart_msg_shown()) {
         screen_show_restart_msg();
     }
+
+    if(help_displayed) {
+        screen_show_help();
+    }
 }
 
 static __inline __attribute__((always_inline)) bool game_is_stopped() {
-    return !initialized || restart_msg_displayed || dbg_displayed;
+    return !initialized || restart_msg_displayed || dbg_displayed || help_displayed;
 }
 
 static pde* current_cr3() {

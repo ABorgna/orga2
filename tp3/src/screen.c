@@ -110,59 +110,23 @@ void dibujar_fondo_interfaz(){
 }
 
 void dibujar_fondo_mapa(){
-    ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
-    int i, j;
-    p[5][0].c = 218;
-    p[5][0].a = C_BG_BLACK | C_MAPA ;
-    for (j = 1; j < VIDEO_COLS-1; j++) {
-        p[5][j].c = 194;
-        p[5][j].a = C_BG_BLACK | C_MAPA ;
-    }
-    p[5][VIDEO_COLS-1].c = 191;
-    p[5][VIDEO_COLS-1].a = C_BG_BLACK | C_MAPA ;
-    for (i = 6; i < VIDEO_FILS-2; i++) {
-        p[i][0].c = 195;
-        p[i][0].a = C_BG_BLACK | C_MAPA ;
-
-        for (j = 1; j < VIDEO_COLS-1; j++) {
-            p[i][j].c = 197;
-            p[i][j].a = C_BG_BLACK | C_MAPA ;
-        }
-        p[i][VIDEO_COLS-1].c = 180;
-        p[i][VIDEO_COLS-1].a = C_BG_BLACK | C_MAPA ;
-    }
-    p[VIDEO_FILS-2][0].c = 192;
-    p[VIDEO_FILS-2][0].a = C_BG_BLACK | C_MAPA ;
-    for (j = 1; j < VIDEO_COLS-1; j++) {
-        p[VIDEO_FILS-2][j].c = 193;
-        p[VIDEO_FILS-2][j].a = C_BG_BLACK | C_MAPA ;
-    }
-    p[VIDEO_FILS-2][VIDEO_COLS-1].c = 217;
-    p[VIDEO_FILS-2][VIDEO_COLS-1].a = C_BG_BLACK | C_MAPA ;
+    screen_dibujar_marco(0, 79,
+                         5, 48,
+                         true);
 }
 
 void atar_con_alambre(){
-    print("(^.^)-b ... LO ATAMO' CON ALAMBRE ", VIDEO_COLS - 34, VIDEO_FILS -1, C_BG_BLACK | C_FG_LIGHT_GREEN);
-    print("^", VIDEO_COLS - 33, VIDEO_FILS -1, C_BG_BLACK | C_FG_LIGHT_GREEN | C_BLINK);
-    print("^", VIDEO_COLS - 31, VIDEO_FILS -1, C_BG_BLACK | C_FG_LIGHT_GREEN | C_BLINK);
+    print("(^.^)-b ... LO ATAMO' CON ALAMBRE ", 23, 1, C_BG_BLACK | C_FG_LIGHT_GREEN);
+    print("^", 24, 1, C_BG_BLACK | C_FG_LIGHT_GREEN | C_BLINK);
+    print("^", 26, 1, C_BG_BLACK | C_FG_LIGHT_GREEN | C_BLINK);
 }
 
 void screen_show_debug(tss* tss, player_group group){
-    ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
     /* dibujar ventana */
-    int i;
-    int j;
-    for (i = DBG_FILS_INIT; i < DBG_FILS_END; i++) {
-      for (j = DBG_COLS_INIT; j < DBG_COLS_END ; j++){
-        if ((i == DBG_FILS_END - 1) || (i == DBG_FILS_INIT) || (j == DBG_COLS_INIT) || (j == DBG_COLS_END -1) ){
-          p[i][j].a = C_BG_LIGHT_GREY;
-          p[i][j].c = ' ';
-        } else {
-          p[i][j].a = C_BG_BLACK ;
-          p[i][j].c = ' ';
-        }
-      }
-    }
+    screen_dibujar_marco(DBG_COLS_INIT, DBG_COLS_END,
+                         DBG_FILS_INIT, DBG_FILS_END,
+                         false);
+
     /* info etiquetas */
     unsigned char group_char = ' ';
     switch (group) {
@@ -186,7 +150,7 @@ void screen_show_debug(tss* tss, player_group group){
     unsigned int* pila = (unsigned int*) tss->esp;
 
     /* valores de registros según tss, POR FILA */
-    unsigned int y = DBG_FILS_INIT + 1;
+    unsigned int y = DBG_FILS_INIT + 2;
 
     print("virus", DBG_COLS_INIT + 2, y, C_BG_BLACK | C_FG_GREEN | C_BLINK);
     print_char(group_char, DBG_COLS_INIT + 8, y, C_BG_BLACK | C_FG_GREEN | C_BLINK);
@@ -400,46 +364,53 @@ void screen_draw_interface(struct task_state *states, char max_states, char* pla
 
   print("Puntos: ",player2_xoffset, yoffset+2, C_PLAYER2);
   print_int(puntos[1], player2_xoffset+10, yoffset+2, C_PLAYER2,2);
+
+  print("? - Ayuda", 71, 49, C_FG_LIGHT_GREEN);
 }
 
 void screen_show_restart_msg() {
-    /* dibujar ventana */
-    int i, j;
-    ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
-
-    j = RESTART_FILS_INIT;
-    for (i = RESTART_COLS_INIT; i <= RESTART_COLS_END ; i++){
-        char c = 196; // -
-        if(i == RESTART_COLS_INIT) c = 218; // ,-
-        if(i == RESTART_COLS_END) c = 191; // -,
-
-        p[j][i].a = C_FG_DARK_GREY;
-        p[j][i].c = c;
-    }
-
-    for (j = RESTART_FILS_INIT+1; j < RESTART_FILS_END; j++) {
-        for (i = RESTART_COLS_INIT; i <= RESTART_COLS_END ; i++){
-            char c = ' ';
-            if(i == RESTART_COLS_INIT) c = 179; // |
-            if(i == RESTART_COLS_END) c = 179; // |
-
-            p[j][i].a = C_FG_DARK_GREY;
-            p[j][i].c = c;
-        }
-    }
-
-    j = RESTART_FILS_END;
-    for (i = RESTART_COLS_INIT; i <= RESTART_COLS_END ; i++){
-        char c = 196; // -
-        if(i == RESTART_COLS_INIT) c = 192; // '-
-        if(i == RESTART_COLS_END) c = 217; // -'
-
-        p[j][i].a = C_FG_DARK_GREY;
-        p[j][i].c = c;
-    }
+    /* dibujar ventana para reiniciar el juego */
+    screen_dibujar_marco(RESTART_COLS_INIT, RESTART_COLS_END,
+                         RESTART_FILS_INIT, RESTART_FILS_END,
+                         false);
 
     print("Reiniciar juego?", RESTART_COL_TEXT, RESTART_FILA_TEXT, C_FG_LIGHT_GREEN);
     print("(y/N)", RESTART_COLS_END - 7, RESTART_FILS_END, C_FG_LIGHT_GREEN);
+}
+
+void screen_show_help() {
+    /* dibujar ventana con listado de las teclas */
+    uint8_t x = HELP_COLS_INIT + 2, y = HELP_FILS_INIT + 2;
+    uint8_t c = C_FG_LIGHT_GREEN;
+
+    screen_dibujar_marco(HELP_COLS_INIT, HELP_COLS_END,
+                         HELP_FILS_INIT, HELP_FILS_END,
+                         false);
+
+    print("---------- Movimiento ----------", x, y++, c);
+    y++;
+    print("WASD/,AOE  Mover jugador A      ", x, y++, c);
+    print("Shift-L    Lanzar jugador A     ", x, y++, c);
+    print("Flechitas  Mover jugador B      ", x, y++, c);
+    print("Shift-R    Lanzar jugador B     ", x, y++, c);
+    y++;
+    print("----------- Opciones -----------", x, y++, c);
+    y++;
+    print("Esc        Reiniciar juego      ", x, y++, c);
+    print("Y          Habilitar modo debug ", x, y++, c);
+    print("?          Menu de ayuda        ", x, y++, c);
+    y++;
+    print("------------ Audio -------------", x, y++, c);
+    y++;
+    print("F1         Silenciar sonidos    ", x, y++, c);
+    print("F2         Tocar Pacman         ", x, y++, c);
+    print("F3         Tocar Spectra        ", x, y++, c);
+    print("F4         Tocar Kirby          ", x, y++, c);
+    print("F5         Tocar Mario          ", x, y++, c);
+    print("F6         Tocar Pokemon gsc    ", x, y++, c);
+    print("F7         Tocar Pokemon ruby   ", x, y++, c);
+    print("F8         Tocar Sonic          ", x, y++, c);
+    print("F9         Tocar Superfantasy   ", x, y++, c);
 }
 
 void screen_draw_clocks() {
@@ -502,3 +473,41 @@ void screen_kill_clock(player_group group, char index){
     screen_draw_clocks();
 }
 
+void screen_dibujar_marco(uint8_t initX, uint8_t endX,
+                          uint8_t initY, uint8_t endY,
+                          bool grilla) {
+    int i, j;
+    ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO_SCREEN;
+
+    j = initY;
+    for (i = initX; i <= endX ; i++){
+        unsigned char c = grilla ? 194 : 196; // -.- or -
+        if(i == initX) c = 218; // ,-
+        if(i == endX) c = 191; // -,
+
+        p[j][i].a = C_FG_DARK_GREY;
+        p[j][i].c = c;
+    }
+
+    for (j = initY+1; j < endY; j++) {
+        for (i = initX; i <= endX ; i++){
+            unsigned char c = grilla ? 197 : ' ';
+            if(i == initX) c = grilla ? 195 : 179; // |- or |
+            if(i == endX) c = grilla ? 180 : 179; // -| or |
+
+            p[j][i].a = C_FG_DARK_GREY;
+            p[j][i].c = c;
+        }
+    }
+
+    j = endY;
+    for (i = initX; i <= endX ; i++){
+        unsigned char c = grilla ? 193 : 196; // -'- or -
+        if(i == initX) c = 192; // '-
+        if(i == endX) c = 217; // -'
+
+        p[j][i].a = C_FG_DARK_GREY;
+        p[j][i].c = c;
+    }
+
+}
