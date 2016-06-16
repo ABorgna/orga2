@@ -54,7 +54,7 @@ A partir de esta conversión se determina si se actualiza la posición de un cur
 \label{isr_dbg}
 Dentro de la rutina de $keyboard\_isr$, si el debugger (\ref{dbg}) se encuentra en pantalla entonces solamente se atenderá la interrupción de teclado que lo desactiva (correspondiente a la letra 'Y').
 Por lo tanto no se podrán mover cursores cuando se esté mostrando.\\
-Para habilitar el modo debug, se llama a la interrupción de teclado de la letra 'Y' y se habilita un flag $dbg\_enabled$ desde la función $game\_enable\_debugger$ antes de volver a la ejecución de la tarea. La próxima vez que se produzca una excepción o un error de parámetros en syscall ($game\_kill\_task$), se detendrá la ejecución y se llamará al debugger hasta que se presione nuevamente la tecla 'Y' y se salte a la tarea idle ($game\_go\_idle$) para retomar la ejecución del juego.
+Para habilitar el modo debug se llama a la interrupción de teclado de la letra 'Y' y se habilita un flag $dbg\_enabled$ desde la función $game\_enable\_debugger$ antes de volver a la ejecución de la tarea. La próxima vez que se produzca una excepción o un error de parámetros en syscall ($game\_kill\_task$), se detendrá la ejecución y se llamará al debugger hasta que se presione nuevamente la tecla 'Y' y se salte a la tarea idle ($game\_go\_idle$) para retomar la ejecución del juego.
 
 \subsection{Habilitar interrupción $0x66$}
 Se define para la $int\ 0x66$ una syscall, cuyo funcionamiento 'ingame' detallaremos más adelante (\ref{syscalls} ).
