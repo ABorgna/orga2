@@ -17,3 +17,21 @@ Completamos la información de la tarea Idle en su entrada correspondiente con l
 	\item Su CR3 es el mismo que el del Kernel
 	\item En los EFLAGS habilitamos el flag de interrupciones (ya que de otro modo no podría ser interrumpida para poder cambiar de tarea)
 \end{itemize}
+
+\subsection{Inicializar TSS de tareas}
+
+Creamos una función llamada tss_inicializar_tarea que dado un puntero a una entrada de TSS y un CR3, modifica la entrada pasada por parámetro para que cumpla con los requisitos del trabajo práctico.
+
+\begin{itemize}
+	\item Se pide una nueva página al directorio de páginas del kernel para el stack del mismo perteneciente a la tarea
+	\item Se asigna el tope de esa página como el stack pointer de nivel 0
+	\item Su instruction pointer es asignado en la dirección virtual 0x0x08000000
+	\item Su stack pointer es asignado al final de su primera página virtual
+	\item En los EFLAGS habilitamos el flag de interrupciones por la misma razón que la tarea Idle
+	\item Los selectores de segmento de datos y de código son asignados como corresponde
+\end{itemize}
+
+El CR3 pasado por parámetro viene de haber llamado previamente a la función mmu_inicializar_dir_tarea que toma la dirección del código original de una tarea, una posición de el_mapa y el directorio de páginas actual para así crear un nuevo directorio que corresponderá a la nueva tarea y devolver la dirección del mismo.
+
+\subsection{Saltar a la tarea Idle}
+
