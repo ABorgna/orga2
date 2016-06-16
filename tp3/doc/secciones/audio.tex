@@ -47,3 +47,14 @@ Y el segundo byte es la duración en $ms$.
 Desarrollamos un conversor de archivos MIDI a nuestro formato (src/tool/frommidi.py),
 que genera archivos binarios $.audio$ , y usando la pseudoinstruccion $incbin$ de NASM
 los incluimos en el código del kernel.
+\\
+
+Quisimos usar este sistema para hacer sonar efectos de sonidos con el movimiento de los jugadores y la acciones de las tareas, Pero nos encontramos con dos problemas:
+
+\begin{itemize}
+    \item En la emulación de bochs, activar el canal entre el PIT y el speaker incurre un delay aparentemente aleatorio de entre 0 y 1s
+    \item Si se deja activa la conexión pero se desabilita el PIT, se produce un ruido audible en el speaker
+\end{itemize}
+
+Debido a estos problemas, abandonamos la idea de agregar efecto de sonido.
+
