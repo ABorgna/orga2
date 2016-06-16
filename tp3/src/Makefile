@@ -171,7 +171,7 @@ tasks: $(TASKSBINS)
 	@echo ''
 
 pseudo_clean:
-	@echo 'Limpiando todo...'
+	@echo 'Limpiando cosas...'
 	find . -name '*.o' -type f -exec rm -f "{}" \;
 	rm -f *.bin
 	rm -f *.tmp
@@ -187,4 +187,6 @@ pseudo_clean:
 clean: pseudo_clean
 	@echo 'Limpiando mas cosas...'
 	rm -f audio/tracks/*.audio
+	find . -name '__pycache__' -type d -exec rm -rf {} \; 2>/dev/null || true
+	find . -name '*.pyc' -type f -exec rm -f "{}" \;
 	@echo ''
