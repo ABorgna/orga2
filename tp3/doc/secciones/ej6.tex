@@ -2,7 +2,7 @@
 
 \subsection{Definir entradas en la GDT para las TSS}
 
-Para definir las entradas de la GDT para las TSS creamos una función gdt_setear_tss_entry que toma el offset dentro la gdt, un puntero a una TSS, y un valor de Data Privilege Level (de 0 a 3) y completa una entrada nueva en la GDT (determinada por offset) con los datos pertinentes a una tarea.
+Para definir las entradas de la GDT para las TSS creamos una función $gdt\_setear\_tss\_entry$ que toma el offset dentro la gdt, un puntero a una TSS, y un valor de Data Privilege Level (de 0 a 3) y completa una entrada nueva en la GDT (determinada por offset) con los datos pertinentes a una tarea.
 
 Usamos esa misma función para completar las entradas de las tareas Inicial y Idle, así como luego utilizamos lo mismo para llenar las entradas de las 25 tareas que pertenecen al juego.
 
@@ -20,7 +20,7 @@ Completamos la información de la tarea Idle en su entrada correspondiente con l
 
 \subsection{Inicializar TSS de tareas}
 
-Creamos una función llamada tss_inicializar_tarea que dado un puntero a una entrada de TSS y un CR3, modifica la entrada pasada por parámetro para que cumpla con los requisitos del trabajo práctico.
+Creamos una función llamada $tss\_inicializar\_tarea$ que dado un puntero a una entrada de TSS y un CR3, modifica la entrada pasada por parámetro para que cumpla con los requisitos del trabajo práctico.
 
 \begin{itemize}
 	\item Se pide una nueva página al directorio de páginas del kernel para el stack del mismo perteneciente a la tarea
@@ -31,7 +31,17 @@ Creamos una función llamada tss_inicializar_tarea que dado un puntero a una ent
 	\item Los selectores de segmento de datos y de código son asignados como corresponde
 \end{itemize}
 
-El CR3 pasado por parámetro viene de haber llamado previamente a la función mmu_inicializar_dir_tarea que toma la dirección del código original de una tarea, una posición de el_mapa y el directorio de páginas actual para así crear un nuevo directorio que corresponderá a la nueva tarea y devolver la dirección del mismo.
+El CR3 pasado por parámetro viene de haber llamado previamente a la función $mmu\_inicializar\_dir\_tarea$ que toma la dirección del código original de una tarea, una posición de el_mapa y el directorio de páginas actual para así crear un nuevo directorio que corresponderá a la nueva tarea y devolver la dirección del mismo.
+
+Con este mecanismo inicializamos la TSS de todas las tareas involucradas en el juego.
 
 \subsection{Saltar a la tarea Idle}
 
+Para ejecutar el salto hacia la tarea Idle, primero cargamos la TSS de la tarea Inicial (que puede contener cualquier cosa ya que solo la vamos a usar para saltar) en el Task Register con el siguiente código:
+
+\begin{lstlisting}
+mov ax, GDT_TSS_INICIAL_DESC
+ltr ax
+\end{lstlisting}
+
+Luego, para saltar a la tarea Idle llamamos a la función $tss\_switch\_task$ cuyo funcionamiento es detallado más adelante en el desarrollo del ejercicio 7.

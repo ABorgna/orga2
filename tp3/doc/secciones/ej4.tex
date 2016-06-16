@@ -1,19 +1,19 @@
 \section{Ejercicio 4}
 
 \subsection{Contador de páginas}
-Se declara en mmu.c una variable global proxima_pagina_libre de tipo void* (que apunta a una dirección de memoria) y se inicializa apuntando a la dirección 0x100000 (el inicio del área libre, mapeada por identity mapping). Cuando pidamos memoria en el área libre con mmu_proxima_pagina_fisica_libre() se retornará esta dirección para uso libre de kernel (a modo pseudo-malloc, aunque no es posible recuperar el espacio pedido) y se incrementará en $2^{12}$ (es decir, apuntará a la próxima página en memoria). \\
+Se declara en mmu.c una variable global $proxima\_pagina\_libre$ de tipo void* (que apunta a una dirección de memoria) y se inicializa apuntando a la dirección 0x100000 (el inicio del área libre, mapeada por identity mapping). Cuando pidamos memoria en el área libre con $mmu\_proxima\_pagina\_fisica\_libre$ se retornará esta dirección para uso libre de kernel (a modo pseudo-malloc, aunque no es posible recuperar el espacio pedido) y se incrementará en $2^{12}$ (es decir, apuntará a la próxima página en memoria). \\
 
 \subsection{Inicialización de directorios y tablas de paginación para tareas}
-La función mmu_inicializar_dir_tarea recibe el puntero de la tarea que se quiere mapear, la posición (x,y) del mapa donde se va a inicializar (el parámetro se pasa en un struct pos_t) y el directorio actual. \\
-Comienza creando (en blanco) el page directory de la tarea que se pasó por parámetro, que se escribe en una página pedida a mmu_proxima_pagina_fisica_libre(). \\
+La función $mmu\_inicializar\_dir\_tarea$ recibe el puntero de la tarea que se quiere mapear, la posición (x,y) del mapa donde se va a inicializar (el parámetro se pasa en un struct $pos\_t$) y el directorio actual. \\
+Comienza creando (en blanco) el page directory de la tarea que se pasó por parámetro, que se escribe en una página pedida a $mmu\_proxima\_pagina\_fisica\_libre$. \\
 Se mapean para el kernel las páginas de la tarea y de su posición del mapa por identity mapping.  \\
 Se copia el código de la tarea a la posición del mapa pedida y se le mapea, con permisos de usuario, la celda para la tarea. \\
 Por último se retorna el directorio, ya inicializado, de páginas de la tarea.
 
 \subsection{Mapeo y desmapeo de páginas de memoria}
-La función mmu_mapear_pagina recibe la dirección virtual que se desea mapear y la física a la cual se quiere mapear, junto con el directorio actual de páginas (cr3) y los atributos que queremos asignar al entry en la page table. \\
+La función $mmu\_mapear\_pagina$ recibe la dirección virtual que se desea mapear y la física a la cual se quiere mapear, junto con el directorio actual de páginas (cr3) y los atributos que queremos asignar al entry en la page table. \\
 En caso de que el bit de present que corresponde al índice indicado por la dirección virtual en el directorio se encontrara en 0, es necesario generar un page directory para indexar esa misma dirección con permiso de escritura y usuario (esto se debe a que si el entry de directorio tiene permisos de usario, el dpl resultante es el que indique la tabla).
 Luego se accede a la tabla y se agrega el entry correspondiente, marcándolo como presente. 
 Finalmente se limpia la hidden caché del directorio con tlbflush() dado que se realizaron cambios en él.\\
 \\
-La función mmu_umapear_pagina
+La función $mmu\_umapear\_pagina$
