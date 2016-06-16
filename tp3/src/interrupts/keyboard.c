@@ -117,15 +117,19 @@ void keyboard_player_keys(unsigned char key) {
             game_mover_cursor(player_A, DER);
             break;
         case '^':
+        case 'I':
             game_mover_cursor(player_B, ARB);
             break;
         case 'v':
+        case 'K':
             game_mover_cursor(player_B, ABA);
             break;
         case '<':
+        case 'J':
             game_mover_cursor(player_B, IZQ);
             break;
         case '>':
+        case 'L':
             game_mover_cursor(player_B, DER);
             break;
 
@@ -219,6 +223,18 @@ unsigned char status2ASCII(unsigned char input){
             output = 'Y';
             break;
         //Player 2
+        case 0x17:
+            output = 'I';
+            break;
+        case 0x24:
+            output = 'J';
+            break;
+        case 0x25:
+            output = 'K';
+            break;
+        case 0x26:
+            output = 'L';
+            break;
         case 0x50:
             output = 'v';
             break;

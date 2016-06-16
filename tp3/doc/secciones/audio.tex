@@ -1,2 +1,49 @@
-\section{Audio}
+\section{Apéndice - Audio}
+
+La mayoría de las computadoras poseen un speaker conectado como periférico
+al procesador que permite generar sonidos de alerta.
+
+Este speaker está directamente conectado al puerto 2 del Programmable Interval Timer (PIT).
+Usando el modo generador de ondas cuadradas del PIT podemos entonces generar una señal de salida audible. \\
+Ya que esta señal es siempre un a onda cuadrada con duty 50\% la calidad del sonido es bastante mala,
+pero pudimos usarla para reproducir pistas de audio de dos canales.
+
+Bochs nos permite emular el speaker habilitando el plugin de la soundblaster16, si se agrega el flag $--enable-sb16$ al compilar.
+
+\subsection{Configuración de los periféricos}
+
+Habilitamos la conexión del PIT con el speaker seteando los bits 1 y 2 del puerto $0x61$ de IO.
+
+\begin{lstlisting}
+tmp = inb(0x61);
+if (tmp != (tmp | 3)) {
+    outb(0x61, tmp | 3);
+}
+\end{lstlisting}
+
+Y para configurar el PIT lo seteamos en modo 3 (square wave) y le enviamos un valor de contador.
+Este valor lo usará para dividir su frequencia base de 1.19MHZ, para obtener como resultado una frecuencia audible.
+
+\begin{lstlisting}
+// Configure the pit, mode 3 (square wave)
+outb(0x43, 0x36 | (channel << 6));
+
+// Send the 16b count to the corresponding port
+outb(0x40 + channel, (uint8_t) (divisor & 0xFF));
+outb(0x40 + channel, (uint8_t) (divisor >> 8));
+\end{lstlisting}
+
+\subsection{Reproducción de MIDIs}
+
+Diseñamos un formato compacto de archivo de audio compuesto por secuencias de bloques de dos bytes.
+El primer byte es el valor de una nota MIDI, un entero entre 1 y 127 (o 0 si es silencio) que se
+traduce a un valor de frecuencia con la siguiente fórmula:
+
+$$ freq = 440 * 2^{\frac{nota - 69}{12}} Hz $$
+
+Y el segundo byte es la duración en $ms$.
+
+Desarrollamos un conversor de archivos MIDI a nuestro formato (src/tool/frommidi.py),
+que genera archivos binarios $.audio$ , y usando la pseudoinstruccion $incbin$ de NASM
+los incluimos en el código del kernel.
 
