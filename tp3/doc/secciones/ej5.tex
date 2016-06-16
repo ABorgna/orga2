@@ -1,8 +1,8 @@
 \section{Ejercicio 5}
 Como ya definimos anteriormente (\ref{rutinas}), si bien seteamos rutinas 'default' para excepciones, las rutinas de atención de interrupciones de teclado y reloj son diferentes.
-Para estas interrupciones (controladas por el PIC) interactuamos con puertos I/O para luego hacer llamados a rutinas específicas (rtc_isr, keyboard_isr, etc) que respondan a estas interrupciones.
-\\Por lo tanto lo único que haremos dentro de las _isr(\# int) definidas en isr.asm será comunicar el fin de interrupción a los puertos del pic y hacer llamados a tareas correspondientes codeadas en C.
-\\Caso aparte es el de la int 0x66, que es la que en la lógica del juego permitirá hacer las syscalls para llamar a DONDE, SOY y MAPEAR según un parámetro input en $eax$.
+Para estas interrupciones (controladas por el PIC) interactuamos con puertos I/O para luego hacer llamados a rutinas específicas ($rtc\_isr$, $keyboard\_isr$, etc) que respondan a estas interrupciones.
+\\Por lo tanto lo único que haremos dentro de las $\_isr(\# int)$ definidas en $isr.asm$ será comunicar el fin de interrupción a los puertos del pic y hacer llamados a tareas correspondientes codeadas en C.
+\\Caso aparte es el de la int 0x66, que es la que en la lógica del juego permitirá hacer las syscalls para llamar a $DONDE$, $SOY$ y $MAPEAR$ según un parámetro input en $eax$.
 
 \subsection{Habilitar interrupciones de reloj}
 Contamos con dos rutinas de atención a dos relojes diferentes: el RTC \footnote{Real-time clock } y el PIT \footnote{Programmable Interval Timer}, asignados a interrupciones nº 32 y 40 respectivamente. \\
@@ -24,12 +24,12 @@ Para el RTC se corresponde la siguiente rutina:
 Donde la primer línea se encarga de reconocer la interrupción y se deshabilitan las NMI
 \footnote{Non-maskable interrupt, \url{http://wiki.osdev.org/RTC\#Avoiding_NMI_and_Other_Interrupts_While_Programming}} mientras se accede el registro C del RTC (de no suceder esto, frente a determinadas interrupciones,
 \href{http://wiki.osdev.org/RTC\#Interrupts_and_Register_C}{se podría deshabilitar la interrupción del RTC}). El acknowledge se completa leyendo el puerto de datos del RTC en la segunda línea. \\
-Luego se hace un llamado a game_tick() (game.c) que llama a actualizarse al scheduler.
+Luego se hace un llamado a $game\_tick()$ (función de $game.c$) que llama a actualizarse al scheduler.
 
 
 
 \subsection{Habilitar interrupciones de teclado}
-Se lee del puerto 0x60 un scan code que luego convertimos a ASCII usando un switch statement para cada botón de la interfaz del juego (ignorando los break codes, de modo que solo se acciona una interrupción al pulsar cada tecla).
+Se lee del puerto $0x60$ un scan code que luego convertimos a ASCII usando un switch statement para cada botón de la interfaz del juego (ignorando los break codes, de modo que solo se acciona una interrupción al pulsar cada tecla).
 A partir de esta conversión se determina si se actualiza la posición de un cursor, si se muestra la pantalla de restart, ayuda o se setea el debug mode \ref{isr_dbg} (entre otros).
 
 \begin{lstlisting}
@@ -52,13 +52,13 @@ A partir de esta conversión se determina si se actualiza la posición de un cur
 
 \subsection{Debugger}
 \label{isr_dbg}
-Dentro de la rutina de keyboard_isr, si el debugger (\ref{dbg}) se encuentra en pantalla entonces solamente se atenderá la interrupción de teclado que lo desactiva (correspondiente a la letra 'Y').
+Dentro de la rutina de $keyboard\_isr$, si el debugger (\ref{dbg}) se encuentra en pantalla entonces solamente se atenderá la interrupción de teclado que lo desactiva (correspondiente a la letra 'Y').
 Por lo tanto no se podrán mover cursores cuando se esté mostrando.\\
-Para habilitar el modo debug, se llama a la interrupción de teclado de la letra 'Y' y se habilita un flag dbg_enabled desde la función game_enable_debugger antes de volver a la ejecución de la tarea. La próxima vez que se produzca una excepción o un error de parámetros en syscall (game_kill_task), se detendrá la ejecución y se llamará al debugger hasta que se presione nuevamente la tecla 'Y' y se salte a la tarea idle (game_go_idle) para retomar la ejecución del juego.
+Para habilitar el modo debug, se llama a la interrupción de teclado de la letra 'Y' y se habilita un flag $dbg\_enabled$ desde la función $game\_enable\_debugger$ antes de volver a la ejecución de la tarea. La próxima vez que se produzca una excepción o un error de parámetros en syscall ($game\_kill\_task$), se detendrá la ejecución y se llamará al debugger hasta que se presione nuevamente la tecla 'Y' y se salte a la tarea idle ($game\_go\_idle$) para retomar la ejecución del juego.
 
 \subsection{Habilitar interrupción $0x66$}
-Se define para la int 0x66 una syscall, cuyo funcionamiento 'ingame' detallaremos más adelante (\ref{syscalls} ).
-Al entrar en la isr correspondiente se produce un llamado a funciones externas de game.c en función de el parámetro pasado en eax, si este parámetro no es válido se procede a terminar la tarea que hizo la llamada a sistema por prevención de que esté corrupta.
+Se define para la $int\ 0x66$ una syscall, cuyo funcionamiento 'ingame' detallaremos más adelante (\ref{syscalls} ).
+Al entrar en la isr correspondiente se produce un llamado a funciones externas de $game.c$ en función de el parámetro pasado en $eax$, si este parámetro no es válido se procede a terminar la tarea que hizo la llamada a sistema por prevención de que esté corrupta.
 \begin{lstlisting}
   global _isr0x66
   _isr0x66:
