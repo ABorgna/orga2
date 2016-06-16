@@ -1,6 +1,6 @@
 \section{Ejercicio 2}
 
-La IDT se corresponde con un arreglo de tamaño 255 de idt_entry. Un idt_entry es un struct que representará cada gate dentro de la tabla indicando selector de segmento de código donde se almacena la ISR, offset en dicho segmento y atributos del descriptor (present gate, tipo de gate y dpl). 
+La IDT se corresponde con un arreglo de tamaño 255 de $idt\_entry$. Un $idt\_entry$ es un struct que representará cada gate dentro de la tabla indicando selector de segmento de código donde se almacena la ISR, offset en dicho segmento y atributos del descriptor (present gate, tipo de gate y dpl). 
 
 \begin{lstlisting} [caption={Struct de las gates},label=gate-struct]
 typedef struct str_idt_entry_fld {
@@ -42,5 +42,5 @@ interrupt_msg_% 1_len equ    $ \$ $ - interrupt_msg_% 1
 
 \end{lstlisting}
 
-Todo esto quedó encapsulado en una función llamada idt_inicializar() que es ejecutada luego de cargar en IDTR un descriptor con la dirección donde se encuentra la IDT y su límite, empaquetados en el struct idt_descriptor de la cátedra.
+Todo esto quedó encapsulado en una función llamada $idt\_inicializar$ que es ejecutada luego de cargar en IDTR un descriptor con la dirección donde se encuentra la IDT y su límite, empaquetados en el struct $idt\_descriptor$ de la cátedra.
 
