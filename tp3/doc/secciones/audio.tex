@@ -11,6 +11,7 @@ pero pudimos usarla para reproducir pistas de audio de dos canales.
 Bochs nos permite emular el speaker habilitando el plugin de la soundblaster16, si se agrega el flag $--enable-sb16$ al compilar.
 
 \subsection{Configuración de los periféricos}
+\label{audio}
 
 Habilitamos la conexión del PIT con el speaker seteando los bits 1 y 2 del puerto $0x61$ de IO.
 
@@ -46,4 +47,3 @@ Y el segundo byte es la duración en $ms$.
 Desarrollamos un conversor de archivos MIDI a nuestro formato (src/tool/frommidi.py),
 que genera archivos binarios $.audio$ , y usando la pseudoinstruccion $incbin$ de NASM
 los incluimos en el código del kernel.
-

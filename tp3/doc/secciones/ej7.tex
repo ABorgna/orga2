@@ -13,6 +13,7 @@ Para decidir el siguiente elemento se realiza un algoritmo Round-Robin para los 
 para las tareas dentro de cada uno.
 
 \subsection{Syscalls}
+\label{syscalls}
 
 Las tareas pueden ejecutar varios syscalls a través de la interrupción 0x66,
 pasando su código en $eax$.
@@ -62,7 +63,7 @@ tss_switch_task:
 \end{lstlisting}
 
 \subsection{Debugger}
-
+\label{dbg}
 El debugger es una herramienta a la hora de programar las tareas, que nos permite ver el estado
 de los registros cuando una tarea se muere.
 
@@ -77,4 +78,3 @@ Cuando se mata a una tarea, si está habilitado el modo debug,
 se llama a $screen\_show\_debug$.
 Esta función recopila el estado actual de los registros y los imprime en pantalla,
 junto a el tope del stack.
-
