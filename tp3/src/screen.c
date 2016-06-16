@@ -391,7 +391,7 @@ void screen_show_help() {
     y++;
     print("WASD/,AOE  Mover jugador A      ", x, y++, c);
     print("Shift-L    Lanzar jugador A     ", x, y++, c);
-    print("Flechitas  Mover jugador B      ", x, y++, c);
+    print("IJKL/^<v>  Mover jugador B      ", x, y++, c);
     print("Shift-R    Lanzar jugador B     ", x, y++, c);
     y++;
     print("----------- Opciones -----------", x, y++, c);
