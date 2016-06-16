@@ -27,7 +27,7 @@ typedef struct str_idt_entry_fld {
 Para inicializar la IDT usamos una serie de macros tanto en C (para las gates) como en ASM (para las ISR) para facilitar la definición de las mismas.
 De los macros generados usamos particularmente 3 de estos.
 \begin{description}
-\item [IDT_ENTRY_INTERRUPT] para las interrupciones de tipo 0-19, 32,33 y 40. Se setea con el descriptor de nuestro segmento flat de código de nivel 0, y offset (dividido de 0 a 15 y 16 a 31 bits por cuestiones de arquitectura) con puntero a una rutina genérica del 0-19, y \label{rutinas} específica para reloj (PIT y RTC) y teclado en interrupiones 32, 40 y 33 respectivamente. \\
+\item [IDT_ENTRY_INTERRUPT] para las interrupciones de tipo 0-19, 32,33 y 40. Se setea con el descriptor de nuestro segmento flat de código de nivel 0, y offset (dividido de 0 a 15 y 16 a 31 bits por cuestiones de arquitectura) con puntero a una rutina genérica del 0-19, y \label{rutinas} específica para reloj (PIT y RTC) y teclado en interrupciones 32, 40 y 33 respectivamente. \\
 Los atributos corresponden a nivel de privilegio 0, bit de present en 1 y tipo = 0xE $>>$ 2
 \item [IDT_ENTRY_DEFAULT] para las interrupciones reservadas por Intel según manual (20-31) y aquellas "libres" para el usuario que no definimos (por lo tanto, no deberían ser accedidas durante la ejecución del sistema). \\
 De esta forma podemos enterarnos, agregando un breakpoint en la rutina, si salta una interrupción que no estamos atendiendo.

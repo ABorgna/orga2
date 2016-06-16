@@ -6,7 +6,7 @@ Para estas interrupciones (controladas por el PIC) interactuamos con puertos I/O
 
 \subsection{Habilitar interrupciones de reloj}
 Contamos con dos rutinas de atención a dos relojes diferentes: el RTC \footnote{Real-time clock } y el PIT \footnote{Programmable Interval Timer}, asignados a interrupciones nº 32 y 40 respectivamente. \\
-Si bien en el contexto del uso dado en este sistema no presentan diferencias ambos relojes, delegamos en el RTC las cuestiones referentes al scheduler y dedicamos el PIT exlusivamente para el funcionamiento del audio \ref{audio}.
+Si bien en el contexto del uso dado en este sistema no presentan diferencias ambos relojes, delegamos en el RTC las cuestiones referentes al scheduler y dedicamos el PIT exclusivamente para el funcionamiento del audio \ref{audio}.
 \\
 \\
 Para el RTC se corresponde la siguiente rutina:
