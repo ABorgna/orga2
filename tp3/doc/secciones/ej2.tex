@@ -1,4 +1,4 @@
-\subsection{Ejercicio 2}
+\section{Ejercicio 2}
 
 La IDT se corresponde con un arreglo de tamaño 255 de idt_entry. Un idt_entry es un struct que representará cada gate dentro de la tabla indicando selector de segmento de código donde se almacena la ISR, offset en dicho segmento y atributos del descriptor (present gate, tipo de gate y dpl). 
 
@@ -20,7 +20,7 @@ typedef struct str_idt_entry_fld {
 
 
 
-\subsubsection{Inicializar la IDT}
+\subsection{Inicializar la IDT}
 
 Para inicializar la IDT usamos una serie de macros tanto en C (para las gates) como en ASM (para las ISR) para facilitar la definición de las mismas.
 De los macros generados usamos particularmente 3 de estos.

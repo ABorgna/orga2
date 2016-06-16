@@ -1,6 +1,6 @@
-\subsection{Ejercicio 1}
+\section{Ejercicio 1}
 
-\subsubsection{Inicializar la GDT}
+\subsection{Inicializar la GDT}
 
 Configuramos la GDT para tener bien configurada la segmentación al pasar a modo protegido.
 
@@ -16,7 +16,7 @@ Además, creamos otras cinco entradas para nuestro uso:
     \item Un segmento de datos con nivel de privilegio 0, con base en $0xB8000$ y límite $80 * 50 * 2 - 1 = 7999 = 0x1F3F$
 \end{itemize}
 
-\subsubsection{Pasar a modo protegido}
+\subsection{Pasar a modo protegido}
 
 Para pasar al modo protegido debemos habilitar primero A20 con la rutina provista por la cátedra, luego cargar la GDT con la instrucción $LGDT$, habilitar el bit PE del registro CR0 que setea el modo protegido propiamente dicho, y saltar a una sección del código programada en 32 bits.
 
@@ -36,7 +36,7 @@ Para pasar al modo protegido debemos habilitar primero A20 con la rutina provist
     jmp GDT_CODE_0_DESC:mp
 \end{lstlisting}
 
-\subsubsection{Imprimir el mapa inicial}
+\subsection{Imprimir el mapa inicial}
 
 La memoria de video que mapeamos anteriormente representa un mapa de caracteres de 80 columnas y 50 líneas, con cada caracter representado como un byte con su valor ASCII y un byte con sus atributos (color de letra, color de fondo y un flag de blink).
 

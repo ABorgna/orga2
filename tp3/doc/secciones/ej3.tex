@@ -1,6 +1,6 @@
-\subsection{Ejercicio 3}
+\section{Ejercicio 3}
 
-\subsubsection{Inicializar las páginas del kernel con identity mapping}
+\subsection{Inicializar las páginas del kernel con identity mapping}
 
 Para inicializar el directorio de páginas del kernel creamos una función mmu_inicializar_dir_kernel() que hace lo siguiente:
 
@@ -11,6 +11,6 @@ Para inicializar el directorio de páginas del kernel creamos una función mmu_i
 
 Más adelante extendimos la misma función para que mapee la página de la tarea idle, también con identity mapping.
 
-\subsubsection{Activar paginación}
+\subsection{Activar paginación}
 
 Para activar paginación movimos en eax el contenido de cr0, seteamos en 1 el bit de paginación (bit 31) y devolvimos a cr0 el contenido de eax.

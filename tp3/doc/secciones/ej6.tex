@@ -1,12 +1,12 @@
-\subsection{Ejercicio 6}
+\section{Ejercicio 6}
 
-\subsubsection{Definir entradas en la GDT para las TSS}
+\subsection{Definir entradas en la GDT para las TSS}
 
 Para definir las entradas de la GDT para las TSS creamos una función gdt_setear_tss_entry que toma el offset dentro la gdt, un puntero a una TSS, y un valor de Data Privilege Level (de 0 a 3) y completa una entrada nueva en la GDT (determinada por offset) con los datos pertinentes a una tarea.
 
 Usamos esa misma función para completar las entradas de las tareas Inicial y Idle, así como luego utilizamos lo mismo para llenar las entradas de las 25 tareas que pertenecen al juego.
 
-\subsubsection{Completar la entrada TSS de la tarea Idle}
+\subsection{Completar la entrada TSS de la tarea Idle}
 
 Completamos la información de la tarea Idle en su entrada correspondiente con los datos que se requirieron en el enunciado:
 
