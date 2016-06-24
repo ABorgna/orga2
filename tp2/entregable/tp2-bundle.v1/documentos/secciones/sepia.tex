@@ -210,13 +210,13 @@ En el siguiente gráfico se explicita con más detalle qué tanto más rápidas 
     \label{fig:sepia-time-speedup}
 \end{figure}
 
-Se puede ver que SSE presenta un speedup de poco menos de 200\% y AVX2 presenta un speedup de casi 350\%. Esto resulta distinto de lo que se predijo anteriormente (speedups esperados de 300\% y 600\% respectivamente).
+Se puede ver que SSE presenta un speedup de poco menos de 200\% y AVX2 presenta un speedup de casi 350\%. Esto resulta distinto de lo que se predijo anteriormente (speedups esperados de 300\% y 600\% respectivamente). Esto puede deberse a varias causas: 
 
-Es importante aclarar que para realizar este experimento, se compiló la implementación en C con la opción de optimización automática O3.
-
-\cuidado \\
-Estaria bueno aca que mencionen la cantidad de operaciones por pixel que calcularon antes para cada implementacion. Por ej. C vs SSE hace el triple de operaciones, por lo que sería esperable que funcione alrededor de 3X veces mas lento
-\cuidado
+\begin{itemize}
+    \item Se compiló la implementación en C con la opción de optimización automática O3, que utiliza operaciones de SSE, con lo cual podría llegar a ser que hace menos operaciones de punto flotante por pixel que las esperadas.
+    \item Por la misma razón, es probable que al compilar se hayan ordenado las operaciones de tal manera de optimizar la performance de pipe-lining del procesador, pudiendo ejecutar más operaciones en la misma cantidad de ciclos.
+    \item Además de operaciones en punto flotante, se realizan -en todas las implementaciones- operaciones de conversión de datos de entero a punto flotante y viceversa, lo cual también puede afectar en la performance ya que son operaciones pesadas.
+\end{itemize}
 
 \subsubsection{Comparación entre optimizaciones de C}
 
