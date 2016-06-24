@@ -174,7 +174,23 @@ Esta implementación ejecuta la misma cantidad de operaciones en punto flotante 
 
 \subsubsection{Comparación entre implementaciones}
 
- Luego de realizar varias corridas de cada una de las implementaciones, se llegaron a los siguientes resultados en cuanto al tiempo total de ejecución:
+A continuación se muestran una serie de experimentos que permiten corroborar las hipótesis planteadas anteriormente en el desarrollo de las implementaciones en cuanto a tiempo de ejecución.
+
+Repasando rápidamente lo que se planteó hasta ahora, se contaron las operaciones en punto flotante que realiza cada una de las implementaciones para hacer una aproximación de qué tan rápido corren y compararlas entre sí. Se llegó a lo siguiente:
+
+\begin{center}
+    \begin{tabular}{ | c | c |}
+    \hline
+    Implementación & Cant. op. punto flotante  \\ \hline
+           C       &     $\frac{3op}{px}$     \\ \hline
+          SSE      &     $\frac{1op}{px}$     \\ \hline
+          AVX2     &     $\frac{1op}{2px}$     \\ \hline
+    \end{tabular}
+\end{center}
+
+Viendo la tabla, es de esperarse que la implementación en SSE presente un speedup de 300\% con respecto a C y AVX2 presente un speedup de 600\% con respecto a la misma.
+
+Luego de realizar varias corridas de cada una de las implementaciones, se llegaron a los siguientes resultados en cuanto al tiempo total de ejecución:
 
 \begin{figure}[h]
     \centering
@@ -183,7 +199,7 @@ Esta implementación ejecuta la misma cantidad de operaciones en punto flotante 
     \label{fig:sepia-time}
 \end{figure}
 
-Se puede inferir entonces que las suposiciones anteriores en cuanto a mejoras de performance resultaron ser verdaderas. La implementación en SSE corre más rápido que la misma en C y la implementación en AVX2 corre aún más rápido que SSE.
+Se puede inferir entonces que algunas de las suposiciones anteriores en cuanto a mejoras de performance resultaron ser verdaderas. La implementación en SSE corre más rápido que la misma en C y la implementación en AVX2 corre aún más rápido que SSE. Veamos con más detalle qué tanto representa esa mejora.
 
 En el siguiente gráfico se explicita con más detalle qué tanto más rápidas son las dos implementaciones en ASM con respecto a C compilado con la optimización O3:
 
@@ -194,7 +210,7 @@ En el siguiente gráfico se explicita con más detalle qué tanto más rápidas 
     \label{fig:sepia-time-speedup}
 \end{figure}
 
-Se puede ver que SSE presenta un speedup de poco menos de 2 y AVX2 presenta un speedup de casi 3.5, evidenciando aún más fuertemente la mejora que se obtiene a medida que se va aumentando el paralelismo del procesamiento de píxeles.
+Se puede ver que SSE presenta un speedup de poco menos de 200\% y AVX2 presenta un speedup de casi 350\%. Esto resulta distinto de lo que se predijo anteriormente (speedups esperados de 300\% y 600\% respectivamente).
 
 Es importante aclarar que para realizar este experimento, se compiló la implementación en C con la opción de optimización automática O3.
 
