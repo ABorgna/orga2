@@ -28,8 +28,8 @@ TESTS = {
         "filter": "cropflip",
         "imgs": ["img/lena.bmp"],
         "implementations": ["c_O3", "sse","sse_par","avx"],
-        "sizes": [(1024, 1024)],
-        "params": ["512 512 0 0"]
+        "sizes": [(2048, 2048)],
+        "params": ["1024 1024 0 0"]
     },
     "cropflip-c-implementaciones": {
         "filter": "cropflip",
