@@ -148,8 +148,10 @@ tasks/idle.tsk: tasks/idle.asm
 	rm $@.tmp
 	@echo ''
 
-tasks/taskA.tsko: tasks/tareaA.c
-	$(CC) $(CFLAGS) -c -o $@ $^
+#tasks/taskA.tsko: tasks/tareaA.c
+#	$(CC) $(CFLAGS) -c -o $@ $^
+tasks/taskA.tsko: tasks/fungi.asm
+	$(NASM) $(NASMFLAGS) -o $@ $^
 tasks/taskB.tsko: tasks/tareaB.c
 	$(CC) $(CFLAGS) -c -o $@ $^
 tasks/taskH.tsko: tasks/tareaH.c
