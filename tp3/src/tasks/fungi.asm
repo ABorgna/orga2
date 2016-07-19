@@ -1,6 +1,9 @@
 
 ; *---------------------------------*
 ; |
+; | Fungi
+; | aka honguitos mágicos
+; |
 ; | Planta esporas en el mapa
 ; | Cuando una se activa copia el código del padre.
 ; |
@@ -36,10 +39,25 @@
 %define VIRUS_AZUL 0x325
 
 %define CHECKSUM_ROJO 0x6C8BAF61
-%define CHECKSUM_AZUL 0
+%define CHECKSUM_AZUL 0x67E4CB61
 
-%define MY_COLOR VIRUS_ROJO
-%define MY_CHECKSUM CHECKSUM_ROJO
+; Descomentar esto para activar el modo de testeo de checksum
+; Apenas inicia la tarea calcula todos los valores, y va tirando breakpoints
+; Ver checksum_tester
+;%define TEST_CHECKSUM_MODE
+
+%define MY_COLOR 0
+%define MY_CHECKSUM 0
+%ifdef TASK_A
+    %define MY_COLOR VIRUS_ROJO
+    %define MY_CHECKSUM CHECKSUM_ROJO
+%elifdef TASK_B
+    %define MY_COLOR VIRUS_AZUL
+    %define MY_CHECKSUM CHECKSUM_AZUL
+%else
+    %error "Definir TASK_A o TASK_B con -dTASK_x"
+%endif
+
 
 %macro PADDING 1
     ; Padding con NOPs de 1 byte hasta la posición %1
@@ -516,7 +534,9 @@ start:
 
     checksum_tester:
         ; Comentar para testear
-        ret
+        %ifndef TEST_CHECKSUM_MODE
+            ret
+        %endif
 
         ; Calcular nuestros checksums
         xchg bx,bx

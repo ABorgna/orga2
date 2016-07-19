@@ -151,9 +151,11 @@ tasks/idle.tsk: tasks/idle.asm
 #tasks/taskA.tsko: tasks/tareaA.c
 #	$(CC) $(CFLAGS) -c -o $@ $^
 tasks/taskA.tsko: tasks/fungi.asm
-	$(NASM) $(NASMFLAGS) -o $@ $^
-tasks/taskB.tsko: tasks/tareaB.c
-	$(CC) $(CFLAGS) -c -o $@ $^
+	$(NASM) $(NASMFLAGS) -o $@ -dTASK_A $^
+#tasks/taskB.tsko: tasks/tareaB.c
+#	$(CC) $(CFLAGS) -c -o $@ $^
+tasks/taskB.tsko: tasks/fungi.asm
+	$(NASM) $(NASMFLAGS) -o $@ -dTASK_B $^
 tasks/taskH.tsko: tasks/tareaH.c
 	$(CC) $(CFLAGS) -c -o $@ $^
 
