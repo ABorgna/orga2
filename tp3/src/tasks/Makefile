@@ -28,4 +28,5 @@ taskB.tsko: fungi.asm
 
 clean:
 	rm -f *.ctsk
+	rm -f *.tsko
 

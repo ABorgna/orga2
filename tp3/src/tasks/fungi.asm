@@ -107,6 +107,8 @@
 
 section .text
 
+global task
+task:
 start:
 
     ; *---------------------------------*
