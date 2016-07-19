@@ -4,23 +4,20 @@
 ; | Planta esporas en el mapa
 ; | Cuando una se activa copia el código del padre.
 ; |
-; | Además mantiene una lista de conocidos,
-; | y cada cierto tiempo checkea que no los hayan modificado.
+; | Guarda las celdas exploradas y los aliados conocidos en un bitmap.
+; | Cada cierto tiempo checkea alguno de sus aliados para ver si lo conquistó
+; | el otro jugador, y mira su tabla de exploradas.
 ; |
 ; | La exploración se realiza en pasos de tamaño dependiente de la posición,
 ; | siempre una cantidad coprima a 80 * 44 para que
 ; | termine recorriendo tod0 el mapa.
+; | Se hace una serie de intentos para buscar casilleros sin explorar.
 ; |
 ; | Además, una tarea iniciada por el jugador siempre explora el casillero
-; | de la derecha al iniciarse.
-; |
-; | Falta:
-; |     - Llamar a SOY (cuando?)
-; |     - No convertir aliados
-; |     - Checkear conocidos
+; | de abajo primero.
 ; |
 ; | Ideas:
-; |     - Still alive counter
+; |     - Generation counter + tabla de conocidos
 ; |
 ; *---------------------------------*
 
@@ -38,7 +35,11 @@
 %define VIRUS_ROJO 0x841
 %define VIRUS_AZUL 0x325
 
+%define CHECKSUM_ROJO 0x6C8BAF61
+%define CHECKSUM_AZUL 0
+
 %define MY_COLOR VIRUS_ROJO
+%define MY_CHECKSUM CHECKSUM_ROJO
 
 %macro PADDING 1
     ; Padding con NOPs de 1 byte hasta la posición %1
@@ -48,11 +49,12 @@
 %macro CHECKSUM 2
     ; Calcular un checksum usando xor desde [%1] hasta [%2]
     ; Resultado en eax, modifica ecx
-    mov ecx, (%2 - %1)
+    mov ecx, ((%2 - %1)/4)
     xor eax, eax
-    .loop_%1_%2:
-        xor eax, [ecx + %1 - 1]
-    loop .loop_%1_%2
+    .loop:
+        ;crc32 eax, byte [ecx + %1 - 1]
+        xor eax, [ecx * 4 + %1 - 4]
+    loop .loop
 
 %endmacro
 
@@ -92,10 +94,8 @@ start:
     ; *---------------------------------*
     ; | Hello world
     ; |
-    ; | Pedir mi posición y pasar al main loop
+    ; | Pedir mi posición, decir quién soy y pasar al main loop
     ; *---------------------------------*
-
-    xchg bx,bx
 
     ; Movemos el esp a donde no moleste
     mov esp, (OFFSET_SPORE - 1)
@@ -112,6 +112,21 @@ start:
     mov ax, [var(PADRE_X)]
     mov [var(POS_Y)], ax
 
+    ; Calculamos nuestra posición lineal
+    movzx edx, word [var(POS_X)]
+    DX_TO_LINEAR
+    mov [var(POS_LINEAR)], dx
+
+    ; Nos marcamos como aliados en nuestro mapa
+    mov eax, edx
+    mov ebx, edx
+    shr eax, 2
+    and ebx, 3
+    shl ebx, 1
+    bts [var(mapa) + eax], ebx
+    inc ebx
+    bts [var(mapa) + eax], ebx
+
     ; Soy yo!
     mov eax, (SYSCALL_SOY - 1)
     inc eax
@@ -119,13 +134,12 @@ start:
     nop
     int 0x66
 
-    ; Siempre exploramos el casillero de la derecha al ser
+    ; Siempre exploramos el casillero de abajo al ser
     ; iniciados por el jugador
     mov bx, [var(POS_X)]
     mov [var(MAPPED_X)], bx
 
-    xor eax, eax
-    inc eax
+    mov eax, 80
     jmp mapear_siguiente
 
     ; *---------------------------------*
@@ -133,6 +147,29 @@ start:
     ; *---------------------------------*
 
     start_spore:
+
+        ; Empezar a recorrer a partir de mi posicion
+        movzx edx, word [var(POS_X)]
+        mov [var(MAPPED_X)], dx
+
+        ; Inicializar cosas
+        mov byte [var(MAP_COUNTER)], 0
+
+        ; Precalcular nuestra posición lineal
+        DX_TO_LINEAR
+        mov [var(POS_LINEAR)], dx
+
+        ; Marcarle a mi padre que estoy viva (y a mi misma)
+        mov eax, edx
+        mov ebx, edx
+        shr eax, 2
+        and ebx, 3
+        shl ebx, 1
+        bts [var(mapa) + eax], ebx
+        bts [var(mapa) + 0x1000 + eax], ebx
+        inc ebx
+        bts [var(mapa) + eax], ebx
+        bts [var(mapa) + 0x1000 + eax], ebx
 
         ; Soy yo!
         mov eax, (SYSCALL_SOY - 1)
@@ -150,22 +187,118 @@ start:
         ; Decidir cuantos pasos adelante explorar
         pasos_a_explorar:
             movzx eax, byte [var(POS_X)]
-            and eax, 0x3
+            and eax, 0xf
             movzx eax, byte [eax + var(STEPS)]
 
         ; Mapear algo
         mapear_siguiente:
-            ; Calcular la nueva posición a partir de
-            ; los pasos que vamos a dar (en eax)
+            ; Calcular la nueva posición a explorar
+            ; Recorremos de a eax pasos,
+            ; buscando una posición sin explorar en el mapa
+            ; si después de 251 iteraciónes nos quedamos con
+            ; esa posición, esté explorada o no
+            ; (esto sirve para cuando ya exploramos tod0 el mapa)
+            ;
+            ; También, cada 8 turnos, visitamos el próximo aliado
+            ; a partir de donde estamos recorriendo.
+            ; (Así lo reconquistamos si apareció el otro jugador)
             movzx edx, word [var(MAPPED_X)]
             DX_TO_LINEAR
-            cmp eax, edx
-            jle .fin_check_underflow
-                ; Evitar que se vaya a una cuenta negativa
-                add edx, 80*44
-            .fin_check_underflow:
-            add edx, eax
+
+            inc word [var(MAP_COUNTER)]
+            test word [var(MAP_COUNTER)], 7
+
+            jz .visitar_aliado
+
+                mov ecx, 251
+                .loop_pasos:
+
+                    ; Incrementar la posición
+                    cmp eax, edx
+                    jle .fin_check_underflow
+                        ; Evitar que se vaya a una cuenta negativa
+                        add edx, 80*44
+                    .fin_check_underflow:
+                    add edx, eax
+
+                    ; Checkear overflow
+                    cmp edx, 80*44
+                    jl .end_check_overflow
+                        sub edx, 80*44
+                    .end_check_overflow:
+
+                    ; Checkear si está explorada
+                    mov ebx, edx
+                    mov edi, edx
+                    shr ebx, 2
+                    and edi, 3
+                    shl edi, 1
+                    bt [var(mapa) + ebx], edi
+                    jnc .end_loop_pasos
+
+                loop .loop_pasos
+                .end_loop_pasos:
+
+                ; Limpiamos esi para marcar que no visitamos un aliado
+                xor esi, esi
+
+                jmp .end_visitar_aliado
+
+            .visitar_aliado:
+
+                ; Nuestra posición lineal en edi
+                movzx edi, word [var(POS_LINEAR)]
+
+                ; Buscar el próximo aliado
+                mov ecx, 80*44 ; Podemos llegar a recorrer tod0 el mapa buscando
+                .loop_buscar_aliado:
+                    ; Incrementar la posición
+                    inc edx
+
+                    ; No revisarnos a nosotros mismos
+                    cmp edx, edi
+                    je .continue_loop_buscar_aliado
+
+                    ; Checkear overflow
+                    cmp edx, 80*44
+                    jl .end_check_overflow_aliado
+                        sub edx, 80*44
+                    .end_check_overflow_aliado:
+
+                    ; Checkear si es un aliado
+                    mov ebx, edx
+                    mov edi, edx
+                    shr ebx, 2
+                    and edi, 3
+                    shl edi, 1
+                    inc edi
+                    bt [var(mapa) + ebx], edi
+                    jc .end_loop_buscar_aliado
+
+                    .continue_loop_buscar_aliado:
+                loop .loop_buscar_aliado
+                .end_loop_buscar_aliado:
+
+                ; Seteamos esi para marcar que visitamos un aliado
+                xor esi, esi
+                inc esi
+
+            .end_visitar_aliado:
+
+            mov edi, edx
             DX_TO_XY
+            ; la posicion lineal queda en edi
+
+            ; Si esi != 0, estamos visitando un aliado
+            ; y no debemos guardar su posición
+            cmp esi, 0
+            jnz .end_guardar_posicion
+                mov [var(MAPPED_X)], dx
+            .end_guardar_posicion:
+
+            ; No mapearnos a nosotros mismos...
+            cmp dx, [var(POS_X)]
+            je main_loop
 
             ; Mapear la posición calculada
             ; Evitamos que quede el código de la syscall a la vista
@@ -175,15 +308,45 @@ start:
             movzx ecx, dh
             int 0x66
 
-            mov [var(MAPPED_X)], dx
             ; x,y mapeados quedan en dl,dh
+            ; la direccion lineal mapeada queda en edi
+
+        ; Una vez mapeada la nueva posición, tenemos tres casos
+        ; - No es nuestro
+        ;   Copiamos la espora y la marcamos en nuestro mapa
+        ; - Es una espora
+        ;   Si el padre no estaba en nuestro mapa, lo agregamos como aliado
+        ;   Si no está corriendo, le cambiamos el padre por nosotros
+        ; - Es un aliado
+        ;   Mergeamos los mapas,
+        ;   muerto > aliado > espora > nada
+        conquistar_mapeado:
+
+            ; Marcamos la posición como explorada
+            mov eax, edi
+            mov ebx, edi
+            shr eax, 2
+            and ebx, 3
+            shl ebx, 1
+            bts [var(mapa) + eax], ebx
+
+            ; Si no está conquistado, no es nuestro
+            call is_conquered
+            cmp eax,0
+            jz dispersar_espora
+
+            ; Si no está conquistado
+            call get_type
+            cmp eax,0
+            je dispersar_espora ; corrupto (lo modificaron)
+            cmp eax, 1
+            je leer_de_aliado
+            jmp leer_de_espora
 
         ; Copiamos la espora
         dispersar_espora:
             ; La posición XY mapeada está en dl,dh
-
-            ; TODO: checkear que no sobreescribamos a alguno nuestro
-            ; (checksum)
+            ; la direccion lineal mapeada está en edi
 
             ; Llenamos la primer parte de nops
             mov edi, (OFFSET_START + 0x1000)
@@ -200,30 +363,190 @@ start:
             ; Le guardamos su posición en sus variables
             ; (quedó guardada en dh:dl)
             mov [var(POS_X) + 0x1000], dx
-            mov [var(MAPPED_X) + 0x1000], dx
 
             ; Copiamos nuestra posición también
             mov ax, [var(POS_X)]
             mov [var(PADRE_X) + 0x1000], ax
 
-        jmp main_loop
+            ; No está activa
+            mov byte [var(ACTIVA) + 0x1000], 0
+
+            jmp main_loop
+
+        leer_de_espora:
+            ; La posición XY mapeada está en dl,dh
+            ; la direccion lineal mapeada está en edi
+
+            ; Guardamos el padre como un aliado
+            ; TODO: ver como funciona con esto desactivado,
+            ;       así evitas estar reviviendo cadáveres
+            movzx edx, word [var(PADRE_X) + 0x1000]
+            DX_TO_LINEAR
+            mov eax, edx
+            mov ebx, edx
+            shr eax, 2
+            and ebx, 3
+            shl ebx, 1
+            bts [var(mapa) + eax], ebx
+            inc ebx
+            bts [var(mapa) + eax], ebx
+
+            ; Setearme como padre si no está activa
+            test byte [var(ACTIVA) + 0x1000], 1
+            jnz .end_cambiar_padre
+                mov ax, [var(POS_X)]
+                mov [var(PADRE_X) + 0x1000], ax
+            .end_cambiar_padre:
+
+            jmp main_loop
+
+        leer_de_aliado:
+            ; La posición XY mapeada está en dl,dh
+            ; la direccion lineal mapeada está en edi
+
+            ; Combinamos los puntos explorados por ambos
+            mov ecx, ((end_mapa - mapa)/4)
+            .loop:
+                mov eax, [ecx * 4 + var(mapa) - 4]
+                or eax, [ecx * 4 + var(mapa) + 0x1000 - 4]
+                mov [ecx * 4 + var(mapa) - 4], eax
+                mov [ecx * 4 + var(mapa) + 0x1000 - 4], eax
+            loop .loop
+
+            jmp main_loop
+
     end_loop:
+
+    ; *---------------------------------*
+    ; | Funciones
+    ; *---------------------------------*
+
+    ; Checkea si la región mapeada fue conquistada, puede haber germinado o no
+    ; Devuelve 0 (false) o 1 (true) en eax
+    is_conquered:
+        CHECKSUM (var(spore)+0x1000), (var(end_spore)+0x1000)
+
+        cmp eax, [var(CHECKSUM_CONQUERED)]
+        sete al
+        movzx eax, al
+
+        ; Normalmente comentada, calcula los checksums
+        ; y tira breakpoints para verlos
+        ; (no se comenta acá sino adentro mismo de la función,
+        ; así no cambia las referencias a las variables)
+        call checksum_tester
+
+        ret
+
+    ; Checkea el tipo de la región mapeada. Devuelve en eax
+    ; 0 - inválido/corrupto
+    ; 1 - aliado
+    ; 2 - espora
+    ; Hay que checkear primero is_conquered
+    get_type:
+        CHECKSUM (var(start)+0x1000), (var(end_loop)+0x1000)
+
+        cmp al, [var(CHECKSUM_EMPTY)]
+        je .is_spore
+
+            cmp al, [var(CHECKSUM_ALIED)]
+            sete al
+            movzx eax, al
+            ret
+
+        .is_spore:
+            mov eax, 2
+            ret
 
     ; *---------------------------------*
     ; | Constants
     ; *---------------------------------*
 
-    ; La exploración se realiza en pasos de tamaño STEPS[POS_X % 8]
+    ; La exploración se realiza en pasos de tamaño STEPS[POS_X % 16]
     ; Notar que los numeros son coprimos con 80x44 = 2^6 * 5 * 11
-    STEPS: db 7,13,17,19,23,29,31,37
+    STEPS: db 7,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71
+
+    ; Checksums
+    ; Hay que recalcularlos si cambia el código
+    CHECKSUM_CONQUERED: dd 0x86E1D95F ; Checksum de la función spore
+    CHECKSUM_ALIED: dd MY_CHECKSUM ; Checksum de la parte baja del código
+    CHECKSUM_EMPTY: dd 0 ; Checksum de la parte baja de una espora (todos NOPs)
 
     ; *---------------------------------*
-    ; | Tabla de conocidos
+    ; | Mapa con las exploraciones
     ; *---------------------------------*
 
+    ; Array de valores de 2b
+    ; 00 : sin explorar
+    ; 01 : espora
+    ; 11 : aliado
+    mapa:
+        times (80*44/4) db 0 ; 2b por celda, 880 B
+    end_mapa:
+
+    ; *---------------------------------*
+    ; | Tabla de conocidos (TODO)
+    ; | array ordenado con nuestros aliados conocidos,
+    ; | y su número de generación
+    ; *---------------------------------*
+
+    tabla_len: db 0
     tabla:
-        ; TODO
+        times 32 dw 0 ; Reservamos 32 lugares, 256 B
     end_tabla:
+
+    ; *---------------------------------*
+    ; | Otras variables
+    ; *---------------------------------*
+    internal_vars:
+        MAPPED_X: db 0
+        MAPPED_Y: db 0
+
+        MAP_COUNTER: dw 0
+
+        POS_LINEAR: dw 0
+    end_internal_vars:
+
+    ; *---------------------------------*
+    ; | Funcion especial para calcular los checksums
+    ; | se puede comentar en la versión final
+    ; |
+    ; | La función se autoinmola al terminar :)
+    ; *---------------------------------*
+
+    checksum_tester:
+        ; Comentar para testear
+        ret
+
+        ; Calcular nuestros checksums
+        xchg bx,bx
+        mov eax, 0xDEADCAFE
+
+        label_0000:
+            CHECKSUM var(spore), var(end_spore)
+            xchg bx,bx
+            ; CHECKSUM_CONQUERED en eax
+
+        label_0001:
+            CHECKSUM var(start), var(end_loop)
+            xchg bx,bx
+            ; CHECKSUM_ALIED en eax
+
+        label_0002:
+            ; Fillearnos de 0s
+            mov edi, var(start)
+            mov ecx, (var(end_loop) - var(start))
+            mov al, 0x90 ; nop
+            rep stosb
+
+            CHECKSUM var(start), var(end_loop)
+            xchg bx,bx
+            ; CHECKSUM_EMPTY en eax
+
+        ; Destruimos tod0, mejor morir
+        mov eax, [0xDEADBEEF]
+
+        ret
 
     ; *---------------------------------*
     ; | Las cosas que se copian con las esporas
@@ -244,6 +567,9 @@ start:
 
         ; Movemos el esp a donde no moleste
         mov esp, (OFFSET_SPORE - 1)
+
+        ; Hello
+        mov byte [var(ACTIVA)], 1
 
         ; Mapear mi padre
         mov eax, SYSCALL_MAPEAR
@@ -270,10 +596,13 @@ start:
     vars:
         POS_X: db 0
         POS_Y: db 0
+
         PADRE_X: db 0
         PADRE_Y: db 0
-        MAPPED_X: db 0
-        MAPPED_Y: db 0
+
+        ; Se setea en 1 solo si la tarea está corriendo
+        ; (para detectar esporas activas)
+        ACTIVA: db 1  ;
     end_vars:
 
     ; *---------------------------------*
@@ -282,7 +611,7 @@ start:
 
     PADDING (OFFSET_END - LAST_JMP_SIZE)
     pre_end:
-    jmp start ; TODO: fijarse bien
+    jmp start
 
 end:
 
