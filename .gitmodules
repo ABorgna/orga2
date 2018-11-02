@@ -1,0 +1,3 @@
+[submodule "recursos-final"]
+path = "final/recursos"
+url = "git@github.com:lbarrios/orga2-final.git"
